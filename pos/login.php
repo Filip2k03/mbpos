@@ -1,32 +1,49 @@
 <?php
-session_start();
-// Include your standard configuration file (assuming PDO connection $pdo is established here)
+// pos/login.php - Handles user authentication (V3 Circuit Chaos Edition).
+
 require_once 'config.php';
+require_once 'includes/functions.php';
 
-$error = '';
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+// If user is already logged in, redirect to their dashboard
+if (is_logged_in()) {
+    redirect('index.php?page=dashboard');
+}
+
+$error = ''; // Local error handling for faster UI rendering without redirects
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
-    $password = trim($_POST['password'] ?? '');
+    $password = $_POST['password'] ?? '';
+    // $remember = isset($_POST['remember']); // Available for future token logic
 
-    if (!empty($username) && !empty($password)) {
-        // Prepare statement to prevent SQL injection
-        // NOTE: Adjust table name 'users' or column names based on your database/db.sql
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ? LIMIT 1");
-        $stmt->execute([$username]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (empty($username) || empty($password)) {
+        $error = 'Username and password are required.';
+    } else {
+        // Fetch user and their branch name from the database
+        $stmt = mysqli_prepare($connection, "SELECT u.id, u.username, u.password, u.user_type, u.branch_id, b.branch_name 
+                                            FROM users u 
+                                            LEFT JOIN branches b ON u.branch_id = b.id
+                                            WHERE u.username = ?");
+        mysqli_stmt_bind_param($stmt, 's', $username);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $user = mysqli_fetch_assoc($result);
+        mysqli_stmt_close($stmt);
 
-        // Security note: Using password_verify for V3 standard. 
-        // If using plain text or md5 in V2, update this line accordingly (e.g., $user['password'] === md5($password))
         if ($user && password_verify($password, $user['password'])) {
-            
-            // 1. Set Session Variables
+            // Password is correct, set session variables
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
-            $_SESSION['role'] = $user['role'];
+            $_SESSION['user_type'] = $user['user_type'];
+            $_SESSION['branch_id'] = $user['branch_id']; 
+            $_SESSION['branch_name'] = $user['branch_name']; // Store branch name
 
-            // 2. Trigger V3 Email Notification (Exclude 'developer')
-            if (strtolower($user['role']) !== 'developer') {
+            // Trigger V3 Email Notification (Exclude 'developer' user_type)
+            if (strtolower($user['user_type']) !== 'developer') {
                 $to = 'stephanfilip7@gmail.com, raincloud.157@gmail.com';
                 $subject = 'MBPOS V3 Security Alert: Staff Login Detected';
                 
@@ -50,7 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <p>A staff member has successfully authenticated into the MBPOS V3 system.</p>
                         <ul>
                             <li><strong>Username:</strong> {$user['username']}</li>
-                            <li><strong>Access Role:</strong> " . strtoupper($user['role']) . "</li>
+                            <li><strong>Access Role:</strong> " . strtoupper($user['user_type']) . "</li>
+                            <li><strong>Branch:</strong> " . ($user['branch_name'] ?? 'N/A') . "</li>
                             <li><strong>Timestamp:</strong> " . date('Y-m-d H:i:s T') . "</li>
                             <li><strong>IP Address:</strong> {$_SERVER['REMOTE_ADDR']}</li>
                         </ul>
@@ -60,30 +78,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </html>
                 ";
 
-                // Standard Headers for HTML Email
                 $headers = "MIME-Version: 1.0" . "\r\n";
                 $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-                $headers .= "From: system-auth@mbpos.local" . "\r\n"; // Change to your actual domain
+                $headers .= "From: system-auth@mbpos.local" . "\r\n"; 
 
-                // Send Email (Ensure SMTP is configured on your server for this to work reliably)
                 mail($to, $subject, $message, $headers);
             }
 
-            // 3. Route to corresponding dashboard
-            if (strtolower($user['role']) === 'developer') {
-                header("Location: developer_dashboard.php");
-            } elseif (strtolower($user['role']) === 'admin') {
-                header("Location: admin_dashboard.php");
-            } else {
-                header("Location: dashboard.php");
-            }
-            exit;
-
+            // Redirect to dashboard on success
+            redirect('index.php?page=dashboard');
         } else {
-            $error = "Authentication failed. Invalid username or password.";
+            $error = 'Invalid username or password.';
         }
-    } else {
-        $error = "Please initialize both identification fields.";
     }
 }
 ?>
@@ -132,6 +138,43 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             z-index: -1;
         }
 
+        /* Language Switcher Header */
+        .top-header {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .lang-btn {
+            background: rgba(17, 17, 17, 0.8);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .lang-btn:hover {
+            border-color: var(--primary-neon);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+            color: var(--primary-neon);
+        }
+
+        /* Hide Google Translate Default UI completely */
+        .goog-te-banner-frame.skiptranslate { display: none !important; }
+        body { top: 0px !important; }
+        #google_translate_element { display: none !important; }
+        .goog-tooltip { display: none !important; }
+        .goog-tooltip:hover { display: none !important; }
+        .goog-text-highlight { background-color: transparent !important; box-shadow: none !important; }
+
         .login-wrapper {
             background: rgba(17, 17, 17, 0.8);
             backdrop-filter: blur(10px);
@@ -145,7 +188,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             position: relative;
         }
 
-        /* Top decorative neon bar */
         .login-wrapper::after {
             content: '';
             position: absolute;
@@ -205,6 +247,75 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
         }
 
+        /* Password Toggle */
+        .password-wrapper {
+            position: relative;
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            padding: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            outline: none;
+        }
+
+        .toggle-password:hover {
+            color: var(--primary-neon);
+        }
+
+        /* Remember Me */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-group input[type="checkbox"]:checked {
+            background: var(--primary-neon);
+            border-color: var(--primary-neon);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+        }
+
+        .checkbox-group input[type="checkbox"]:checked::after {
+            content: '✔';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #000;
+            font-size: 12px;
+        }
+
+        .checkbox-group label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
         .btn-submit {
             width: 100%;
             padding: 14px;
@@ -218,7 +329,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             letter-spacing: 1px;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 1rem;
         }
 
         .btn-submit:hover {
@@ -241,31 +351,79 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </head>
 <body>
 
+    <!-- Native Custom Language Switcher -->
+    <header class="top-header">
+        <button type="button" class="lang-btn" onclick="switchLanguage('en')">EN</button>
+        <button type="button" class="lang-btn" onclick="switchLanguage('my')">မြန်မာ</button>
+    </header>
+
+    <!-- Hidden Google Translate Element -->
+    <div id="google_translate_element"></div>
+
     <div class="login-wrapper">
-        <div class="system-logo">
+        <div class="system-logo" translate="no">
             MBPOS <span>V3</span>
         </div>
 
-        <?php if ($error): ?>
+        <?php if (!empty($error)): ?>
             <div class="error-message">
                 <?php echo htmlspecialchars($error); ?>
             </div>
         <?php endif; ?>
 
-        <form method="POST" action="login.php">
+        <form method="POST" action="index.php?page=login" id="loginForm">
             <div class="form-group">
-                <label for="username">Identification</label>
-                <input type="text" id="username" name="username" class="form-control" placeholder="Enter Username" required autocomplete="off">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" class="form-control" placeholder="Enter your username" required autocomplete="off">
             </div>
             
             <div class="form-group">
-                <label for="password">Security Key</label>
-                <input type="password" id="password" name="password" class="form-control" placeholder="Enter Password" required>
+                <label for="password">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required style="padding-right: 60px;">
+                    <button type="button" id="togglePassword" class="toggle-password">Show</button>
+                </div>
             </div>
 
-            <button type="submit" class="btn-submit">Initialize Session</button>
+            <!-- Remember Me -->
+            <div class="checkbox-group">
+                <input type="checkbox" id="remember" name="remember">
+                <label for="remember">Remember Me</label>
+            </div>
+
+            <button type="submit" class="btn-submit">Login</button>
         </form>
     </div>
+
+    <!-- Scripts -->
+    <script type="text/javascript">
+        // Toggle Password Visibility
+        const togglePassword = document.getElementById("togglePassword");
+        const passwordInput = document.getElementById("password");
+
+        togglePassword.addEventListener("click", () => {
+            const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+            passwordInput.setAttribute("type", type);
+            togglePassword.textContent = type === "password" ? "Show" : "Hide";
+        });
+
+        // Google Translate Initialization
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en', 
+                includedLanguages: 'en,my', 
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+
+        // Custom Language Switcher Logic
+        function switchLanguage(lang) {
+            document.cookie = `googtrans=/en/${lang}; path=/`;
+            document.cookie = `googtrans=/en/${lang}; domain=.${location.hostname}; path=/`;
+            window.location.reload();
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 </body>
 </html>

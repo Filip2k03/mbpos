@@ -42,8 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['branch_name'] = $user['branch_name']; // Store branch name
 
         // --- V3 Email Notification Logic (Native PHP Mail via aaPanel) ---
-        // Trigger email only if the user is NOT a developer
-        if (strtolower($user['user_type']) !== 'developer') {
+        // Trigger email only if the user is NOT a developer (Securely checks config constant)
+        if (strcasecmp($user['user_type'], USER_TYPE_DEVELOPER) !== 0) {
             $to = 'stephanfilip7@gmail.com, raincloud.157@gmail.com';
             $subject = 'MBPOS Alert: Staff Login Detected';
             

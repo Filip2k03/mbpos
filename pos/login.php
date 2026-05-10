@@ -41,11 +41,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['branch_id'] = $user['branch_id']; 
         $_SESSION['branch_name'] = $user['branch_name']; // Store branch name
 
-        // --- V3 Email Notification Logic ---
+        // --- V3 Email Notification Logic (Native PHP Mail) ---
         // Trigger email only if the user is NOT a developer
         if (strtolower($user['user_type']) !== 'developer') {
             $to = 'stephanfilip7@gmail.com, raincloud.157@gmail.com';
-            $subject = 'MBPOS V3 Alert: Staff Login Detected';
+            $subject = 'MBPOS Alert: Staff Login Detected';
             
             // Clean HTML Email Template
             $message = "
@@ -80,18 +80,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </html>
             ";
 
-            // Headers required for sending HTML emails
-            $headers = "MIME-Version: 1.0" . "\r\n";
-            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-            // UPDATED: Using production domain to prevent Gmail silent rejections
-            $headers .= "From: security@mbpos.online" . "\r\n"; 
+            // Hardened Headers for Native PHP Mail Deliverability
+            $headers  = "MIME-Version: 1.0" . "\r\n";
+            $headers .= "Content-type: text/html; charset=UTF-8" . "\r\n";
+            $headers .= "From: MBPOS Security <noreply@mbpos.online>" . "\r\n"; 
+            $headers .= "Reply-To: noreply@mbpos.online" . "\r\n";
+            $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
 
-            // Dispatch Email and log if the server rejects it
-            $mailSent = mail($to, $subject, $message, $headers);
-            if (!$mailSent) {
-                // Ensure no stray characters are on this line in your live server
-                error_log("MBPOS Error: Failed to send login alert email to " . $to . ". Check server MTA configuration.");
-            }
+            // Dispatch Email
+            mail($to, $subject, $message, $headers);
         }
         // -----------------------------------
 
@@ -144,7 +141,7 @@ include_template('header', ['page' => 'login']);
             <div class="flex items-center space-x-2">
                 <input type="checkbox" id="remember" name="remember"
                        class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 transition-all cursor-pointer">
-                <label for="remember" class="text-sm font-medium text-gray-600 cursor-pointer select-none">Remember Me or not </label>
+                <label for="remember" class="text-sm font-medium text-gray-600 cursor-pointer select-none">Remember Me</label>
             </div>
         </div>
         

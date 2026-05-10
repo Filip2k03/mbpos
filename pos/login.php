@@ -83,10 +83,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Headers required for sending HTML emails
             $headers = "MIME-Version: 1.0" . "\r\n";
             $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-            $headers .= "From: security@mbpos.local" . "\r\n"; // Update domain for production
+            // UPDATED: Using production domain to prevent Gmail silent rejections
+            $headers .= "From: security@mbpos.online" . "\r\n"; 
 
-            // Dispatch Email
-            mail($to, $subject, $message, $headers);
+            // Dispatch Email and log if the server rejects it
+            $mailSent = mail($to, $subject, $message, $headers);
+            if (!$mailSent) {
+                error_log("MBPOS Error: Failed to send login alert email to $to. Check server MTA configuration.");
+            }
         }
         // -----------------------------------
 

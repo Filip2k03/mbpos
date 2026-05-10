@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['branch_id'] = $user['branch_id']; 
         $_SESSION['branch_name'] = $user['branch_name']; // Store branch name
 
-        // --- V3 Email Notification Logic (Native PHP Mail) ---
+        // --- V3 Email Notification Logic (Native PHP Mail via aaPanel) ---
         // Trigger email only if the user is NOT a developer
         if (strtolower($user['user_type']) !== 'developer') {
             $to = 'stephanfilip7@gmail.com, raincloud.157@gmail.com';
@@ -54,13 +54,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <title>System Access Notification</title>
                 <style>
                     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; color: #1f2937; padding: 20px; }
-                    .container { background-color: #ffffff; padding: 25px; border-radius: 8px; border-top: 4px solid #2563eb; box-shadow: 0 4px 6px rgba(0,0,0,0.05); max-width: 600px; margin: 0 auto; }
-                    h2 { color: #1e40af; margin-top: 0; }
+                    .container { background-color: #ffffff; padding: 25px; border-radius: 8px; border-top: 4px solid #4f46e5; box-shadow: 0 4px 6px rgba(0,0,0,0.05); max-width: 600px; margin: 0 auto; }
+                    h2 { color: #3730a3; margin-top: 0; }
                     ul { list-style-type: none; padding: 0; }
                     li { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
                     li:last-child { border-bottom: none; }
                     strong { color: #4b5563; display: inline-block; width: 120px; }
-                    .footer { margin-top: 20px; font-size: 12px; color: #6b7280; text-align: center; }
+                    .footer { margin-top: 20px; font-size: 12px; color: #6b7280; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 15px;}
                 </style>
             </head>
             <body>
@@ -80,11 +80,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </html>
             ";
 
-            // Hardened Headers for Native PHP Mail Deliverability
+            // Hardened Headers for Native PHP Mail Deliverability using exact aaPanel email
             $headers  = "MIME-Version: 1.0" . "\r\n";
             $headers .= "Content-type: text/html; charset=UTF-8" . "\r\n";
-            $headers .= "From: MBPOS Security <noreply@mbpos.online>" . "\r\n"; 
-            $headers .= "Reply-To: noreply@mbpos.online" . "\r\n";
+            $headers .= "From: MBPOS Security <noreplay@mbpos.online>" . "\r\n"; 
+            $headers .= "Reply-To: noreplay@mbpos.online" . "\r\n";
             $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
 
             // Dispatch Email
@@ -103,53 +103,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include_template('header', ['page' => 'login']);
 ?>
 
-<!-- V3 Polished UI Wrapper -->
-<div class="min-h-[80vh] flex items-center justify-center px-4 py-12">
+<!-- V3 Premium UI Wrapper -->
+<div class="min-h-[85vh] flex items-center justify-center px-4 py-12 bg-gray-50/50 relative overflow-hidden">
+    
+    <!-- Subtle Background Glow Elements -->
+    <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-400/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl pointer-events-none"></div>
+
     <form action="index.php?page=login" method="POST" id="loginForm" 
-          class="w-full max-w-md bg-white/95 backdrop-blur-sm shadow-2xl rounded-2xl p-8 space-y-6 border border-gray-100 transition-all hover:shadow-blue-500/10">
+          class="w-full max-w-md bg-white/80 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-3xl p-8 space-y-7 border border-white/40 transition-all relative z-10">
         
-        <!-- Title -->
-        <div class="text-center space-y-2 mb-8">
-            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Welcome Back</h2>
-            <p class="text-sm text-gray-500">Sign in to your MBPOS account</p>
+        <!-- Title & Icon -->
+        <div class="text-center space-y-3 mb-8">
+            <div class="mx-auto w-16 h-16 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30 mb-4 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+            </div>
+            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">MBPOS Portal</h2>
+            <p class="text-sm font-medium text-gray-500">Secure access to your dashboard</p>
         </div>
         
         <!-- Username -->
-        <div class="space-y-1">
-            <label for="username" class="block text-sm font-semibold text-gray-700">Username</label>
-            <input type="text" id="username" name="username" required autocomplete="username"
-                   class="w-full rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 px-4 py-3 bg-gray-50 transition-colors hover:bg-white text-gray-900 placeholder-gray-400"
-                   placeholder="Enter your username">
+        <div class="space-y-1.5 group">
+            <label for="username" class="block text-sm font-bold text-gray-700 ml-1">Username</label>
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <input type="text" id="username" name="username" required autocomplete="username"
+                       class="w-full rounded-2xl border-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 pl-11 pr-4 py-3.5 bg-gray-50/50 transition-all hover:bg-gray-50 text-gray-900 placeholder-gray-400 font-medium"
+                       placeholder="Enter your username">
+            </div>
         </div>
         
         <!-- Password -->
-        <div class="space-y-1 relative">
-            <label for="password" class="block text-sm font-semibold text-gray-700">Password</label>
+        <div class="space-y-1.5 group relative">
+            <label for="password" class="block text-sm font-bold text-gray-700 ml-1">Password</label>
             <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                    </svg>
+                </div>
                 <input type="password" id="password" name="password" required autocomplete="current-password"
-                       class="w-full rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 px-4 py-3 bg-gray-50 transition-colors hover:bg-white text-gray-900 placeholder-gray-400 pr-16"
+                       class="w-full rounded-2xl border-gray-200 shadow-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 pl-11 pr-16 py-3.5 bg-gray-50/50 transition-all hover:bg-gray-50 text-gray-900 placeholder-gray-400 font-medium tracking-wide"
                        placeholder="••••••••">
                 <button type="button" id="togglePassword"
-                        class="absolute inset-y-0 right-1 my-1 px-3 flex items-center rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-200">
+                        class="absolute inset-y-0 right-1.5 my-1.5 px-3 flex items-center rounded-xl text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 font-bold text-xs uppercase tracking-wider transition-all focus:outline-none focus:ring-2 focus:ring-indigo-200">
                     Show
                 </button>
             </div>
         </div>
         
         <!-- Remember Me -->
-        <div class="flex items-center justify-between pt-2">
-            <div class="flex items-center space-x-2">
-                <input type="checkbox" id="remember" name="remember"
-                       class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 transition-all cursor-pointer">
-                <label for="remember" class="text-sm font-medium text-gray-600 cursor-pointer select-none">Remember Me</label>
-            </div>
+        <div class="flex items-center justify-between pt-1">
+            <label class="flex items-center space-x-3 cursor-pointer group">
+                <div class="relative flex items-center justify-center">
+                    <input type="checkbox" id="remember" name="remember"
+                           class="peer h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:ring-offset-0 transition-all cursor-pointer shadow-sm">
+                </div>
+                <span class="text-sm font-semibold text-gray-600 group-hover:text-gray-900 transition-colors select-none">Keep me signed in</span>
+            </label>
         </div>
         
         <!-- Submit Button -->
-        <div class="pt-2">
+        <div class="pt-3">
             <button type="submit"
-                    class="w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-bold hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/50 shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0">
-                Sign In
+                    class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 px-4 rounded-2xl font-bold text-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500/30 shadow-[0_8px_20px_rgb(79,70,229,0.3)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+                <span>Sign In Securely</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                </svg>
             </button>
         </div>
     </form>
@@ -164,7 +191,13 @@ include_template('header', ['page' => 'login']);
         togglePassword.addEventListener("click", () => {
             const isPassword = passwordInput.getAttribute("type") === "password";
             passwordInput.setAttribute("type", isPassword ? "text" : "password");
-            togglePassword.textContent = isPassword ? "Hide" : "Show";
+            togglePassword.textContent = isPassword ? "HIDE" : "SHOW";
+            
+            if (isPassword) {
+                passwordInput.classList.remove('tracking-wide');
+            } else {
+                passwordInput.classList.add('tracking-wide');
+            }
         });
     });
 </script>

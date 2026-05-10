@@ -1,17 +1,2 @@
-<?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-$servername = "localhost";
-$username = "mbposV3_usr";
-$password = "bCnxZMzSh3zhNSYA";
-$dbname = "zpxcdpsz_pos_mb";
-
-$conn = mysqli_connect($servername, $username, $password, $dbname);
-
-if (!$conn) {
-    die("❌ Connection failed: " . mysqli_connect_error());
-}
-// echo "✅ Connected successfully!";
-
-?>
+mail = noreplay@gmail.com
+password = mbposV32026

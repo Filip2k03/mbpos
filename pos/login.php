@@ -89,7 +89,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Dispatch Email and log if the server rejects it
             $mailSent = mail($to, $subject, $message, $headers);
             if (!$mailSent) {
-                error_log("MBPOS Error: Failed to send login alert email to $to. Check server MTA configuration.");
+                // Ensure no stray characters are on this line in your live server
+                error_log("MBPOS Error: Failed to send login alert email to " . $to . ". Check server MTA configuration.");
             }
         }
         // -----------------------------------
@@ -145,8 +146,6 @@ include_template('header', ['page' => 'login']);
                        class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 transition-all cursor-pointer">
                 <label for="remember" class="text-sm font-medium text-gray-600 cursor-pointer select-none">Remember Me</label>
             </div>
-            <!-- Optional: Forgot password link placeholder for future V3 updates -->
-            <!-- <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors">Forgot password?</a> -->
         </div>
         
         <!-- Submit Button -->

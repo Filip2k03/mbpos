@@ -144,7 +144,7 @@ include_template('header', ['page' => 'login']);
             <div class="flex items-center space-x-2">
                 <input type="checkbox" id="remember" name="remember"
                        class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 transition-all cursor-pointer">
-                <label for="remember" class="text-sm font-medium text-gray-600 cursor-pointer select-none">Remember Me</label>
+                <label for="remember" class="text-sm font-medium text-gray-600 cursor-pointer select-none">Remember Me or not </label>
             </div>
         </div>
         

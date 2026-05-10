@@ -5,9 +5,9 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 $hostname = "localhost";
-$username = "zpxcdpsz_filip";
-$password = "T6#N1Hyezr#n.fSi";
-$database = "zpxcdpsz_pos1_v3";
+$username = "mbposV3_usr";
+$password = "bCnxZMzSh3zhNSYA";
+$database = "mbposV3";
 
 // Establish the database connection
 $connection = mysqli_connect($hostname, $username, $password, $database);

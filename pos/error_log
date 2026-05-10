@@ -1,5 +1,5 @@
-[31-Jan-2026 04:42:55 UTC] Cannot add or update a child row: a foreign key constraint fails (`zpxcdpsz_pos1_v3`.`vouchers`, CONSTRAINT `fk_vouchers_sender_customer` FOREIGN KEY (`sender_customer_id`) REFERENCES `users` (`id`) ON DELETE SET NULL)
-[10-Mar-2026 08:47:45 UTC] Cannot add or update a child row: a foreign key constraint fails (`zpxcdpsz_pos1_v3`.`vouchers`, CONSTRAINT `fk_vouchers_receiver_customer` FOREIGN KEY (`receiver_customer_id`) REFERENCES `users` (`id`) ON DELETE SET NULL)
+[31-Jan-2026 04:42:55 UTC] Cannot add or update a child row: a foreign key constraint fails (`mbposV3`.`vouchers`, CONSTRAINT `fk_vouchers_sender_customer` FOREIGN KEY (`sender_customer_id`) REFERENCES `users` (`id`) ON DELETE SET NULL)
+[10-Mar-2026 08:47:45 UTC] Cannot add or update a child row: a foreign key constraint fails (`mbposV3`.`vouchers`, CONSTRAINT `fk_vouchers_receiver_customer` FOREIGN KEY (`receiver_customer_id`) REFERENCES `users` (`id`) ON DELETE SET NULL)
 [08-May-2026 06:22:35 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
 Stack trace:
 #0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()

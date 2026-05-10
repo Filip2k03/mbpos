@@ -46,76 +46,88 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['branch_id'] = $user['branch_id']; 
         $_SESSION['branch_name'] = $user['branch_name']; // Store branch name
 
-        // --- V3 Email Notification Logic (PHPMailer via aaPanel SMTP) ---
+        // --- V3 Email Notification Logic (Smart Localhost Bypass) ---
         // Trigger email only if the user is NOT a developer
         if (strcasecmp($user['user_type'], USER_TYPE_DEVELOPER) !== 0) {
             
-            // Failsafe: Only attempt to send if Composer has been run
+            $to1 = 'stephanfilip7@gmail.com';
+            $to2 = 'raincloud.157@gmail.com';
+            $subject = 'MBPOS Alert: Staff Login Detected';
+            
+            // Clean HTML Email Template
+            $message = "
+            <html>
+            <head>
+                <title>System Access Notification</title>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; color: #1f2937; padding: 20px; }
+                    .container { background-color: #ffffff; padding: 25px; border-radius: 8px; border-top: 4px solid #4f46e5; box-shadow: 0 4px 6px rgba(0,0,0,0.05); max-width: 600px; margin: 0 auto; }
+                    h2 { color: #3730a3; margin-top: 0; }
+                    ul { list-style-type: none; padding: 0; }
+                    li { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
+                    li:last-child { border-bottom: none; }
+                    strong { color: #4b5563; display: inline-block; width: 120px; }
+                    .footer { margin-top: 20px; font-size: 12px; color: #6b7280; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 15px;}
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <h2>System Access Notification</h2>
+                    <p>A staff member has successfully authenticated into the MBPOS system.</p>
+                    <ul>
+                        <li><strong>Username:</strong> " . htmlspecialchars($user['username']) . "</li>
+                        <li><strong>Access Role:</strong> " . strtoupper(htmlspecialchars($user['user_type'])) . "</li>
+                        <li><strong>Branch:</strong> " . htmlspecialchars($user['branch_name'] ?? 'N/A') . "</li>
+                        <li><strong>Timestamp:</strong> " . date('Y-m-d H:i:s T') . "</li>
+                        <li><strong>IP Address:</strong> " . htmlspecialchars($_SERVER['REMOTE_ADDR'] ?? 'Unknown') . "</li>
+                    </ul>
+                    <div class='footer'>This is an automated security message from your MBPOS System.</div>
+                </div>
+            </body>
+            </html>
+            ";
+
+            $emailSent = false;
+
+            // Strategy 1: Try PHPMailer via Localhost (Bypasses external DNS issues)
             if (file_exists('vendor/autoload.php')) {
                 require_once 'vendor/autoload.php';
-
                 $mail = new PHPMailer(true);
 
                 try {
-                    // Server settings
                     $mail->isSMTP();
-                    $mail->Host       = 'mail.mbpos.online'; // aaPanel default mail host
+                    $mail->Host       = '127.0.0.1'; // Force internal routing
                     $mail->SMTPAuth   = true;
                     $mail->Username   = 'noreplay@mbpos.online';
-                    $mail->Password   = 'mbposV32026'; // Provided SMTP password
-                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // Enable implicit TLS/SSL encryption
-                    $mail->Port       = 465; // SSL port
+                    $mail->Password   = 'mbposV32026'; 
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // Usually internal uses STARTTLS or none
+                    $mail->Port       = 587; // Try 587 first for internal handoff
 
-                    // Recipients
                     $mail->setFrom('noreplay@mbpos.online', 'MBPOS Security');
-                    $mail->addAddress('stephanfilip7@gmail.com'); 
-                    $mail->addAddress('raincloud.157@gmail.com'); 
+                    $mail->addAddress($to1); 
+                    $mail->addAddress($to2); 
 
-                    // Clean HTML Email Template
-                    $message = "
-                    <html>
-                    <head>
-                        <title>System Access Notification</title>
-                        <style>
-                            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; color: #1f2937; padding: 20px; }
-                            .container { background-color: #ffffff; padding: 25px; border-radius: 8px; border-top: 4px solid #4f46e5; box-shadow: 0 4px 6px rgba(0,0,0,0.05); max-width: 600px; margin: 0 auto; }
-                            h2 { color: #3730a3; margin-top: 0; }
-                            ul { list-style-type: none; padding: 0; }
-                            li { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
-                            li:last-child { border-bottom: none; }
-                            strong { color: #4b5563; display: inline-block; width: 120px; }
-                            .footer { margin-top: 20px; font-size: 12px; color: #6b7280; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 15px;}
-                        </style>
-                    </head>
-                    <body>
-                        <div class='container'>
-                            <h2>System Access Notification</h2>
-                            <p>A staff member has successfully authenticated into the MBPOS system.</p>
-                            <ul>
-                                <li><strong>Username:</strong> " . htmlspecialchars($user['username']) . "</li>
-                                <li><strong>Access Role:</strong> " . strtoupper(htmlspecialchars($user['user_type'])) . "</li>
-                                <li><strong>Branch:</strong> " . htmlspecialchars($user['branch_name'] ?? 'N/A') . "</li>
-                                <li><strong>Timestamp:</strong> " . date('Y-m-d H:i:s T') . "</li>
-                                <li><strong>IP Address:</strong> " . htmlspecialchars($_SERVER['REMOTE_ADDR'] ?? 'Unknown') . "</li>
-                            </ul>
-                            <div class='footer'>This is an automated security message from your MBPOS System.</div>
-                        </div>
-                    </body>
-                    </html>
-                    ";
-
-                    // Content
                     $mail->isHTML(true);
-                    $mail->Subject = 'MBPOS Alert: Staff Login Detected';
+                    $mail->Subject = $subject;
                     $mail->Body    = $message;
 
                     $mail->send();
+                    $emailSent = true;
                 } catch (Exception $e) {
-                    // Log error silently so user login isn't interrupted
-                    error_log("MBPOS Mailer Error: {$mail->ErrorInfo}");
+                    error_log("PHPMailer Localhost Error: {$mail->ErrorInfo}");
                 }
-            } else {
-                error_log("MBPOS Security Alert Skipped: PHPMailer vendor/autoload.php is missing. Run composer require phpmailer/phpmailer.");
+            }
+
+            // Strategy 2: Fallback to native PHP mail() if Composer isn't ready or SMTP failed
+            if (!$emailSent) {
+                $headers  = "MIME-Version: 1.0" . "\r\n";
+                $headers .= "Content-type: text/html; charset=UTF-8" . "\r\n";
+                $headers .= "From: MBPOS Security <noreplay@mbpos.online>" . "\r\n"; 
+                $headers .= "Reply-To: noreplay@mbpos.online" . "\r\n";
+                $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
+
+                mail("$to1, $to2", $subject, $message, $headers);
+                error_log("MBPOS Alert: Defaulted to native PHP mail() function.");
             }
         }
         // -----------------------------------

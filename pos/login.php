@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['branch_id'] = $user['branch_id']; 
         $_SESSION['branch_name'] = $user['branch_name']; // Store branch name
 
-        // --- V3 Email Notification Logic (Smart Localhost Bypass) ---
+        // --- V3 Email Notification Logic (Strict PHPMailer Implementation) ---
         // Trigger email only if the user is NOT a developer
         if (strcasecmp($user['user_type'], USER_TYPE_DEVELOPER) !== 0) {
             
@@ -89,19 +89,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $emailSent = false;
 
-            // Strategy 1: Try PHPMailer via Localhost (Bypasses external DNS issues)
+            // Strategy 1: PHPMailer via Verified DNS MX Record
             if (file_exists('vendor/autoload.php')) {
                 require_once 'vendor/autoload.php';
                 $mail = new PHPMailer(true);
 
                 try {
                     $mail->isSMTP();
-                    $mail->Host       = '127.0.0.1'; // Force internal routing
+                    $mail->Host       = 'mail.mbpos.online'; // Verified OK in DNS
                     $mail->SMTPAuth   = true;
                     $mail->Username   = 'noreplay@mbpos.online';
                     $mail->Password   = 'mbposV32026'; 
-                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // Usually internal uses STARTTLS or none
-                    $mail->Port       = 587; // Try 587 first for internal handoff
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // SSL
+                    $mail->Port       = 465; // SSL Port
 
                     $mail->setFrom('noreplay@mbpos.online', 'MBPOS Security');
                     $mail->addAddress($to1); 
@@ -114,11 +114,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $mail->send();
                     $emailSent = true;
                 } catch (Exception $e) {
-                    error_log("PHPMailer Localhost Error: {$mail->ErrorInfo}");
+                    error_log("MBPOS PHPMailer Critical Error: {$mail->ErrorInfo}");
                 }
+            } else {
+                error_log("MBPOS Alert: PHPMailer is NOT installed. vendor/autoload.php is missing. Please run composer.");
             }
 
-            // Strategy 2: Fallback to native PHP mail() if Composer isn't ready or SMTP failed
+            // Strategy 2: Fallback to native PHP mail() if Composer isn't ready
             if (!$emailSent) {
                 $headers  = "MIME-Version: 1.0" . "\r\n";
                 $headers .= "Content-type: text/html; charset=UTF-8" . "\r\n";

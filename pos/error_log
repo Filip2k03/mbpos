@@ -1,0 +1,482 @@
+[31-Jan-2026 04:42:55 UTC] Cannot add or update a child row: a foreign key constraint fails (`zpxcdpsz_pos1_v3`.`vouchers`, CONSTRAINT `fk_vouchers_sender_customer` FOREIGN KEY (`sender_customer_id`) REFERENCES `users` (`id`) ON DELETE SET NULL)
+[10-Mar-2026 08:47:45 UTC] Cannot add or update a child row: a foreign key constraint fails (`zpxcdpsz_pos1_v3`.`vouchers`, CONSTRAINT `fk_vouchers_receiver_customer` FOREIGN KEY (`receiver_customer_id`) REFERENCES `users` (`id`) ON DELETE SET NULL)
+[08-May-2026 06:22:35 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 06:23:19 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 06:24:34 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 06:24:45 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 06:26:19 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 06:26:19 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 06:26:37 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 06:26:53 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 06:30:22 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 06:33:15 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/index.php(10): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 06:41:24 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 06:53:47 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 06:54:59 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 06:55:08 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/index.php(10): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 07:00:02 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 07:00:44 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 07:03:16 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/index.php(10): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 07:13:05 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/index.php(10): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 07:13:42 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 07:28:12 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 07:30:02 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 07:30:20 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 08:19:20 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 08:20:14 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/index.php(10): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 08:22:13 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/index.php(10): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 08:27:04 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 08:28:19 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/index.php(10): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 08:28:41 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 08:28:50 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/index.php(10): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 08:29:39 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 08:33:51 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 09:00:22 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 09:00:52 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 09:01:42 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 09:05:14 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 09:22:43 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 09:22:46 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/index.php(10): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 09:23:44 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 09:23:54 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 09:29:53 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 09:32:04 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/index.php(10): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 09:33:43 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/voucher_print.php(6): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 09:35:09 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 09:35:19 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 09:39:18 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 09:41:06 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 09:41:39 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 09:49:08 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 09:59:13 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 10:50:30 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 10:51:40 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[08-May-2026 11:07:00 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:50:37 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:51:10 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:51:27 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:52:07 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:52:07 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/index.php(10): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:52:31 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/index.php(10): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:53:07 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:53:37 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:53:41 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:53:57 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:54:08 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:54:10 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:54:11 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:54:28 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:54:38 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:54:41 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:55:12 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:55:41 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:55:52 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:57:37 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:58:40 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 09:58:49 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 10:11:10 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 10:12:10 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 10:13:01 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 10:14:21 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 10:16:11 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/fetch_notifications.php(4): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13
+[09-May-2026 10:18:54 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Too many connections in /home/zpxcdpsz/public_html/pos/config.php:13
+Stack trace:
+#0 /home/zpxcdpsz/public_html/pos/config.php(13): mysqli_connect()
+#1 /home/zpxcdpsz/public_html/pos/index.php(10): require_once('/home/zpxcdpsz/...')
+#2 {main}
+  thrown in /home/zpxcdpsz/public_html/pos/config.php on line 13

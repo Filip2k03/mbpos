@@ -7,7 +7,7 @@ ini_set('display_errors', 1);
 $hostname = "localhost";
 $username = "mbposV3_usr";
 $password = "bCnxZMzSh3zhNSYA";
-$database = "mbposV3";
+$database = "mbposv3";
 
 // Establish the database connection
 $connection = mysqli_connect($hostname, $username, $password, $database);

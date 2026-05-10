@@ -1,6 +1,11 @@
 <?php
 // pos/login.php - Handles user authentication.
 
+// Import PHPMailer classes into the global namespace
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
 require_once 'config.php';
 require_once 'includes/functions.php';
 
@@ -41,54 +46,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['branch_id'] = $user['branch_id']; 
         $_SESSION['branch_name'] = $user['branch_name']; // Store branch name
 
-        // --- V3 Email Notification Logic (Native PHP Mail via aaPanel) ---
-        // Trigger email only if the user is NOT a developer (Securely checks config constant)
+        // --- V3 Email Notification Logic (PHPMailer via aaPanel SMTP) ---
+        // Trigger email only if the user is NOT a developer
         if (strcasecmp($user['user_type'], USER_TYPE_DEVELOPER) !== 0) {
-            $to = 'stephanfilip7@gmail.com, raincloud.157@gmail.com';
-            $subject = 'MBPOS Alert: Staff Login Detected';
             
-            // Clean HTML Email Template
-            $message = "
-            <html>
-            <head>
-                <title>System Access Notification</title>
-                <style>
-                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; color: #1f2937; padding: 20px; }
-                    .container { background-color: #ffffff; padding: 25px; border-radius: 8px; border-top: 4px solid #4f46e5; box-shadow: 0 4px 6px rgba(0,0,0,0.05); max-width: 600px; margin: 0 auto; }
-                    h2 { color: #3730a3; margin-top: 0; }
-                    ul { list-style-type: none; padding: 0; }
-                    li { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
-                    li:last-child { border-bottom: none; }
-                    strong { color: #4b5563; display: inline-block; width: 120px; }
-                    .footer { margin-top: 20px; font-size: 12px; color: #6b7280; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 15px;}
-                </style>
-            </head>
-            <body>
-                <div class='container'>
-                    <h2>System Access Notification</h2>
-                    <p>A staff member has successfully authenticated into the MBPOS system.</p>
-                    <ul>
-                        <li><strong>Username:</strong> " . htmlspecialchars($user['username']) . "</li>
-                        <li><strong>Access Role:</strong> " . strtoupper(htmlspecialchars($user['user_type'])) . "</li>
-                        <li><strong>Branch:</strong> " . htmlspecialchars($user['branch_name'] ?? 'N/A') . "</li>
-                        <li><strong>Timestamp:</strong> " . date('Y-m-d H:i:s T') . "</li>
-                        <li><strong>IP Address:</strong> " . htmlspecialchars($_SERVER['REMOTE_ADDR'] ?? 'Unknown') . "</li>
-                    </ul>
-                    <div class='footer'>This is an automated security message from your MBPOS System.</div>
-                </div>
-            </body>
-            </html>
-            ";
+            // Failsafe: Only attempt to send if Composer has been run
+            if (file_exists('vendor/autoload.php')) {
+                require_once 'vendor/autoload.php';
 
-            // Hardened Headers for Native PHP Mail Deliverability using exact aaPanel email
-            $headers  = "MIME-Version: 1.0" . "\r\n";
-            $headers .= "Content-type: text/html; charset=UTF-8" . "\r\n";
-            $headers .= "From: MBPOS Security <noreplay@mbpos.online>" . "\r\n"; 
-            $headers .= "Reply-To: noreplay@mbpos.online" . "\r\n";
-            $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
+                $mail = new PHPMailer(true);
 
-            // Dispatch Email
-            mail($to, $subject, $message, $headers);
+                try {
+                    // Server settings
+                    $mail->isSMTP();
+                    $mail->Host       = 'mail.mbpos.online'; // aaPanel default mail host
+                    $mail->SMTPAuth   = true;
+                    $mail->Username   = 'noreplay@mbpos.online';
+                    $mail->Password   = 'mbposV32026'; // Provided SMTP password
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // Enable implicit TLS/SSL encryption
+                    $mail->Port       = 465; // SSL port
+
+                    // Recipients
+                    $mail->setFrom('noreplay@mbpos.online', 'MBPOS Security');
+                    $mail->addAddress('stephanfilip7@gmail.com'); 
+                    $mail->addAddress('raincloud.157@gmail.com'); 
+
+                    // Clean HTML Email Template
+                    $message = "
+                    <html>
+                    <head>
+                        <title>System Access Notification</title>
+                        <style>
+                            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; color: #1f2937; padding: 20px; }
+                            .container { background-color: #ffffff; padding: 25px; border-radius: 8px; border-top: 4px solid #4f46e5; box-shadow: 0 4px 6px rgba(0,0,0,0.05); max-width: 600px; margin: 0 auto; }
+                            h2 { color: #3730a3; margin-top: 0; }
+                            ul { list-style-type: none; padding: 0; }
+                            li { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
+                            li:last-child { border-bottom: none; }
+                            strong { color: #4b5563; display: inline-block; width: 120px; }
+                            .footer { margin-top: 20px; font-size: 12px; color: #6b7280; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 15px;}
+                        </style>
+                    </head>
+                    <body>
+                        <div class='container'>
+                            <h2>System Access Notification</h2>
+                            <p>A staff member has successfully authenticated into the MBPOS system.</p>
+                            <ul>
+                                <li><strong>Username:</strong> " . htmlspecialchars($user['username']) . "</li>
+                                <li><strong>Access Role:</strong> " . strtoupper(htmlspecialchars($user['user_type'])) . "</li>
+                                <li><strong>Branch:</strong> " . htmlspecialchars($user['branch_name'] ?? 'N/A') . "</li>
+                                <li><strong>Timestamp:</strong> " . date('Y-m-d H:i:s T') . "</li>
+                                <li><strong>IP Address:</strong> " . htmlspecialchars($_SERVER['REMOTE_ADDR'] ?? 'Unknown') . "</li>
+                            </ul>
+                            <div class='footer'>This is an automated security message from your MBPOS System.</div>
+                        </div>
+                    </body>
+                    </html>
+                    ";
+
+                    // Content
+                    $mail->isHTML(true);
+                    $mail->Subject = 'MBPOS Alert: Staff Login Detected';
+                    $mail->Body    = $message;
+
+                    $mail->send();
+                } catch (Exception $e) {
+                    // Log error silently so user login isn't interrupted
+                    error_log("MBPOS Mailer Error: {$mail->ErrorInfo}");
+                }
+            } else {
+                error_log("MBPOS Security Alert Skipped: PHPMailer vendor/autoload.php is missing. Run composer require phpmailer/phpmailer.");
+            }
         }
         // -----------------------------------
 

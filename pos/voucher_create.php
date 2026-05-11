@@ -253,31 +253,31 @@ include_template('header', ['page' => 'voucher_create']);
                                 Sender Details
                             </h3>
                             
-                            <!-- Custom Toggle -->
+                            <!-- Custom Toggle (Default: New) -->
                             <div class="flex items-center gap-6 mb-6 p-1.5 bg-gray-100 rounded-xl inline-flex">
                                 <label class="cursor-pointer relative flex-1 text-center">
-                                    <input type="radio" name="sender_type" value="existing" checked class="peer sr-only">
+                                    <input type="radio" name="sender_type" value="existing" class="peer sr-only">
                                     <div class="px-4 py-2 rounded-lg text-sm font-bold text-gray-500 peer-checked:bg-white peer-checked:text-blue-600 peer-checked:shadow-sm transition-all">Existing</div>
                                 </label>
                                 <label class="cursor-pointer relative flex-1 text-center">
-                                    <input type="radio" name="sender_type" value="new" class="peer sr-only">
+                                    <input type="radio" name="sender_type" value="new" checked class="peer sr-only">
                                     <div class="px-4 py-2 rounded-lg text-sm font-bold text-gray-500 peer-checked:bg-white peer-checked:text-blue-600 peer-checked:shadow-sm transition-all">New</div>
                                 </label>
                             </div>
 
-                            <div id="existing_sender_fields" class="space-y-4">
+                            <div id="existing_sender_fields" class="space-y-4 hidden">
                                 <label for="sender_customer_id" class="block text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Search Database</label>
                                 <select id="sender_customer_id" name="sender_customer_id" class="customer-search w-full"></select>
                             </div>
                             
-                            <div id="new_sender_fields" class="space-y-4 hidden">
+                            <div id="new_sender_fields" class="space-y-4">
                                 <div>
                                     <label for="sender_name" class="block text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 mb-1">Full Name</label>
-                                    <input type="text" id="sender_name" name="sender_name" class="w-full rounded-2xl border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all py-3 font-medium text-gray-800" placeholder="e.g. Aung Aung">
+                                    <input type="text" id="sender_name" name="sender_name" class="w-full rounded-2xl border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all py-3 font-medium text-gray-800 capitalize" placeholder="e.g. Aung Aung">
                                 </div>
                                 <div>
                                     <label for="sender_phone" class="block text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 mb-1">Phone Number</label>
-                                    <input type="text" id="sender_phone" name="sender_phone" class="w-full rounded-2xl border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all py-3 font-medium text-gray-800" placeholder="09xxxxxxxxx">
+                                    <input type="tel" id="sender_phone" name="sender_phone" class="w-full rounded-2xl border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all py-3 font-medium text-gray-800" placeholder="09xxxxxxxxx">
                                 </div>
                             </div>
                         </div>
@@ -292,31 +292,31 @@ include_template('header', ['page' => 'voucher_create']);
                                 Receiver Details
                             </h3>
                             
-                            <!-- Custom Toggle -->
+                            <!-- Custom Toggle (Default: New) -->
                             <div class="flex items-center gap-6 mb-6 p-1.5 bg-gray-100 rounded-xl inline-flex">
                                 <label class="cursor-pointer relative flex-1 text-center">
-                                    <input type="radio" name="receiver_type" value="existing" checked class="peer sr-only">
+                                    <input type="radio" name="receiver_type" value="existing" class="peer sr-only">
                                     <div class="px-4 py-2 rounded-lg text-sm font-bold text-gray-500 peer-checked:bg-white peer-checked:text-emerald-600 peer-checked:shadow-sm transition-all">Existing</div>
                                 </label>
                                 <label class="cursor-pointer relative flex-1 text-center">
-                                    <input type="radio" name="receiver_type" value="new" class="peer sr-only">
+                                    <input type="radio" name="receiver_type" value="new" checked class="peer sr-only">
                                     <div class="px-4 py-2 rounded-lg text-sm font-bold text-gray-500 peer-checked:bg-white peer-checked:text-emerald-600 peer-checked:shadow-sm transition-all">New</div>
                                 </label>
                             </div>
 
-                            <div id="existing_receiver_fields" class="space-y-4">
+                            <div id="existing_receiver_fields" class="space-y-4 hidden">
                                 <label for="receiver_customer_id" class="block text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Search Database</label>
                                 <select id="receiver_customer_id" name="receiver_customer_id" class="customer-search w-full"></select>
                             </div>
 
-                            <div id="new_receiver_fields" class="space-y-4 hidden">
+                            <div id="new_receiver_fields" class="space-y-4">
                                 <div>
                                     <label for="receiver_name" class="block text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 mb-1">Full Name</label>
-                                    <input type="text" id="receiver_name" name="receiver_name" class="w-full rounded-2xl border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all py-3 font-medium text-gray-800" placeholder="e.g. Maung Maung">
+                                    <input type="text" id="receiver_name" name="receiver_name" class="w-full rounded-2xl border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all py-3 font-medium text-gray-800 capitalize" placeholder="e.g. Maung Maung">
                                 </div>
                                 <div>
                                     <label for="receiver_phone" class="block text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 mb-1">Phone Number</label>
-                                    <input type="text" id="receiver_phone" name="receiver_phone" class="w-full rounded-2xl border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all py-3 font-medium text-gray-800" placeholder="09xxxxxxxxx">
+                                    <input type="tel" id="receiver_phone" name="receiver_phone" class="w-full rounded-2xl border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all py-3 font-medium text-gray-800" placeholder="09xxxxxxxxx">
                                 </div>
                                 <div>
                                     <label for="receiver_address" class="block text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 mb-1">Delivery Address</label>
@@ -501,8 +501,9 @@ include_template('header', ['page' => 'voucher_create']);
                 $(`#new_${type}_fields :input`).prop('required', !isExisting);
                 $(`#${type}_customer_id`).prop('required', isExisting);
                 if (!isExisting) {
+                    // Just clear the select2 dropdown securely, but don't wipe typed fields 
+                    // in case the user clicked 'Existing' by mistake.
                     $(`#${type}_customer_id`).val(null).trigger('change');
-                    $(`#new_${type}_fields input, #new_${type}_fields textarea`).val('');
                 }
             }).change();
         }

@@ -1,16 +1,24 @@
 <?php
-// profit_loss.php
-// Admin-only page for calculating profits and expenses, now broken down by currency, daily, and monthly
+// pos/profit_loss.php
+// Admin & Developer page for calculating profits and expenses, broken down by currency, daily, and monthly
 
-include_template('header', ['page' => 'profit_loss']);
+require_once 'config.php';
+require_once 'includes/functions.php';
 
-if (!is_logged_in() || !is_admin()) {
-    flash_message('error', 'Access denied. You must be an ADMIN to view financial reports.');
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+// --- V3 Authorization Update: Admins AND Developers can access ---
+if (!is_logged_in() || (!is_admin() && !is_developer())) {
+    flash_message('error', 'Access denied. You must be an Administrator or Developer to view financial reports.');
     redirect('index.php?page=dashboard');
 }
 
-// Access the global $connection variable
 global $connection;
+
+// --- CRITICAL FIX FOR MYANMAR FONTS ---
+mysqli_set_charset($connection, "utf8mb4");
 
 // Initialize arrays to store income and expenses by currency
 $voucher_income_by_currency = [];
@@ -37,7 +45,7 @@ function fetch_financial_data($connection, $table, $amount_column, $date_column 
     $result = mysqli_query($connection, $query);
     if ($result) {
         while ($row = mysqli_fetch_assoc($result)) {
-            $currency = htmlspecialchars($row['currency']);
+            $currency = htmlspecialchars($row['currency'], ENT_QUOTES, 'UTF-8');
             $total_amount = (float)$row['total_amount'];
             if ($date_column) {
                 $report_date = $row['report_date'];
@@ -152,7 +160,7 @@ function process_monthly_query($connection, $query, &$target_array) {
     $result = mysqli_query($connection, $query);
     if ($result) {
         while ($row = mysqli_fetch_assoc($result)) {
-            $currency = htmlspecialchars($row['currency']);
+            $currency = htmlspecialchars($row['currency'], ENT_QUOTES, 'UTF-8');
             $report_month = $row['report_month'];
             $total_amount = (float)$row['total_amount'];
             $target_array[$currency][$report_month] = $total_amount;
@@ -235,204 +243,275 @@ foreach ($chart_labels_monthly as $month) {
     $chart_expenses_monthly[] = $monthly_total_expenses;
 }
 
+include_template('header', ['page' => 'profit_loss']);
 ?>
 
-<div class="bg-white p-8 rounded-lg shadow-xl w-full">
-    <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Profit & Loss Statement</h2>
+<!-- V3 Liquid UI Wrapper -->
+<div class="relative min-h-[85vh] bg-slate-50/30 p-4 sm:p-8 overflow-hidden font-sans">
+    
+    <!-- Ambient Background Glows -->
+    <div class="absolute top-[0%] left-[20%] w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="absolute bottom-[10%] right-[10%] w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none"></div>
 
-    <div class="mb-8">
-        <div class="flex border-b border-gray-200">
-            <button class="tab-button py-2 px-4 text-sm font-medium text-gray-600 focus:outline-none hover:text-indigo-600 active-tab" data-tab="currency">By Currency</button>
-            <button class="tab-button py-2 px-4 text-sm font-medium text-gray-600 focus:outline-none hover:text-indigo-600" data-tab="daily">Daily Summary</button>
-            <button class="tab-button py-2 px-4 text-sm font-medium text-gray-600 focus:outline-none hover:text-indigo-600" data-tab="monthly">Monthly Summary</button>
-            <button class="tab-button py-2 px-4 text-sm font-medium text-gray-600 focus:outline-none hover:text-indigo-600" data-tab="charts">Charts</button>
-        </div>
-
-        <div id="currency" class="tab-content mt-4 active">
-            <h3 class="text-2xl font-semibold text-gray-700 mb-4">Summary by Currency</h3>
-            <?php if (empty($financial_summary_by_currency)): ?>
-                <p class="text-center text-gray-600">No financial data available to display by currency.</p>
-            <?php else: ?>
-                <div class="overflow-x-auto rounded-lg shadow-md border border-gray-200 mb-8">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">Currency</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Voucher Income</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Other Income</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Revenue</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Expenses</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">Net Worth</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <?php foreach ($financial_summary_by_currency as $currency => $data): ?>
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap text-lg font-bold text-gray-900"><?php echo $currency; ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><?php echo number_format($data['voucher_income'], 2); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><?php echo number_format($data['other_income'], 2); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600"><?php echo number_format($data['total_revenue'], 2); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600"><?php echo number_format($data['expenses'], 2); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-lg font-bold <?php echo ($data['net_worth'] >= 0) ? 'text-green-600' : 'text-red-600'; ?>">
-                                        <?php echo number_format($data['net_worth'], 2); ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
-        </div>
-
-        <div id="daily" class="tab-content mt-4 hidden">
-            <h3 class="text-2xl font-semibold text-gray-700 mb-4">Daily Financial Summary</h3>
-            <?php if (empty($daily_financial_summary)): ?>
-                <p class="text-center text-gray-600">No daily financial data available to display.</p>
-            <?php else: ?>
-                <div class="overflow-x-auto rounded-lg shadow-md border border-gray-200 mb-8">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">Date</th>
-                                <?php foreach (array_keys($all_currencies) as $curr_code): ?>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo $curr_code; ?> (Net)</th>
-                                <?php endforeach; ?>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <?php foreach ($daily_financial_summary as $date => $currencies_data): ?>
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900"><?php echo htmlspecialchars($date); ?></td>
-                                    <?php foreach (array_keys($all_currencies) as $curr_code): ?>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm <?php echo (($currencies_data[$curr_code]['net_worth'] ?? 0) >= 0) ? 'text-green-600' : 'text-red-600'; ?>">
-                                            <?php echo number_format($currencies_data[$curr_code]['net_worth'] ?? 0, 2); ?>
-                                        </td>
-                                    <?php endforeach; ?>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
-        </div>
-
-        <div id="monthly" class="tab-content mt-4 hidden">
-            <h3 class="text-2xl font-semibold text-gray-700 mb-4">Monthly Financial Summary</h3>
-            <?php if (empty($monthly_financial_summary)): ?>
-                <p class="text-center text-gray-600">No monthly financial data available to display.</p>
-            <?php else: ?>
-                <div class="overflow-x-auto rounded-lg shadow-md border border-gray-200 mb-8">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">Month</th>
-                                <?php foreach (array_keys($all_currencies) as $curr_code): ?>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo $curr_code; ?> (Net)</th>
-                                <?php endforeach; ?>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <?php foreach ($monthly_financial_summary as $month => $currencies_data): ?>
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900"><?php echo htmlspecialchars($month); ?></td>
-                                    <?php foreach (array_keys($all_currencies) as $curr_code): ?>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm <?php echo (($currencies_data[$curr_code]['net_worth'] ?? 0) >= 0) ? 'text-green-600' : 'text-red-600'; ?>">
-                                            <?php echo number_format($currencies_data[$curr_code]['net_worth'] ?? 0, 2); ?>
-                                        </td>
-                                    <?php endforeach; ?>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
-        </div>
-
-        <div id="charts" class="tab-content mt-4 hidden">
-            <h3 class="text-2xl font-semibold text-gray-700 mb-4">Financial Charts</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                    <h4 class="text-xl font-medium text-gray-700 mb-2">Daily Net Worth Over Time (All Currencies Combined)</h4>
-                    <canvas id="dailyNetWorthChart"></canvas>
+    <div class="max-w-7xl mx-auto relative z-10">
+        
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-5 animate-fadeInDown">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30 text-white transform -rotate-3 hover:rotate-0 transition-transform duration-300 border border-emerald-400/20">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
                 <div>
-                    <h4 class="text-xl font-medium text-gray-700 mb-2">Monthly Net Worth Over Time (All Currencies Combined)</h4>
-                    <canvas id="monthlyNetWorthChart"></canvas>
-                </div>
-            </div>
-             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
-                <div>
-                    <h4 class="text-xl font-medium text-gray-700 mb-2">Daily Revenue vs. Expenses (All Currencies Combined)</h4>
-                    <canvas id="dailyRevenueExpensesChart"></canvas>
-                </div>
-                <div>
-                    <h4 class="text-xl font-medium text-gray-700 mb-2">Monthly Revenue vs. Expenses (All Currencies Combined)</h4>
-                    <canvas id="monthlyRevenueExpensesChart"></canvas>
+                    <h1 class="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent tracking-tight">Profit & Loss Ledger</h1>
+                    <p class="text-sm font-medium text-slate-500 mt-1">Comprehensive financial analytics and revenue tracking.</p>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="mt-8 text-center">
-        <a href="index.php?page=other_income" class="btn bg-green-600 hover:bg-green-700 px-6 py-2">Manage Other Income</a>
-        <a href="index.php?page=expenses" class="btn btn-blue px-6 py-2 ml-4">Manage Expenses</a>
-        <a href="index.php?page=admin_dashboard" class="btn bg-gray-700 hover:bg-gray-800 px-6 py-2 ml-4">Back to Admin Dashboard</a>
+        <div class="bg-white/80 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_8px_40px_rgb(0,0,0,0.04)] border border-white/60 p-6 sm:p-10 mb-8 animate-fadeInDown" style="animation-delay: 0.1s;">
+            
+            <!-- V3 Glassmorphism Tabs -->
+            <div class="flex flex-wrap gap-2 mb-8 bg-slate-100/50 p-1.5 rounded-2xl border border-slate-200/60 inline-flex">
+                <button class="tab-button py-2.5 px-6 text-sm font-bold text-slate-500 rounded-xl focus:outline-none transition-all duration-300 active-tab bg-white text-indigo-600 shadow-sm border border-slate-100" data-tab="currency">By Currency</button>
+                <button class="tab-button py-2.5 px-6 text-sm font-bold text-slate-500 rounded-xl focus:outline-none transition-all duration-300 hover:text-indigo-500 hover:bg-white/50" data-tab="daily">Daily Summary</button>
+                <button class="tab-button py-2.5 px-6 text-sm font-bold text-slate-500 rounded-xl focus:outline-none transition-all duration-300 hover:text-indigo-500 hover:bg-white/50" data-tab="monthly">Monthly Summary</button>
+                <button class="tab-button py-2.5 px-6 text-sm font-bold text-slate-500 rounded-xl focus:outline-none transition-all duration-300 hover:text-indigo-500 hover:bg-white/50" data-tab="charts">Visual Charts</button>
+            </div>
+
+            <!-- TAB 1: CURRENCY -->
+            <div id="currency" class="tab-content block">
+                <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Summary by Currency
+                </h3>
+                <?php if (empty($financial_summary_by_currency)): ?>
+                    <div class="text-center py-12 bg-slate-50/50 rounded-2xl border border-slate-100 text-slate-400 font-medium">No financial data available to display by currency.</div>
+                <?php else: ?>
+                    <div class="overflow-x-auto w-full custom-scrollbar rounded-2xl border border-slate-100 shadow-sm bg-white">
+                        <table class="min-w-full text-left border-collapse whitespace-nowrap">
+                            <thead class="bg-slate-50/80 border-b border-slate-100">
+                                <tr>
+                                    <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest">Currency</th>
+                                    <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest text-right">Voucher Income</th>
+                                    <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest text-right">Other Income</th>
+                                    <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest text-right">Total Revenue</th>
+                                    <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest text-right">Total Expenses</th>
+                                    <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest text-right">Net Worth</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100/60">
+                                <?php foreach ($financial_summary_by_currency as $currency => $data): ?>
+                                    <tr class="hover:bg-slate-50/50 transition-colors duration-200">
+                                        <td class="py-4 px-6">
+                                            <span class="inline-flex items-center gap-1.5 font-mono text-sm font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+                                                <?= $currency; ?>
+                                            </span>
+                                        </td>
+                                        <td class="py-4 px-6 text-right font-medium text-slate-600"><?= number_format($data['voucher_income'], 2); ?></td>
+                                        <td class="py-4 px-6 text-right font-medium text-slate-600"><?= number_format($data['other_income'], 2); ?></td>
+                                        <td class="py-4 px-6 text-right font-extrabold text-indigo-600 bg-indigo-50/30"><?= number_format($data['total_revenue'], 2); ?></td>
+                                        <td class="py-4 px-6 text-right font-extrabold text-rose-500 bg-rose-50/30"><?= number_format($data['expenses'], 2); ?></td>
+                                        <td class="py-4 px-6 text-right font-extrabold text-lg <?= ($data['net_worth'] >= 0) ? 'text-emerald-600 bg-emerald-50/30' : 'text-red-600 bg-red-50/30'; ?>">
+                                            <?= number_format($data['net_worth'], 2); ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- TAB 2: DAILY -->
+            <div id="daily" class="tab-content hidden">
+                <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-blue-500"></span> Daily Financial Summary
+                </h3>
+                <?php if (empty($daily_financial_summary)): ?>
+                    <div class="text-center py-12 bg-slate-50/50 rounded-2xl border border-slate-100 text-slate-400 font-medium">No daily financial data available to display.</div>
+                <?php else: ?>
+                    <div class="overflow-x-auto w-full custom-scrollbar rounded-2xl border border-slate-100 shadow-sm bg-white">
+                        <table class="min-w-full text-left border-collapse whitespace-nowrap">
+                            <thead class="bg-slate-50/80 border-b border-slate-100">
+                                <tr>
+                                    <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest">Date</th>
+                                    <?php foreach (array_keys($all_currencies) as $curr_code): ?>
+                                        <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest text-right"><?= $curr_code; ?> (Net)</th>
+                                    <?php endforeach; ?>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100/60">
+                                <?php foreach ($daily_financial_summary as $date => $currencies_data): ?>
+                                    <tr class="hover:bg-slate-50/50 transition-colors duration-200">
+                                        <td class="py-4 px-6 font-bold text-slate-800"><?= htmlspecialchars($date); ?></td>
+                                        <?php foreach (array_keys($all_currencies) as $curr_code): 
+                                            $net = $currencies_data[$curr_code]['net_worth'] ?? 0;
+                                        ?>
+                                            <td class="py-4 px-6 text-right font-extrabold <?= $net >= 0 ? 'text-emerald-600' : 'text-red-500'; ?>">
+                                                <?= number_format($net, 2); ?>
+                                            </td>
+                                        <?php endforeach; ?>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- TAB 3: MONTHLY -->
+            <div id="monthly" class="tab-content hidden">
+                <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-purple-500"></span> Monthly Financial Summary
+                </h3>
+                <?php if (empty($monthly_financial_summary)): ?>
+                    <div class="text-center py-12 bg-slate-50/50 rounded-2xl border border-slate-100 text-slate-400 font-medium">No monthly financial data available to display.</div>
+                <?php else: ?>
+                    <div class="overflow-x-auto w-full custom-scrollbar rounded-2xl border border-slate-100 shadow-sm bg-white">
+                        <table class="min-w-full text-left border-collapse whitespace-nowrap">
+                            <thead class="bg-slate-50/80 border-b border-slate-100">
+                                <tr>
+                                    <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest">Month</th>
+                                    <?php foreach (array_keys($all_currencies) as $curr_code): ?>
+                                        <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest text-right"><?= $curr_code; ?> (Net)</th>
+                                    <?php endforeach; ?>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100/60">
+                                <?php foreach ($monthly_financial_summary as $month => $currencies_data): ?>
+                                    <tr class="hover:bg-slate-50/50 transition-colors duration-200">
+                                        <td class="py-4 px-6 font-bold text-slate-800"><?= htmlspecialchars($month); ?></td>
+                                        <?php foreach (array_keys($all_currencies) as $curr_code): 
+                                            $net = $currencies_data[$curr_code]['net_worth'] ?? 0;
+                                        ?>
+                                            <td class="py-4 px-6 text-right font-extrabold <?= $net >= 0 ? 'text-emerald-600' : 'text-red-500'; ?>">
+                                                <?= number_format($net, 2); ?>
+                                            </td>
+                                        <?php endforeach; ?>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- TAB 4: CHARTS -->
+            <div id="charts" class="tab-content hidden">
+                <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-cyan-500"></span> Visual Financial Charts
+                </h3>
+                
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                    <!-- Daily Net Worth -->
+                    <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+                        <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Daily Net Worth (Combined)</h4>
+                        <div class="relative h-64 w-full">
+                            <canvas id="dailyNetWorthChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Monthly Net Worth -->
+                    <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+                        <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Monthly Net Worth (Combined)</h4>
+                        <div class="relative h-64 w-full">
+                            <canvas id="monthlyNetWorthChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Daily Rev vs Exp -->
+                    <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+                        <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Daily Revenue vs. Expenses</h4>
+                        <div class="relative h-64 w-full">
+                            <canvas id="dailyRevenueExpensesChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Monthly Rev vs Exp -->
+                    <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+                        <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Monthly Revenue vs. Expenses</h4>
+                        <div class="relative h-64 w-full">
+                            <canvas id="monthlyRevenueExpensesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- External Quick Actions -->
+        <div class="flex flex-wrap justify-center gap-4 animate-fadeInDown" style="animation-delay: 0.2s;">
+            <a href="index.php?page=other_income" class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-3 px-8 rounded-2xl font-bold hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all transform hover:-translate-y-1">
+                Manage Other Income
+            </a>
+            <a href="index.php?page=expenses" class="bg-gradient-to-r from-rose-500 to-red-600 text-white py-3 px-8 rounded-2xl font-bold hover:shadow-[0_0_20px_rgba(244,63,94,0.3)] transition-all transform hover:-translate-y-1">
+                Manage Expenses
+            </a>
+            <?php if (is_admin()): ?>
+            <a href="index.php?page=admin_dashboard" class="bg-white border border-slate-200 text-slate-700 py-3 px-8 rounded-2xl font-bold hover:bg-slate-50 hover:shadow-md transition-all transform hover:-translate-y-1">
+                Back to Admin Dashboard
+            </a>
+            <?php endif; ?>
+        </div>
+
     </div>
 </div>
+
+<style>
+    /* Custom Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(203, 213, 225, 0.6); border-radius: 999px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.8); }
+
+    /* Animations */
+    @keyframes fadeInDown {
+        from { opacity: 0; transform: translateY(-15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeInDown {
+        animation: fadeInDown 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        opacity: 0;
+    }
+</style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Tab switching logic
+        // Tab switching logic (V3 Styled)
         const tabButtons = document.querySelectorAll('.tab-button');
         const tabContents = document.querySelectorAll('.tab-content');
 
         tabButtons.forEach(button => {
             button.addEventListener('click', () => {
-                tabButtons.forEach(btn => btn.classList.remove('active-tab'));
-                tabContents.forEach(content => content.classList.add('hidden'));
-
-                button.classList.add('active-tab');
-                const targetTab = button.dataset.tab;
-                document.getElementById(targetTab).classList.remove('hidden');
-
-                // Re-render charts when the charts tab is activated
-                if (targetTab === 'charts') {
-                    renderCharts();
-                }
-            });
-        });
-
-        // Initialize active tab style
-        const activeTabButton = document.querySelector('.tab-button.active-tab');
-        if (activeTabButton) {
-            activeTabButton.style.borderBottom = '2px solid #4F46E5'; // Example indigo-600
-            activeTabButton.style.color = '#4F46E5';
-        }
-
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
+                // Reset all buttons
                 tabButtons.forEach(btn => {
-                    btn.classList.remove('active-tab');
-                    btn.style.borderBottom = 'none';
-                    btn.style.color = '#4B5563'; // gray-600
+                    btn.classList.remove('active-tab', 'bg-white', 'text-indigo-600', 'shadow-sm', 'border-slate-100');
+                    btn.classList.add('hover:text-indigo-500', 'hover:bg-white/50');
+                    btn.style.border = '1px solid transparent';
                 });
 
-                button.classList.add('active-tab');
-                button.style.borderBottom = '2px solid #4F46E5'; // indigo-600
-                button.style.color = '#4F46E5';
+                // Hide all content
+                tabContents.forEach(content => {
+                    content.classList.remove('block');
+                    content.classList.add('hidden');
+                });
 
-                tabContents.forEach(content => content.classList.add('hidden'));
+                // Activate clicked button
+                button.classList.add('active-tab', 'bg-white', 'text-indigo-600', 'shadow-sm');
+                button.classList.remove('hover:text-indigo-500', 'hover:bg-white/50');
+                button.style.border = '1px solid #f1f5f9';
+
+                // Show targeted content
                 const targetTab = button.dataset.tab;
                 document.getElementById(targetTab).classList.remove('hidden');
+                document.getElementById(targetTab).classList.add('block');
 
+                // Re-render charts to fix canvas sizing bugs inside hidden divs
                 if (targetTab === 'charts') {
                     renderCharts();
                 }
             });
         });
-
 
         // Chart Data from PHP
         const dailyLabels = <?php echo json_encode($chart_labels_daily); ?>;
@@ -445,151 +524,138 @@ foreach ($chart_labels_monthly as $month) {
         const monthlyRevenueData = <?php echo json_encode($chart_total_revenue_monthly); ?>;
         const monthlyExpensesData = <?php echo json_encode($chart_expenses_monthly); ?>;
 
-        // Function to render charts
+        let chartsRendered = false;
+        const chartInstances = [];
+
+        // Function to render charts with V3 Aesthetics
         function renderCharts() {
-            // Daily Net Worth Chart
-            new Chart(document.getElementById('dailyNetWorthChart'), {
+            if (chartsRendered) return; // Prevent creating multiple instances
+            chartsRendered = true;
+
+            // Global Chart config for sleeker look
+            Chart.defaults.font.family = "'Inter', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif";
+            Chart.defaults.color = '#94a3b8'; // slate-400
+            
+            const gridOptions = {
+                color: '#f1f5f9', // slate-100
+                drawBorder: false,
+            };
+
+            // Daily Net Worth Chart (Line)
+            chartInstances.push(new Chart(document.getElementById('dailyNetWorthChart'), {
                 type: 'line',
                 data: {
                     labels: dailyLabels,
                     datasets: [{
-                        label: 'Daily Net Worth',
+                        label: 'Net Worth',
                         data: dailyNetWorthData,
-                        borderColor: 'rgb(75, 192, 192)',
-                        tension: 0.1,
-                        fill: false
+                        borderColor: '#10b981', // emerald-500
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4, // Smooth curves
+                        fill: true,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#10b981',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
                     }]
                 },
                 options: {
                     responsive: true,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Daily Net Worth'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: false
-                        }
-                    }
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { grid: { display: false } }, y: { grid: gridOptions } }
                 }
-            });
+            }));
 
-            // Monthly Net Worth Chart
-            new Chart(document.getElementById('monthlyNetWorthChart'), {
+            // Monthly Net Worth Chart (Line)
+            chartInstances.push(new Chart(document.getElementById('monthlyNetWorthChart'), {
                 type: 'line',
                 data: {
                     labels: monthlyLabels,
                     datasets: [{
-                        label: 'Monthly Net Worth',
+                        label: 'Net Worth',
                         data: monthlyNetWorthData,
-                        borderColor: 'rgb(153, 102, 255)',
-                        tension: 0.1,
-                        fill: false
+                        borderColor: '#8b5cf6', // violet-500
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#8b5cf6',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
                     }]
                 },
                 options: {
                     responsive: true,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Monthly Net Worth'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: false
-                        }
-                    }
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { grid: { display: false } }, y: { grid: gridOptions } }
                 }
-            });
+            }));
 
-            // Daily Revenue vs Expenses Chart
-            new Chart(document.getElementById('dailyRevenueExpensesChart'), {
+            // Daily Revenue vs Expenses Chart (Bar)
+            chartInstances.push(new Chart(document.getElementById('dailyRevenueExpensesChart'), {
                 type: 'bar',
                 data: {
                     labels: dailyLabels,
                     datasets: [
                         {
-                            label: 'Daily Total Revenue',
+                            label: 'Revenue',
                             data: dailyRevenueData,
-                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            backgroundColor: '#4f46e5', // indigo-600
+                            borderRadius: 6,
                         },
                         {
-                            label: 'Daily Total Expenses',
+                            label: 'Expenses',
                             data: dailyExpensesData,
-                            backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                            backgroundColor: '#f43f5e', // rose-500
+                            borderRadius: 6,
                         }
                     ]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
-                        title: {
-                            display: true,
-                            text: 'Daily Revenue vs. Expenses'
-                        }
+                        legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } }
                     },
-                    scales: {
-                        x: {
-                            stacked: false,
-                        },
-                        y: {
-                            stacked: false,
-                            beginAtZero: true
-                        }
-                    }
+                    scales: { x: { grid: { display: false } }, y: { grid: gridOptions } }
                 }
-            });
+            }));
 
-            // Monthly Revenue vs Expenses Chart
-            new Chart(document.getElementById('monthlyRevenueExpensesChart'), {
+            // Monthly Revenue vs Expenses Chart (Bar)
+            chartInstances.push(new Chart(document.getElementById('monthlyRevenueExpensesChart'), {
                 type: 'bar',
                 data: {
                     labels: monthlyLabels,
                     datasets: [
                         {
-                            label: 'Monthly Total Revenue',
+                            label: 'Revenue',
                             data: monthlyRevenueData,
-                            backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                            backgroundColor: '#0ea5e9', // sky-500
+                            borderRadius: 6,
                         },
                         {
-                            label: 'Monthly Total Expenses',
+                            label: 'Expenses',
                             data: monthlyExpensesData,
-                            backgroundColor: 'rgba(255, 159, 64, 0.6)',
+                            backgroundColor: '#f59e0b', // amber-500
+                            borderRadius: 6,
                         }
                     ]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
-                        title: {
-                            display: true,
-                            text: 'Monthly Revenue vs. Expenses'
-                        }
+                        legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } }
                     },
-                    scales: {
-                        x: {
-                            stacked: false,
-                        },
-                        y: {
-                            stacked: false,
-                            beginAtZero: true
-                        }
-                    }
+                    scales: { x: { grid: { display: false } }, y: { grid: gridOptions } }
                 }
-            });
+            }));
         }
     });
 </script>
-
-<style>
-    /* Basic styling for tabs, assuming Tailwind CSS is available */
-    .tab-button.active-tab {
-        border-bottom: 2px solid #4F46E5; /* Tailwind indigo-600 */
-        color: #4F46E5; /* Tailwind indigo-600 */
-    }
-</style>
 
 <?php include_template('footer'); ?>

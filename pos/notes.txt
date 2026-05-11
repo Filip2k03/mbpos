@@ -1,2 +1,2 @@
-mail = noreplay@gmail.com
+mail = noreplay@mbpos.onine
 password = mbposV32026

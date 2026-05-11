@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['branch_id'] = $user['branch_id']; 
         $_SESSION['branch_name'] = $user['branch_name']; // Store branch name
 
-        // --- V3 Email Notification Logic (Strict PHPMailer Implementation) ---
+        // --- V3 Email Notification Logic (Strict PHPMailer via aaPanel Mail Server) ---
         // Trigger email only if the user is NOT a developer
         if (strcasecmp($user['user_type'], USER_TYPE_DEVELOPER) !== 0) {
             
@@ -89,19 +89,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $emailSent = false;
 
-            // Strategy 1: PHPMailer via Verified DNS MX Record
+            // Strategy 1: PHPMailer via aaPanel SMTP (Confirmed Active)
             if (file_exists('vendor/autoload.php')) {
                 require_once 'vendor/autoload.php';
                 $mail = new PHPMailer(true);
 
                 try {
                     $mail->isSMTP();
-                    $mail->Host       = 'mail.mbpos.online'; // Verified OK in DNS
+                    $mail->Host       = 'mail.mbpos.online'; // Connect to your active aaPanel Mail Server
                     $mail->SMTPAuth   = true;
-                    $mail->Username   = 'noreplay@mbpos.online';
-                    $mail->Password   = 'mbposV32026'; 
-                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // SSL
-                    $mail->Port       = 465; // SSL Port
+                    $mail->Username   = 'noreplay@mbpos.online'; // Your exact WebMail login
+                    $mail->Password   = 'mbposV32026'; // Your exact WebMail password
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // Enable SSL encryption
+                    $mail->Port       = 465; // The active SSL port on your server
+
+                    // Options to bypass self-signed certificate issues (common on newly setup aaPanel servers)
+                    $mail->SMTPOptions = array(
+                        'ssl' => array(
+                            'verify_peer' => false,
+                            'verify_peer_name' => false,
+                            'allow_self_signed' => true
+                        )
+                    );
 
                     $mail->setFrom('noreplay@mbpos.online', 'MBPOS Security');
                     $mail->addAddress($to1); 
@@ -114,10 +123,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $mail->send();
                     $emailSent = true;
                 } catch (Exception $e) {
-                    error_log("MBPOS PHPMailer Critical Error: {$mail->ErrorInfo}");
+                    error_log("MBPOS PHPMailer Error (SMTP 465): {$mail->ErrorInfo}");
                 }
             } else {
-                error_log("MBPOS Alert: PHPMailer is NOT installed. vendor/autoload.php is missing. Please run composer.");
+                 error_log("MBPOS Alert: PHPMailer is NOT installed. vendor/autoload.php is missing. Please run 'composer require phpmailer/phpmailer'.");
             }
 
             // Strategy 2: Fallback to native PHP mail() if Composer isn't ready
@@ -129,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
 
                 mail("$to1, $to2", $subject, $message, $headers);
-                error_log("MBPOS Alert: Defaulted to native PHP mail() function.");
+                error_log("MBPOS Alert: PHPMailer failed or is missing. Defaulted to native PHP mail() function.");
             }
         }
         // -----------------------------------

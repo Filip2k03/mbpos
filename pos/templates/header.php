@@ -138,7 +138,7 @@ if (is_logged_in()) {
             100% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0); }
         }
 
-        /* V3 Loader */
+        /* V3 Loader - Logistics Edition */
         .ship-loader {
             position: fixed;
             inset: 0;
@@ -157,14 +157,51 @@ if (is_logged_in()) {
             visibility: hidden;
             pointer-events: none;
         }
+        
+        .truck-svg {
+            width: 140px;
+            height: auto;
+            animation: drive 3s ease-in-out infinite;
+            filter: drop-shadow(0 10px 15px rgba(99, 102, 241, 0.3));
+        }
+
+        /* Truck Animations */
+        .wheel {
+            animation: spin 1s linear infinite;
+            transform-origin: center;
+            transform-box: fill-box;
+        }
+        .exhaust {
+            animation: puff 1s ease-out infinite;
+            opacity: 0;
+        }
+        .exhaust-2 { animation-delay: 0.3s; }
+        .exhaust-3 { animation-delay: 0.6s; }
+
+        @keyframes drive {
+            0%   { transform: translateY(0) rotate(0deg); }
+            25%  { transform: translateY(-4px) rotate(-1deg); }
+            50%  { transform: translateY(0) rotate(0deg); }
+            75%  { transform: translateY(-2px) rotate(1deg); }
+            100% { transform: translateY(0) rotate(0deg); }
+        }
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes puff {
+            0% { opacity: 0; transform: translate(0, 0) scale(0.5); }
+            50% { opacity: 0.6; transform: translate(-10px, -5px) scale(1); }
+            100% { opacity: 0; transform: translate(-20px, -10px) scale(1.5); }
+        }
+
         .mb-logo-loader {
             font-size: 28px;
             font-weight: 900;
             background: linear-gradient(to right, #2563eb, #7c3aed);
             -webkit-background-clip: text;
             color: transparent;
-            margin-top: 15px;
-            letter-spacing: 2px;
+            margin-top: 20px;
+            letter-spacing: 3px;
         }
         .progress-bar-v3 {
             width: 240px;
@@ -189,14 +226,6 @@ if (is_logged_in()) {
             from { background-position: 200% 0; }
             to   { background-position: -200% 0; }
         }
-        .ship-svg {
-            animation: float 3s ease-in-out infinite;
-            filter: drop-shadow(0 10px 15px rgba(99, 102, 241, 0.2));
-        }
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50%      { transform: translateY(-12px); }
-        }
         
         /* Mobile Nav Active Item */
         .mobile-nav-item.active {
@@ -218,11 +247,54 @@ if (is_logged_in()) {
 </head>
 <body class="bg-gray-50/50 text-gray-800 antialiased font-sans">
 
-<!-- V3 Liquid Loader -->
+<!-- V3 Logistics Loader -->
 <div class="ship-loader" id="shipLoader">
-    <svg class="ship-svg text-indigo-600" width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+    <!-- Custom Animated Logistics Truck SVG -->
+    <svg class="truck-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">
+        <!-- Exhaust puffs -->
+        <circle class="exhaust exhaust-1" cx="15" cy="45" r="3" fill="#cbd5e1"/>
+        <circle class="exhaust exhaust-2" cx="10" cy="40" r="4" fill="#cbd5e1"/>
+        <circle class="exhaust exhaust-3" cx="5" cy="35" r="5" fill="#cbd5e1"/>
+        
+        <!-- Main Body / Cargo Area (Gradient) -->
+        <defs>
+            <linearGradient id="cargoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#4f46e5"/>
+                <stop offset="100%" stop-color="#7c3aed"/>
+            </linearGradient>
+            <linearGradient id="cabGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#3b82f6"/>
+                <stop offset="100%" stop-color="#2563eb"/>
+            </linearGradient>
+        </defs>
+        
+        <path d="M20 20 h 55 v 30 h -55 z" fill="url(#cargoGradient)" rx="4" />
+        
+        <!-- MBPOS text on cargo -->
+        <text x="35" y="40" fill="white" font-family="Arial" font-weight="900" font-size="12" letter-spacing="1">MBPOS</text>
+        
+        <!-- Truck Cabin -->
+        <path d="M 75 25 h 15 l 10 10 v 15 h -25 z" fill="url(#cabGradient)" />
+        
+        <!-- Window -->
+        <path d="M 78 28 h 10 l 6 6 v 5 h -16 z" fill="#e0f2fe" />
+        
+        <!-- Wheels -->
+        <g class="wheel">
+            <circle cx="35" cy="55" r="8" fill="#1e293b"/>
+            <circle cx="35" cy="55" r="4" fill="#94a3b8"/>
+            <circle cx="35" cy="55" r="2" fill="#ffffff"/>
+        </g>
+        <g class="wheel">
+            <circle cx="85" cy="55" r="8" fill="#1e293b"/>
+            <circle cx="85" cy="55" r="4" fill="#94a3b8"/>
+            <circle cx="85" cy="55" r="2" fill="#ffffff"/>
+        </g>
+        
+        <!-- Headlight -->
+        <path d="M 98 42 h 4 v 4 h -4 z" fill="#fbbf24" />
     </svg>
+
     <div class="mb-logo-loader">MBLOGISTICS</div>
     <div class="progress-bar-v3"><div class="progress-v3" id="loaderProgress"></div></div>
 </div>
@@ -248,7 +320,7 @@ if (is_logged_in()) {
                     
                     <?php if ($is_user_admin || $is_user_developer): ?>
                         <div class="relative group">
-                            <button class="nav-link px-4 py-2 text-gray-600 hover:text-indigo-600 font-bold text-sm rounded-lg flex items-center gap-1 <?= in_array($current_page, ['admin_dashboard', 'developer_dashboard', 'branches']) ? 'active text-indigo-600' : '' ?>">
+                            <button class="nav-link px-4 py-2 text-gray-600 hover:text-indigo-600 font-bold text-sm rounded-lg flex items-center gap-1 <?= in_array($current_page, ['admin_dashboard', 'developer_dashboard', 'branches', 'register']) ? 'active text-indigo-600' : '' ?>">
                                 Admin Tools
                                 <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                             </button>
@@ -257,6 +329,10 @@ if (is_logged_in()) {
                                 <a href="index.php?page=admin_dashboard" class="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-gray-600 hover:text-indigo-600 hover:bg-indigo-50/50 transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                                     Admin Dashboard
+                                </a>
+                                <a href="index.php?page=register" class="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-gray-600 hover:text-indigo-600 hover:bg-indigo-50/50 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                    User Management
                                 </a>
                                 <?php if ($is_user_developer): ?>
                                 <a href="index.php?page=developer_dashboard" class="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-gray-600 hover:text-indigo-600 hover:bg-indigo-50/50 transition-colors">

@@ -64,7 +64,7 @@ try {
 }
 
 // Set up the base URL for the QR code
-$base_url = "https://qr.mblogistics.express/index.php?page=customer_voucher_view&id=";
+$base_url = "https://qr.mbpos.online/index.php?page=customer_voucher_view&id=";
 $qr_data = $base_url . urlencode($voucher_data['id'] ?? '');
 
 ?>

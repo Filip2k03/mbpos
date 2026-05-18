@@ -86,37 +86,51 @@ include_template('header', ['page' => 'dashboard']);
         <!-- NEW: Global Regional Sequence Trackers (Digital/Analog Display) -->
         <section class="mb-10 animate-fadeInDown" style="animation-delay: 0.15s;">
             <div class="bg-white/80 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_40px_rgb(0,0,0,0.04)] border border-white/60 p-6 sm:p-8">
-                <div class="flex items-center justify-between mb-6">
+                
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
                     <h2 class="text-xl font-bold text-gray-800 flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center shadow-inner">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                         </div>
                         Live Regional Sequence Sync
                     </h2>
-                    <span class="bg-slate-900 text-cyan-400 py-1 px-3 rounded-full text-[10px] font-bold tracking-widest border border-slate-700 shadow-sm uppercase flex items-center gap-1.5">
-                        <div class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></div>
-                        Digital Tracker
-                    </span>
+                    
+                    <div class="flex items-center gap-3">
+                        <!-- Live Device Clock -->
+                        <div class="bg-[#0f172a] border border-slate-700 px-4 py-2.5 rounded-xl shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] flex items-center gap-2">
+                            <svg class="w-4 h-4 text-cyan-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span id="digital-clock" class="font-mono text-sm font-bold text-cyan-400 tracking-widest drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">00:00:00 AM</span>
+                        </div>
+                        <!-- Live Sync Badge -->
+                        <span class="hidden md:flex bg-slate-900 text-emerald-400 py-2.5 px-4 rounded-xl text-[10px] font-bold tracking-widest border border-slate-700 shadow-sm uppercase items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></div>
+                            Syncing
+                        </span>
+                    </div>
                 </div>
 
                 <!-- Digital LED Displays -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
                     <?php foreach ($region_sequences as $reg): ?>
-                        <div class="bg-[#0f172a] rounded-2xl p-4 border border-slate-800 shadow-[inset_0_4px_20px_rgba(0,0,0,0.5)] relative overflow-hidden group">
-                            <!-- Ambient LED Glow -->
-                            <div class="absolute -top-4 -right-4 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/30 transition-colors duration-500"></div>
+                        <div class="bg-[#0f172a] rounded-2xl p-4 border border-slate-800 shadow-[inset_0_4px_20px_rgba(0,0,0,0.5)] relative overflow-hidden group flex flex-col items-center justify-center text-center">
                             
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 truncate relative z-10">
+                            <!-- Ambient LED Glows -->
+                            <div class="absolute -top-4 -right-4 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/30 transition-colors duration-500 pointer-events-none"></div>
+                            <div class="absolute -bottom-4 -left-4 w-16 h-16 bg-cyan-500/10 rounded-full blur-xl group-hover:bg-cyan-500/30 transition-colors duration-500 pointer-events-none"></div>
+                            
+                            <!-- Region Name -->
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 w-full truncate border-b border-slate-800 pb-2 relative z-10">
                                 <?= htmlspecialchars($reg['region_name']) ?>
                             </p>
                             
-                            <div class="flex items-end gap-1.5 relative z-10">
-                                <span class="text-xs font-black text-cyan-400 bg-cyan-400/10 px-1.5 py-0.5 rounded border border-cyan-400/20">
+                            <!-- Vertical Stack: Prefix (Top) -> Sequence (Bottom) -->
+                            <div class="flex flex-col items-center gap-1.5 relative z-10 w-full">
+                                <span class="text-[11px] font-black text-cyan-400 bg-cyan-400/10 px-2 py-0.5 rounded border border-cyan-400/20 tracking-widest shadow-[0_0_10px_rgba(34,211,238,0.2)]">
                                     <?= htmlspecialchars($reg['prefix']) ?>
                                 </span>
-                                <!-- Digital Monospace Counter -->
-                                <div class="font-mono text-xl sm:text-2xl font-bold text-emerald-400 tracking-wider drop-shadow-[0_0_8px_rgba(52,211,153,0.6)] leading-none">
-                                    <?= sprintf('%05d', $reg['current_sequence']) ?>
+                                <!-- Digital Monospace Counter (6 Digits) -->
+                                <div class="font-mono text-2xl sm:text-3xl font-bold text-emerald-400 tracking-widest drop-shadow-[0_0_12px_rgba(52,211,153,0.8)] leading-none mt-1 group-hover:text-emerald-300 transition-colors">
+                                    <?= sprintf('%06d', $reg['current_sequence']) ?>
                                 </div>
                             </div>
                         </div>
@@ -368,6 +382,31 @@ include_template('header', ['page' => 'dashboard']);
   document.addEventListener('keydown', e => { 
       if (e.key === 'Escape' && !contactModal.classList.contains('hidden')) hideModal(); 
   });
+
+  // Digital Clock Logic
+  function updateDigitalClock() {
+      const now = new Date();
+      let hours = now.getHours();
+      let minutes = now.getMinutes();
+      let seconds = now.getSeconds();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      
+      hours = hours % 12;
+      hours = hours ? hours : 12; // the hour '0' should be '12'
+      
+      hours = hours < 10 ? '0' + hours : hours;
+      minutes = minutes < 10 ? '0' + minutes : minutes;
+      seconds = seconds < 10 ? '0' + seconds : seconds;
+      
+      const clockElement = document.getElementById('digital-clock');
+      if (clockElement) {
+          clockElement.textContent = hours + ':' + minutes + ':' + seconds + ' ' + ampm;
+      }
+  }
+  
+  // Initialize and tick clock
+  updateDigitalClock();
+  setInterval(updateDigitalClock, 1000);
 </script>
 
 <?php

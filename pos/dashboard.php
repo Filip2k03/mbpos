@@ -42,6 +42,16 @@ if ($result) {
 }
 mysqli_stmt_close($stmt);
 
+// --- Fetch Regional Sequence Trackers (Digital Show) ---
+$region_sequences = [];
+$seq_query = "SELECT region_name, prefix, current_sequence FROM regions ORDER BY current_sequence DESC";
+$seq_result = mysqli_query($connection, $seq_query);
+if ($seq_result) {
+    while ($row = mysqli_fetch_assoc($seq_result)) {
+        $region_sequences[] = $row;
+    }
+}
+
 include_template('header', ['page' => 'dashboard']);
 ?>
 
@@ -71,6 +81,48 @@ include_template('header', ['page' => 'dashboard']);
         <!-- Quick Actions Module (Injected V3 Template) -->
         <section class="mb-10 animate-fadeInDown" style="animation-delay: 0.1s;">
             <?php include_template('dashboard_actions'); ?>
+        </section>
+
+        <!-- NEW: Global Regional Sequence Trackers (Digital/Analog Display) -->
+        <section class="mb-10 animate-fadeInDown" style="animation-delay: 0.15s;">
+            <div class="bg-white/80 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_40px_rgb(0,0,0,0.04)] border border-white/60 p-6 sm:p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-gray-800 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center shadow-inner">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        </div>
+                        Live Regional Sequence Sync
+                    </h2>
+                    <span class="bg-slate-900 text-cyan-400 py-1 px-3 rounded-full text-[10px] font-bold tracking-widest border border-slate-700 shadow-sm uppercase flex items-center gap-1.5">
+                        <div class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></div>
+                        Digital Tracker
+                    </span>
+                </div>
+
+                <!-- Digital LED Displays -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
+                    <?php foreach ($region_sequences as $reg): ?>
+                        <div class="bg-[#0f172a] rounded-2xl p-4 border border-slate-800 shadow-[inset_0_4px_20px_rgba(0,0,0,0.5)] relative overflow-hidden group">
+                            <!-- Ambient LED Glow -->
+                            <div class="absolute -top-4 -right-4 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/30 transition-colors duration-500"></div>
+                            
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 truncate relative z-10">
+                                <?= htmlspecialchars($reg['region_name']) ?>
+                            </p>
+                            
+                            <div class="flex items-end gap-1.5 relative z-10">
+                                <span class="text-xs font-black text-cyan-400 bg-cyan-400/10 px-1.5 py-0.5 rounded border border-cyan-400/20">
+                                    <?= htmlspecialchars($reg['prefix']) ?>
+                                </span>
+                                <!-- Digital Monospace Counter -->
+                                <div class="font-mono text-xl sm:text-2xl font-bold text-emerald-400 tracking-wider drop-shadow-[0_0_8px_rgba(52,211,153,0.6)] leading-none">
+                                    <?= sprintf('%05d', $reg['current_sequence']) ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
         </section>
 
         <!-- Main Dashboard Content Grid -->

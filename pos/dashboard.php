@@ -128,8 +128,8 @@ include_template('header', ['page' => 'dashboard']);
                                 <span class="text-[11px] font-black text-cyan-400 bg-cyan-400/10 px-2 py-0.5 rounded border border-cyan-400/20 tracking-widest shadow-[0_0_10px_rgba(34,211,238,0.2)]">
                                     <?= htmlspecialchars($reg['prefix']) ?>
                                 </span>
-                                <!-- Digital Monospace Counter (6 Digits) -->
-                                <div class="font-mono text-2xl sm:text-3xl font-bold text-emerald-400 tracking-widest drop-shadow-[0_0_12px_rgba(52,211,153,0.8)] leading-none mt-1 group-hover:text-emerald-300 transition-colors">
+                                <!-- Digital Monospace Counter (6 Digits) without font-weight -->
+                                <div class="font-mono text-2xl sm:text-3xl text-emerald-400 tracking-widest drop-shadow-[0_0_12px_rgba(52,211,153,0.8)] leading-none mt-1 group-hover:text-emerald-300 transition-colors">
                                     <?= sprintf('%06d', $reg['current_sequence']) ?>
                                 </div>
                             </div>

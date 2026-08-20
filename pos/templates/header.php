@@ -8,6 +8,7 @@ if (session_status() == PHP_SESSION_NONE) {
 
 // Load shared functions + assets
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/maintenance_analytics.php';
 require_once __DIR__ . '/../assets.php';
 
 // Detect roles
@@ -19,10 +20,13 @@ $is_user_staff = is_staff();
 $page_title = $page_title ?? (APP_NAME ?? 'MBLOGISTICS POS');
 $current_page = $_GET['page'] ?? 'dashboard';
 
-// Fetch unread notification count for the logged-in user
+// Fetch unread notification count & POS diagnostics for the logged-in user
 $unread_notifications = 0;
+$pos_diagnostics = null;
 if (is_logged_in()) {
     global $connection;
+    $pos_diagnostics = get_pos_system_diagnostics($connection ?? null);
+    
     $user_id = $_SESSION['user_id']; 
     $stmt = mysqli_prepare($connection, "SELECT COUNT(id) FROM notifications WHERE user_id = ? AND is_read = 0");
     mysqli_stmt_bind_param($stmt, 'i', $user_id);
@@ -31,6 +35,7 @@ if (is_logged_in()) {
     $unread_notifications = mysqli_fetch_row($result)[0];
     mysqli_stmt_close($stmt);
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -299,6 +304,14 @@ if (is_logged_in()) {
     <div class="progress-bar-v3"><div class="progress-v3" id="loaderProgress"></div></div>
 </div>
 
+<?php 
+// Include Maintenance & High-Load Advisory Components for Logged In Users
+if (is_logged_in()) {
+    include_template('maintenance_banner', ['pos_diagnostics' => $pos_diagnostics]);
+    include_template('maintenance_load_modal', ['pos_diagnostics' => $pos_diagnostics]);
+}
+?>
+
 <!-- Desktop Glass Header -->
 <header class="glass-nav sticky top-0 z-40 transition-all duration-300">
     <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -348,7 +361,16 @@ if (is_logged_in()) {
                         </div>
                     <?php endif; ?>
 
-                    <div class="flex items-center gap-5 ml-2 border-l border-gray-200 pl-6">
+                    <div class="flex items-center gap-4 ml-2 border-l border-gray-200 pl-5">
+                        <!-- System Diagnostics & Load Trigger Button -->
+                        <button type="button" onclick="openMaintenanceModal()" class="relative p-2 text-gray-400 hover:text-indigo-600 transition-colors bg-gray-50 hover:bg-indigo-50 rounded-full group" title="System Load & Diagnostics Center">
+                            <svg class="h-5 w-5 transform group-hover:rotate-45 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <?php if (!empty($pos_diagnostics['maintenance_active']) || !empty($pos_diagnostics['high_load_detected'])): ?>
+                                <span class="absolute top-0 right-0 w-2.5 h-2.5 bg-amber-500 rounded-full animate-ping"></span>
+                                <span class="absolute top-0 right-0 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-white"></span>
+                            <?php endif; ?>
+                        </button>
+
                         <!-- Notifications -->
                         <a href="index.php?page=notifications" class="relative p-2 text-gray-400 hover:text-indigo-600 transition-colors bg-gray-50 hover:bg-indigo-50 rounded-full">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
@@ -378,6 +400,7 @@ if (is_logged_in()) {
         </div>
     </nav>
 </header>
+
 
 <!-- Floating Glass Mobile Nav (Premium V3) -->
 <?php if (is_logged_in()): ?>
@@ -508,7 +531,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 loader.classList.add("hidden");
                 setTimeout(() => loader.style.display = "none", 600); // Fully remove from DOM flow
             }, 200);
+
+            // Auto-trigger Maintenance / High Load Advisory Modal if active & not previously dismissed in session
+            <?php if (is_logged_in() && (!empty($pos_diagnostics['maintenance_active']) || !empty($pos_diagnostics['high_load_detected']))): ?>
+            setTimeout(() => {
+                try {
+                    if (sessionStorage.getItem('mbpos_maintenance_dismissed') !== 'true') {
+                        if (typeof openMaintenanceModal === 'function') {
+                            openMaintenanceModal();
+                        }
+                    }
+                } catch(e) {}
+            }, 800);
+            <?php endif; ?>
         }
     }, 150);
 });
 </script>
+<script src="assets/js/main.js"></script>

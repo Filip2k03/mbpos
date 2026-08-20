@@ -532,11 +532,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => loader.style.display = "none", 600); // Fully remove from DOM flow
             }, 200);
 
-            // Auto-trigger Maintenance / High Load Advisory Modal if active & not previously dismissed in session
-            <?php if (is_logged_in() && (!empty($pos_diagnostics['maintenance_active']) || !empty($pos_diagnostics['high_load_detected']))): ?>
+            // Auto-trigger Maintenance / High Load Advisory Modal based on GMT+6:30 shift checkpoint
+            <?php if (is_logged_in()): ?>
             setTimeout(() => {
                 try {
-                    if (sessionStorage.getItem('mbpos_maintenance_dismissed') !== 'true') {
+                    const shiftKey = '<?= $pos_diagnostics['shift_session_key'] ?? 'mbpos_shift_default' ?>';
+                    const isHighLoadOrMaintenance = <?= (!empty($pos_diagnostics['maintenance_active']) || !empty($pos_diagnostics['high_load_detected'])) ? 'true' : 'false' ?>;
+                    const shiftAcknowledged = (sessionStorage.getItem(shiftKey) === 'true');
+
+                    // Prompt on login for the current shift (Morning, Afternoon around 12:00, Night 17:00+) or if high load/maintenance is active
+                    if ((!shiftAcknowledged || isHighLoadOrMaintenance) && sessionStorage.getItem('mbpos_maintenance_dismissed') !== 'true') {
                         if (typeof openMaintenanceModal === 'function') {
                             openMaintenanceModal();
                         }

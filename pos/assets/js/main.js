@@ -81,15 +81,18 @@ window.closeMaintenanceModal = function(isContinueWorking = false) {
         document.body.style.overflow = ''; // Restore scrolling
         
         if (isContinueWorking) {
-            // Save state in sessionStorage so user isn't interrupted again during this session
+            const shiftKey = modal.getAttribute('data-shift-key') || 'mbpos_shift_default';
+            // Save acknowledgement for this specific GMT+6:30 shift window
             try {
                 sessionStorage.setItem('mbpos_maintenance_dismissed', 'true');
+                sessionStorage.setItem(shiftKey, 'true');
+                localStorage.setItem(shiftKey, 'true');
             } catch(e) {}
 
             // Display a sleek Toast notification acknowledging continuous work
             if (typeof Toastify === 'function') {
                 Toastify({
-                    text: "✅ POS Operational Session Active: You can continue issuing vouchers and managing logistics smoothly.",
+                    text: "✅ Shift Checkpoint Acknowledged: You can continue issuing vouchers and managing logistics smoothly.",
                     duration: 6000,
                     close: true,
                     gravity: "top",
@@ -145,7 +148,7 @@ window.toggleTechSupportCard = function() {
  * @param {string} token - Diagnostic Token ID
  */
 window.copyDiagnosticToken = function(token) {
-    const infoText = `[MBPOS Diagnostic Token: ${token}] - Date: ${new Date().toISOString()} - Node: High Load & Maintenance Active`;
+    const infoText = `[MBPOS Diagnostic Token: ${token}] - Timezone: GMT+6:30 - Date: ${new Date().toISOString()} - Node: High Load & Maintenance Active`;
     
     if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(infoText).then(() => {
@@ -196,7 +199,7 @@ window.copyDiagnosticToken = function(token) {
     }
 };
 
-// Check if modal or banner should be auto-restored or auto-shown
+// Check if modal or banner should be auto-restored or auto-shown for the current shift checkpoint
 document.addEventListener('DOMContentLoaded', function() {
     // Check banner dismissed state
     try {
@@ -206,3 +209,4 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     } catch(e) {}
 });
+

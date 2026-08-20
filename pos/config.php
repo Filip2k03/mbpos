@@ -4,10 +4,14 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+// Set System Timezone to GMT +6:30 (Asia/Yangon)
+date_default_timezone_set('Asia/Yangon');
+
 $hostname = "localhost";
 $username = "mbposV3_usr";
 $password = "bCnxZMzSh3zhNSYA";
 $database = "mbposv3";
+
 
 // Establish the database connection
 $connection = mysqli_connect($hostname, $username, $password, $database);

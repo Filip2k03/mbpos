@@ -21,8 +21,10 @@ $shift_desc = $pos_diagnostics['shift_desc'] ?? 'Live Operational Status';
 $shift_session_key = $pos_diagnostics['shift_session_key'] ?? 'mbpos_shift_default';
 $gmt_time = $pos_diagnostics['current_time_gmt630'] ?? date('h:i A');
 
-$is_dev_or_admin = function_exists('is_developer') && (is_developer() || is_admin());
+// Strictly allow ONLY Developer role to see Dev Mode / Dev Center controls
+$is_developer_user = function_exists('is_developer') && is_developer();
 ?>
+
 
 <!-- Liquid Glass Diagnostic & Maintenance Modal Wrapper -->
 <div id="pos-maintenance-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true" data-shift-key="<?= htmlspecialchars($shift_session_key) ?>">
@@ -114,13 +116,14 @@ $is_dev_or_admin = function_exists('is_developer') && (is_developer() || is_admi
                                 </span>
                             <?php endforeach; ?>
                         </div>
-                        <?php if ($is_dev_or_admin): ?>
+                        <?php if ($is_developer_user): ?>
                             <a href="index.php?page=maintenance" class="text-cyan-400 hover:text-cyan-300 underline font-bold text-[11px] ml-auto">
                                 ⚙️ Modify in Dev Center
                             </a>
                         <?php endif; ?>
                     </div>
                     <?php endif; ?>
+
                 </div>
 
                 <!-- Section 2: Global Voucher Totals & Multi-Currency Financial Breakdown -->
@@ -324,14 +327,15 @@ $is_dev_or_admin = function_exists('is_developer') && (is_developer() || is_admi
                         <span>Contact Tech Company</span>
                     </button>
 
-                    <!-- Developer Quick Access Button if Authorized -->
-                    <?php if ($is_dev_or_admin): ?>
+                    <!-- Developer Quick Access Button strictly for Developer Role only -->
+                    <?php if ($is_developer_user): ?>
                         <a href="index.php?page=maintenance" class="p-3 rounded-2xl bg-slate-200/80 hover:bg-slate-300 text-slate-700 font-bold text-xs transition-colors flex items-center gap-1.5" title="Dev Center Maintenance Mode">
                             <span>🛠️</span>
                             <span class="hidden sm:inline">Dev Mode</span>
                         </a>
                     <?php endif; ?>
                 </div>
+
 
                 <!-- Primary: Continue to Working Action -->
                 <button type="button" onclick="closeMaintenanceModal(true)" class="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-600 to-indigo-600 text-white font-extrabold text-sm shadow-[0_8px_25px_rgba(16,185,129,0.35)] hover:shadow-[0_12px_30px_rgba(16,185,129,0.5)] transition-all transform hover:-translate-y-0.5 active:translate-y-0">

@@ -375,10 +375,12 @@ if ($result) {
             </div>
             <div class="mt-12 border-t border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500">
                 <p>&copy; <?= date('Y') ?> mblogistics. All rights reserved.</p>
-                <div class="flex items-center space-x-4 mt-4 sm:mt-0">
+                <div class="flex flex-wrap items-center gap-3 mt-4 sm:mt-0">
                     <span>Powered by <a href="https://payvia.asia" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-primary transition">PayVia</a></span>
                     <span class="text-gray-700">|</span>
-                    <span>Developed by <a href="https://techyyfilip.vercel.app" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-primary transition">Filip</a></span>
+                    <span><a href="https://payvia.cloud" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-primary transition">Payvia Cloud</a></span>
+                    <span class="text-gray-700">|</span>
+                    <span>Developed by <a href="https://thuyakyaw.com" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-primary transition" title="Thuya Kyaw — Lead Software Engineer & Architect">Thuya Kyaw</a></span>
                 </div>
             </div>
         </div>

@@ -36,23 +36,23 @@ $page = $_GET['page'] ?? ($page ?? 'home'); // fallback page name
 
             <!-- Center: Ecosystem Links -->
             <div class="flex flex-wrap justify-center items-center gap-2 bg-slate-50/80 p-1.5 rounded-2xl border border-slate-100 shadow-sm">
-                <a href="https://payvia.asia" target="_blank" class="px-4 py-2 rounded-xl text-[11px] sm:text-xs font-bold text-purple-600 hover:bg-white hover:shadow-sm hover:text-purple-700 transition-all flex items-center gap-1.5">
+                <a href="https://payvia.asia" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-xl text-[11px] sm:text-xs font-bold text-purple-600 hover:bg-white hover:shadow-sm hover:text-purple-700 transition-all flex items-center gap-1.5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                     Payvia.asia
                 </a>
                 <div class="w-px h-6 bg-slate-200 hidden sm:block"></div>
-                <a href="https://payvia.space" target="_blank" class="px-4 py-2 rounded-xl text-[11px] sm:text-xs font-bold text-indigo-600 hover:bg-white hover:shadow-sm hover:text-indigo-700 transition-all flex items-center gap-1.5">
+                <a href="https://payvia.cloud" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-xl text-[11px] sm:text-xs font-bold text-indigo-600 hover:bg-white hover:shadow-sm hover:text-indigo-700 transition-all flex items-center gap-1.5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                    Payvia.space
+                    Payvia.cloud
                 </a>
             </div>
 
             <!-- Right: Developer Signature -->
             <div class="flex items-center gap-2 mt-2 md:mt-0">
                 <span data-i18n="Engineered by" class="text-xs font-medium text-slate-400">Engineered by</span>
-                <a href="https://techyyfilip.vercel.app" target="_blank" class="group flex items-center gap-2 bg-slate-900 px-3.5 py-2 rounded-xl hover:shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all hover:-translate-y-0.5">
+                <a href="https://thuyakyaw.com" target="_blank" rel="noopener noreferrer" class="group flex items-center gap-2 bg-slate-900 px-3.5 py-2 rounded-xl hover:shadow-[0_0_18px_rgba(14,165,233,0.35)] transition-all hover:-translate-y-0.5 border border-slate-800" title="Thuya Kyaw — Lead Software Engineer & Architect">
                     <div class="w-2 h-2 rounded-full bg-cyan-400 group-hover:animate-ping shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
-                    <span class="text-xs font-bold text-white tracking-wide">TechyyFilip</span>
+                    <span class="text-xs font-bold text-white tracking-wide">Thuya Kyaw</span>
                 </a>
             </div>
             

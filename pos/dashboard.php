@@ -204,8 +204,8 @@ include_template('header', ['page' => 'dashboard']);
                     </div>
                 </div>
 
-                <p style="font-size:0.85rem;color:#cbd5e1;line-height:1.6;margin-bottom:1.5rem;" data-i18n="High-availability logistics cloud infrastructure, fail-open Redis caching, and real-time ledger sync powered by TechyyFilip.">
-                    High-availability logistics cloud infrastructure, fail-open Redis caching, and real-time ledger sync powered by TechyyFilip.
+                <p style="font-size:0.85rem;color:#cbd5e1;line-height:1.6;margin-bottom:1.5rem;" data-i18n="High-availability logistics cloud infrastructure, fail-open Redis caching, and real-time ledger sync powered by Thuya Kyaw.">
+                    High-availability logistics cloud infrastructure, fail-open Redis caching, and real-time ledger sync powered by Thuya Kyaw.
                 </p>
 
                 <button type="button" id="contactDeveloperBtn" class="btn-primary w-full justify-center" data-i18n="Access Tech Hub">
@@ -243,19 +243,19 @@ include_template('header', ['page' => 'dashboard']);
                     <span class="text-xs text-primary font-mono mt-0.5">@stephanfilip2k03</span>
                 </a>
 
-                <a href="https://payvia.asia" target="_blank" class="v5-record-row text-center flex-col items-center p-3 rounded-xl border border-slate-100 hover:border-blue-200">
+                <a href="https://payvia.asia" target="_blank" rel="noopener noreferrer" class="v5-record-row text-center flex-col items-center p-3 rounded-xl border border-slate-100 hover:border-blue-200">
                     <span class="font-bold text-slate-800 text-sm">FinTech Core</span>
                     <span class="text-xs text-muted mt-0.5">payvia.asia</span>
                 </a>
 
-                <a href="https://payvia.space" target="_blank" class="v5-record-row text-center flex-col items-center p-3 rounded-xl border border-slate-100 hover:border-blue-200">
+                <a href="https://payvia.cloud" target="_blank" rel="noopener noreferrer" class="v5-record-row text-center flex-col items-center p-3 rounded-xl border border-slate-100 hover:border-blue-200">
                     <span class="font-bold text-slate-800 text-sm">Cloud Operations</span>
-                    <span class="text-xs text-muted mt-0.5">payvia.space</span>
+                    <span class="text-xs text-muted mt-0.5">payvia.cloud</span>
                 </a>
             </div>
 
             <div class="mt-5 text-center">
-                 <p class="text-xs font-medium text-slate-400">Maintained by <a href="https://techyyfilip.vercel.app" target="_blank" class="text-primary font-semibold hover:underline">TechyyFilip</a></p>
+                 <p class="text-xs font-medium text-slate-400">Lead Engineer & Architect: <a href="https://thuyakyaw.com" target="_blank" rel="noopener noreferrer" class="text-primary font-semibold hover:underline" title="Thuya Kyaw — Lead Software Engineer & Architect">Thuya Kyaw</a></p>
             </div>
         </div>
     </div>

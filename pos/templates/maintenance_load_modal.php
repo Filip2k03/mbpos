@@ -279,36 +279,36 @@ $is_developer_user = function_exists('is_developer') && is_developer();
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                        <!-- Direct Telegram/Chat -->
-                        <a href="https://techyyfilip.vercel.app" target="_blank" class="bg-white/10 hover:bg-white/20 p-3 rounded-xl border border-white/10 transition-all flex items-center gap-3">
+                        <!-- Lead Architect / Developer Portfolio -->
+                        <a href="https://thuyakyaw.com" target="_blank" rel="noopener noreferrer" class="bg-white/10 hover:bg-white/20 p-3 rounded-xl border border-white/10 transition-all flex items-center gap-3" title="Thuya Kyaw — Lead Software Engineer & Architect">
                             <div class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-300 flex items-center justify-center font-bold text-sm">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                             </div>
                             <div>
-                                <span class="text-xs font-bold text-white block">Tech Portal</span>
-                                <span class="text-[10px] text-slate-300">techyyfilip.vercel.app</span>
+                                <span class="text-xs font-bold text-white block">Lead Architect</span>
+                                <span class="text-[10px] text-slate-300">thuyakyaw.com</span>
                             </div>
                         </a>
 
                         <!-- Ecosystem Hub -->
-                        <a href="https://payvia.space" target="_blank" class="bg-white/10 hover:bg-white/20 p-3 rounded-xl border border-white/10 transition-all flex items-center gap-3">
+                        <a href="https://payvia.cloud" target="_blank" rel="noopener noreferrer" class="bg-white/10 hover:bg-white/20 p-3 rounded-xl border border-white/10 transition-all flex items-center gap-3" title="Payvia Cloud Operations">
                             <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-bold text-sm">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                             </div>
                             <div>
                                 <span class="text-xs font-bold text-white block">Payvia Cloud</span>
-                                <span class="text-[10px] text-slate-300">payvia.space</span>
+                                <span class="text-[10px] text-slate-300">payvia.cloud</span>
                             </div>
                         </a>
 
                         <!-- Email Support -->
-                        <a href="mailto:support@payvia.space?subject=MBPOS%20High%20Load%20Support%20Request%20Token%20<?= $token ?>" class="bg-white/10 hover:bg-white/20 p-3 rounded-xl border border-white/10 transition-all flex items-center gap-3">
+                        <a href="mailto:support@payvia.cloud?subject=MBPOS%20High%20Load%20Support%20Request%20Token%20<?= $token ?>" class="bg-white/10 hover:bg-white/20 p-3 rounded-xl border border-white/10 transition-all flex items-center gap-3" title="Direct Email Support">
                             <div class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 flex items-center justify-center font-bold text-sm">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                             </div>
                             <div>
                                 <span class="text-xs font-bold text-white block">Support Desk</span>
-                                <span class="text-[10px] text-slate-300">support@payvia.space</span>
+                                <span class="text-[10px] text-slate-300">support@payvia.cloud</span>
                             </div>
                         </a>
                     </div>

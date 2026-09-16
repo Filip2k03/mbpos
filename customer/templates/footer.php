@@ -21,10 +21,18 @@
     
     <footer class="text-center mt-8 py-6 text-sm text-gray-500 border-t">
         <p class="mb-2">&copy; <?= date('Y') ?> MBLOGISTICS. All rights reserved.</p>
-        <a href="https://payvia.asia" target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-gray-400 hover:text-blue-500 transition-colors">
-            <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 6a2 2 0 00-2 2v4a2 2 0 002 2h12a2 2 0 002-2v-4a2 2 0 00-2-2H4z"></path></svg>
-            <span>Powered by payvia.asia</span>
-        </a>
+        <div class="inline-flex flex-wrap items-center justify-center gap-3 text-xs text-gray-400">
+            <a href="https://payvia.asia" target="_blank" rel="noopener noreferrer" class="inline-flex items-center hover:text-blue-500 transition-colors">
+                <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 6a2 2 0 00-2 2v4a2 2 0 002 2h12a2 2 0 002-2v-4a2 2 0 00-2-2H4z"></path></svg>
+                <span>payvia.asia</span>
+            </a>
+            <span>&bull;</span>
+            <a href="https://payvia.cloud" target="_blank" rel="noopener noreferrer" class="hover:text-blue-500 transition-colors">
+                <span>payvia.cloud</span>
+            </a>
+            <span>&bull;</span>
+            <span>Engineered by <a href="https://thuyakyaw.com" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-blue-600 font-semibold" title="Thuya Kyaw — Lead Software Engineer & Architect">Thuya Kyaw</a></span>
+        </div>
     </footer>
 </body>
 </html>

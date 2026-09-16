@@ -236,10 +236,13 @@ if (is_logged_in()) {
 document.addEventListener('DOMContentLoaded', function() {
     let lastId = 0;
     let notificationPollInitialized = false;
+    let notificationPollInFlight = false;
     
     // Notification Fetcher Logic
     function fetchNotifications() {
         <?php if (is_logged_in()): ?>
+        if (notificationPollInFlight || document.hidden) return;
+        notificationPollInFlight = true;
         const request = window.mbposFetch ? window.mbposFetch(`index.php?page=fetch_notifications&last_id=${lastId}`, { timeout: 5000 }) : fetch(`index.php?page=fetch_notifications&last_id=${lastId}`);
         request
             .then(response => response.json())
@@ -286,12 +289,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
             })
-            .catch(error => console.error('Error fetching notifications:', error));
+            .catch(error => console.error('Error fetching notifications:', error))
+            .finally(() => { notificationPollInFlight = false; });
         <?php endif; ?>
     }
     
-    // Poll every 10 seconds
-    setInterval(fetchNotifications, 10000);
+    // Load once immediately, then poll only while this POS tab is visible.
+    fetchNotifications();
+    setInterval(fetchNotifications, 15000);
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) fetchNotifications();
+    });
     
 });
 </script>

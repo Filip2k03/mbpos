@@ -86,13 +86,14 @@ $preview_date_time = date('Y-m-d H:i');
 
 // --- Handle Form Submission ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $sender_type = $_POST['sender_type'] ?? 'new';
-    $sender_customer_id = ($sender_type === 'existing') ? intval($_POST['sender_customer_id'] ?? 0) : null;
+    // V5 vouchers always capture a fresh sender and receiver. Historical
+    // customer links remain in the database for old vouchers, but this form
+    // never accepts or trusts customer IDs from the browser.
+    $sender_customer_id = null;
     $sender_name = trim($_POST['sender_name']);
     $sender_phone = trim($_POST['sender_phone']);
     
-    $receiver_type = $_POST['receiver_type'] ?? 'new';
-    $receiver_customer_id = ($receiver_type === 'existing') ? intval($_POST['receiver_customer_id'] ?? 0) : null;
+    $receiver_customer_id = null;
     $receiver_name = trim($_POST['receiver_name']);
     $receiver_phone = trim($_POST['receiver_phone']);
     $receiver_address = trim($_POST['receiver_address']);
@@ -173,6 +174,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mysqli_stmt_bind_param($stmt_update_seq, 'ii', $new_sequence, $destination_region_id);
         if(!mysqli_stmt_execute($stmt_update_seq)) throw new Exception("Database Error [Sequence]: " . mysqli_stmt_error($stmt_update_seq));
         mysqli_stmt_close($stmt_update_seq);
+        mbpos_cache_del(mbpos_cache_key('lookup-regions', 'voucher-create'));
+        mbpos_cache_del(mbpos_cache_key('dashboard-regions', 'sequence'));
 
         // 6. Create user notifications
         $notification_message = "New voucher #{$voucher_code} created by " . htmlspecialchars($_SESSION['username'] ?? 'Staff') . ".";
@@ -185,6 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             foreach ($users_to_notify as $notify_user_id) {
                 mysqli_stmt_bind_param($stmt_notif, 'is', $notify_user_id, $notification_message);
                 mysqli_stmt_execute($stmt_notif);
+                mbpos_cache_del(mbpos_cache_key('notifications-unread', $notify_user_id));
             }
             mysqli_stmt_close($stmt_notif);
         }
@@ -210,9 +214,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Render master header
 include_template('header', ['page' => 'voucher_create']);
 ?>
-
-<!-- Select2 CDN -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
 <style>
 :root{
@@ -344,18 +345,12 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 @keyframes spin{to{transform:rotate(360deg)}}
 .toast{position:fixed;right:20px;bottom:20px;padding:12px 16px;background:#10233f;color:#fff;border-radius:12px;box-shadow:var(--shadow);font-size:11px;font-weight:600;opacity:0;transform:translateY(10px);transition:.25s ease;z-index:9999;pointer-events:none}
 .toast.show{opacity:1;transform:none}
-.seg-pill{display:inline-flex;background:#edf2f7;border-radius:8px;padding:2px;gap:2px}
-.seg-pill button{border:0;background:transparent;padding:3px 9px;border-radius:6px;font-size:9px;font-weight:700;color:#6b7c93;transition:all .2s ease}
-.seg-pill button.active{background:#fff;color:var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.08)}
-.customer-search-wrap{margin-bottom:10px}
-.select2-container--default .select2-selection--single{border:1px solid var(--line)!important;border-radius:11px!important;height:38px!important;padding:4px 6px!important}
-.select2-container--default .select2-selection--single .select2-selection__arrow{height:36px!important}
 @media(max-width:1200px){.workspace{grid-template-columns:1fr}.right{grid-template-columns:1fr 1fr}.preview{grid-column:1/-1}}
 @media(max-width:850px){.app{display:block}.sidebar{display:none}.top{padding:12px 16px}.content{padding:16px}.grid,.routegrid{grid-template-columns:1fr}.route,.full{grid-column:auto}.right{grid-template-columns:1fr}.delivery{grid-template-columns:1fr}.head{align-items:start;flex-direction:column}.steps{overflow-x:auto;-webkit-overflow-scrolling:touch}.step{min-width:100px}.search{max-width:none}}
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   body{background:#fff!important;padding:0!important;margin:0!important}
-  .sidebar,.top,.alert,.head,.steps,.grid,.summary,.tracking,.previewbar,#voucher-form,.seg-pill,.add,.actions,.request-status{display:none!important}
+  .sidebar,.top,.alert,.head,.steps,.grid,.summary,.tracking,.previewbar,#voucher-form,.add,.actions,.request-status{display:none!important}
   .content,.workspace,.right,.preview{display:block!important;padding:0!important;margin:0!important;width:100%!important;max-width:none!important}
   .paper{border:0!important;box-shadow:none!important;min-height:auto!important;padding:0!important;display:block!important}
 }
@@ -424,7 +419,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 
       <!-- Step Wizard -->
       <div class="steps glass">
-        <div class="step active" id="st-1"><b>1</b>Customer</div>
+        <div class="step active" id="st-1"><b>1</b>Sender & Receiver</div>
         <div class="step" id="st-2"><b>2</b>Routing</div>
         <div class="step" id="st-3"><b>3</b>Items</div>
         <div class="step" id="st-4"><b>4</b>Review</div>
@@ -441,21 +436,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
               
               <!-- Card 1: Sender Details -->
               <div class="card glass">
-                <h3>
-                  <span>① Sender Details</span>
-                  <div class="seg-pill">
-                    <button type="button" class="active" data-toggle="sender" data-val="new">+ New</button>
-                    <button type="button" data-toggle="sender" data-val="existing">⌕ Existing</button>
-                  </div>
-                </h3>
-                <input type="hidden" name="sender_type" id="sender_type" value="new">
-                
-                <div id="existing_sender_wrap" class="customer-search-wrap" style="display:none;">
-                  <div class="field">
-                    <label>Select Existing Customer <span class="required">*</span></label>
-                    <select id="sender_customer_id" name="sender_customer_id" class="customer-search" style="width:100%"></select>
-                  </div>
-                </div>
+                <h3><span>① New Sender Details</span><small>Manual entry</small></h3>
 
                 <div class="field">
                   <label>Full Name <span class="required">*</span></label>
@@ -470,21 +451,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 
               <!-- Card 2: Receiver Details -->
               <div class="card glass">
-                <h3>
-                  <span>② Receiver Details</span>
-                  <div class="seg-pill">
-                    <button type="button" class="active" data-toggle="receiver" data-val="new">+ New</button>
-                    <button type="button" data-toggle="receiver" data-val="existing">⌕ Existing</button>
-                  </div>
-                </h3>
-                <input type="hidden" name="receiver_type" id="receiver_type" value="new">
-
-                <div id="existing_receiver_wrap" class="customer-search-wrap" style="display:none;">
-                  <div class="field">
-                    <label>Select Existing Customer <span class="required">*</span></label>
-                    <select id="receiver_customer_id" name="receiver_customer_id" class="customer-search" style="width:100%"></select>
-                  </div>
-                </div>
+                <h3><span>② New Receiver Details</span><small>Manual entry</small></h3>
 
                 <div class="field">
                   <label>Full Name <span class="required">*</span></label>
@@ -735,10 +702,6 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 
 <!-- Floating Toast Container -->
 <div class="toast" id="toast"></div>
-
-<!-- jQuery and Select2 JS -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
 // Data injected from backend database
@@ -996,27 +959,6 @@ byId("draft").onclick = () => {
 byId("print").onclick = () => window.print();
 byId("print2").onclick = () => window.print();
 
-// Customer Existing / New Toggle Pill
-document.querySelectorAll(".seg-pill button").forEach(btn => {
-  btn.onclick = function() {
-    const toggle = this.dataset.toggle;
-    const val = this.dataset.val;
-    this.parentElement.querySelectorAll("button").forEach(b => b.classList.remove("active"));
-    this.classList.add("active");
-    byId(toggle + "_type").value = val;
-
-    const wrap = byId("existing_" + toggle + "_wrap");
-    if (val === "existing") {
-      wrap.style.display = "block";
-    } else {
-      wrap.style.display = "none";
-      if (window.jQuery) {
-        window.jQuery(`#${toggle}_customer_id`).val(null).trigger("change");
-      }
-    }
-  };
-});
-
 // Setup Event Listeners
 byId("addRow").addEventListener("click", () => addRow());
 byId("extra").addEventListener("input", update);
@@ -1033,43 +975,6 @@ byId("branch").addEventListener("change", update);
 document.addEventListener("change", e => {
   if (e.target.name === "delivery_type") update();
 });
-
-// jQuery Select2 for Customer Search
-if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
-  window.jQuery(function($) {
-    $(".customer-search").select2({
-    ajax: {
-      url: "index.php?page=ajax_search_customers",
-      dataType: "json",
-      delay: 250,
-      data: params => ({ q: params.term }),
-      processResults: data => ({ results: data.results })
-    },
-    placeholder: "Search customer by name or phone...",
-    minimumInputLength: 2,
-    width: "100%"
-  });
-
-    $("#sender_customer_id").on("select2:select", function(e) {
-      const data = e.params.data;
-      if (data) {
-        $("#sender").val(data.text ? data.text.split(" (")[0] : "");
-        $("#senderPhone").val(data.phone || "");
-        update();
-      }
-    });
-
-    $("#receiver_customer_id").on("select2:select", function(e) {
-      const data = e.params.data;
-      if (data) {
-        $("#receiver").val(data.text ? data.text.split(" (")[0] : "");
-        $("#receiverPhone").val(data.phone || "");
-        if (data.address) $("#address").val(data.address);
-        update();
-      }
-    });
-  });
-}
 
 // Initialize Defaults
 bindCurrencies();

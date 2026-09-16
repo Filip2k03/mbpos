@@ -3,6 +3,7 @@
 
 require_once 'config.php';
 require_once 'includes/functions.php';
+require_once 'includes/cache.php';
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -22,6 +23,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'mark_all_read') {
     $stmt = mysqli_prepare($connection, "UPDATE notifications SET is_read = 1 WHERE user_id = ?");
     mysqli_stmt_bind_param($stmt, 'i', $user_id);
     mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+    mbpos_cache_del(mbpos_cache_key('notifications-unread', $user_id));
     redirect('index.php?page=notifications');
 }
 

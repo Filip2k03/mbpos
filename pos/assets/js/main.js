@@ -36,32 +36,62 @@ document.addEventListener('DOMContentLoaded', function () {
 // MBPOS V5 application shell: language, installability, and honest offline UX
 // =========================================================================
 (function () {
-    // Small, dependency-free request helper for live UI enhancements. It
-    // aborts stalled requests and retries idempotent GETs once, keeping legacy
-    // PHP screens usable on slower mobile connections.
+    const inflightGets = new Map();
+
+    // Dependency-free request helper for live UI enhancements. Concurrent GETs
+    // to the same URL share one network operation, stalled requests abort, and
+    // only transient failures are retried. Dynamic PHP responses bypass the
+    // browser cache so authenticated records cannot become stale.
     window.mbposFetch = function (url, options) {
         options = options || {};
         const method = (options.method || 'GET').toUpperCase();
-        const attempts = method === 'GET' ? 2 : 1;
+        const maxAttempts = method === 'GET' ? Math.max(1, Number(options.attempts || 2)) : 1;
+        const timeoutMs = Math.max(1000, Number(options.timeout || 8000));
+        const dedupe = method === 'GET' && options.dedupe !== false;
+        const requestKey = method + ':' + String(url);
         let attempt = 0;
 
         function request() {
             attempt += 1;
             const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), options.timeout || 8000);
-            const requestOptions = Object.assign({}, options, { signal: controller.signal, credentials: 'same-origin' });
+            const timeout = setTimeout(() => controller.abort(), timeoutMs);
+            const requestOptions = Object.assign({}, options, {
+                signal: controller.signal,
+                credentials: 'same-origin'
+            });
+            delete requestOptions.timeout;
+            delete requestOptions.attempts;
+            delete requestOptions.dedupe;
+            if (method === 'GET' && String(url).includes('index.php')) {
+                requestOptions.cache = 'no-store';
+            }
             return fetch(url, requestOptions).then(function (response) {
                 clearTimeout(timeout);
-                if (!response.ok) throw new Error('Request failed: ' + response.status);
+                if (!response.ok) {
+                    const error = new Error('Request failed: ' + response.status);
+                    error.retryable = response.status === 429 || response.status >= 500;
+                    throw error;
+                }
                 return response;
             }).catch(function (error) {
                 clearTimeout(timeout);
-                if (attempt < attempts) return request();
+                const retryable = error.name === 'AbortError' || error.retryable !== false;
+                if (retryable && attempt < maxAttempts) return request();
                 throw error;
             });
         }
 
-        return request();
+        if (!dedupe) return request();
+        if (!inflightGets.has(requestKey)) {
+            const operation = request().finally(function () {
+                inflightGets.delete(requestKey);
+            });
+            inflightGets.set(requestKey, operation);
+        }
+        // Each consumer receives an independent body stream.
+        return inflightGets.get(requestKey).then(function (response) {
+            return response.clone();
+        });
     };
 
     const translations = {

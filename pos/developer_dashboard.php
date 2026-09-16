@@ -289,7 +289,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Fetch and display database status via AJAX, injecting V3 Premium Cards
-    fetch('index.php?page=ajax_db_status')
+    const statusRequest = window.mbposFetch
+        ? window.mbposFetch('index.php?page=ajax_db_status', { timeout: 6000 })
+        : fetch('index.php?page=ajax_db_status', { cache: 'no-store', credentials: 'same-origin' });
+    statusRequest
         .then(response => response.json())
         .then(data => {
             const container = document.getElementById('db-status-cards');
@@ -307,8 +310,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <span class="text-2xl font-extrabold text-emerald-600 truncate">${data.version}</span>
                 </div>
                 <div class="bg-white/80 backdrop-blur-xl rounded-2xl p-5 border border-white/60 shadow-[0_4px_20px_rgb(0,0,0,0.03)] flex flex-col justify-center transition-all hover:shadow-md hover:-translate-y-0.5">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div> Connectivity</span>
-                    <span class="text-2xl font-extrabold text-green-500">Online</span>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div> Cache Layer</span>
+                    <span class="text-xl font-extrabold text-green-500">${data.cache}</span>
+                    <span class="text-xs font-semibold text-slate-400 mt-1">${data.cache_latency_ms === null ? 'Fail-open active' : data.cache_latency_ms + ' ms'}</span>
                 </div>
             `;
         })

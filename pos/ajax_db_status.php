@@ -4,6 +4,7 @@ header('Content-Type: application/json');
 
 require_once 'config.php';
 require_once 'includes/functions.php';
+require_once 'includes/cache.php';
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -16,34 +17,32 @@ if (!is_logged_in() || !is_developer()) {
     exit();
 }
 
-global $connection, $database;
+global $connection;
 
-$status = [
-    'size' => 'N/A',
-    'tables' => 'N/A',
-    'version' => 'N/A'
-];
+$status = mbpos_cache_remember('diagnostics', 'database-status', 15, function () use ($connection) {
+    $data = ['size' => 'N/A', 'tables' => 'N/A', 'version' => 'N/A'];
+    $metrics_result = mysqli_query(
+        $connection,
+        "SELECT ROUND(COALESCE(SUM(data_length + index_length), 0) / 1024 / 1024, 2) AS db_size_mb,
+                COUNT(*) AS table_count
+         FROM information_schema.tables
+         WHERE table_schema = DATABASE()"
+    );
+    if ($metrics_result && $row = mysqli_fetch_assoc($metrics_result)) {
+        $data['size'] = $row['db_size_mb'] . ' MB';
+        $data['tables'] = (int)$row['table_count'];
+    }
+    $version_result = mysqli_query($connection, "SELECT VERSION() AS version");
+    if ($version_result && $row = mysqli_fetch_assoc($version_result)) {
+        $data['version'] = $row['version'];
+    }
+    return $data;
+});
 
-// Get DB Size
-$size_query = "SELECT table_schema AS 'db_name', ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'db_size_mb' FROM information_schema.tables WHERE table_schema = '$database' GROUP BY table_schema;";
-$size_result = mysqli_query($connection, $size_query);
-if($size_result && $row = mysqli_fetch_assoc($size_result)) {
-    $status['size'] = $row['db_size_mb'] . ' MB';
-}
+$cache_status = mbpos_cache_status();
+$status['cache'] = $cache_status['enabled'] ? 'Redis Online' : 'Database Fallback';
+$status['cache_latency_ms'] = $cache_status['latency_ms'];
 
-// Get Table Count
-$tables_query = "SELECT COUNT(*) as table_count FROM information_schema.tables WHERE table_schema = '$database';";
-$tables_result = mysqli_query($connection, $tables_query);
-if($tables_result && $row = mysqli_fetch_assoc($tables_result)) {
-    $status['tables'] = $row['table_count'];
-}
-
-// Get MySQL Version
-$version_query = "SELECT VERSION() as version;";
-$version_result = mysqli_query($connection, $version_query);
-if($version_result && $row = mysqli_fetch_assoc($version_result)) {
-    $status['version'] = $row['version'];
-}
-
-echo json_encode($status);
+header('Cache-Control: no-store, private');
+echo json_encode($status, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 ?>

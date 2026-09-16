@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mbpos-v5-shell-2026-09-16-r3';
+const CACHE_NAME = 'mbpos-v5-shell-2026-09-16-r4';
 const APP_SHELL = [
   './offline.html',
   './assets/css/style.css',
@@ -27,22 +27,40 @@ self.addEventListener('fetch', (event) => {
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
-        // Do not cache authenticated PHP pages: voucher/customer data must not be
-        // persisted in the offline cache. The offline fallback is intentionally
-        // a neutral shell and never claims that live records are available.
         .then((response) => response)
-        .catch(() => caches.match(request).then((cached) => cached || caches.match('./offline.html')))
+        // Authenticated PHP pages are never cached. Offline navigation always
+        // receives a neutral shell rather than stale operational records.
+        .catch(() => caches.match('./offline.html'))
     );
     return;
   }
 
+  const url = new URL(request.url);
+  const isSameOrigin = url.origin === self.location.origin;
+  const isStaticAsset = isSameOrigin && (
+    url.pathname.includes('/assets/') ||
+    url.pathname.endsWith('/bg.jpg') ||
+    url.pathname.endsWith('/offline.html') ||
+    url.pathname.endsWith('/manifest.webmanifest')
+  );
+
+  // API, PHP, and other dynamic GET responses may contain authenticated data.
+  // They always go directly to the network and are never written to Cache API.
+  if (!isStaticAsset) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
   event.respondWith(
-    caches.match(request).then((cached) => cached || fetch(request).then((response) => {
-      if (response.ok && new URL(request.url).origin === self.location.origin) {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-      }
-      return response;
-    }))
+    caches.match(request).then((cached) => {
+      const refresh = fetch(request).then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        }
+        return response;
+      }).catch(() => cached);
+      return cached || refresh;
+    })
   );
 });

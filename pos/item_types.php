@@ -2,6 +2,7 @@
 // pos/item_types.php - CRUD management for Item Types (V3 Premium UI).
 require_once 'config.php';
 require_once 'includes/functions.php';
+require_once 'includes/cache.php';
 
 if (session_status() == PHP_SESSION_NONE) session_start();
 if (!is_logged_in() || (!is_admin() && !is_developer())) {
@@ -18,6 +19,18 @@ mysqli_set_charset($connection, "utf8mb4");
 $edit_item = null;
 
 // --- Handle POST Request (Add or Update) ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    $item_id = intval($_POST['delete_id']);
+    $stmt = mysqli_prepare($connection, "DELETE FROM item_types WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, 'i', $item_id);
+    if (mysqli_stmt_execute($stmt)) {
+        mbpos_cache_del(mbpos_cache_key('lookup-items', 'all'));
+        flash_message('success', 'Item category deleted.');
+    }
+    mysqli_stmt_close($stmt);
+    redirect('index.php?page=item_types');
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name']);
     $item_id = intval($_POST['item_id'] ?? 0);
@@ -28,11 +41,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($item_id > 0) { // Update
             $stmt = mysqli_prepare($connection, "UPDATE item_types SET name = ? WHERE id = ?");
             mysqli_stmt_bind_param($stmt, 'si', $name, $item_id);
-            if(mysqli_stmt_execute($stmt)) flash_message('success', 'Item category updated successfully.');
+            if(mysqli_stmt_execute($stmt)) {
+                mbpos_cache_del(mbpos_cache_key('lookup-items', 'all'));
+                flash_message('success', 'Item category updated successfully.');
+            }
         } else { // Add
             $stmt = mysqli_prepare($connection, "INSERT INTO item_types (name) VALUES (?)");
             mysqli_stmt_bind_param($stmt, 's', $name);
-            if(mysqli_stmt_execute($stmt)) flash_message('success', 'Item category added successfully.');
+            if(mysqli_stmt_execute($stmt)) {
+                mbpos_cache_del(mbpos_cache_key('lookup-items', 'all'));
+                flash_message('success', 'Item category added successfully.');
+            }
         }
     }
     redirect('index.php?page=item_types');
@@ -41,10 +60,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // --- Handle GET Request (Delete or Edit) ---
 if (isset($_GET['action'])) {
     $id = intval($_GET['id'] ?? 0);
-    if ($_GET['action'] === 'delete' && $id > 0) {
+    if ($_GET['action'] === 'delete' && $id > 0 && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = mysqli_prepare($connection, "DELETE FROM item_types WHERE id = ?");
         mysqli_stmt_bind_param($stmt, 'i', $id);
-        if(mysqli_stmt_execute($stmt)) flash_message('success', 'Item category deleted.');
+        if(mysqli_stmt_execute($stmt)) {
+            mbpos_cache_del(mbpos_cache_key('lookup-items', 'all'));
+            flash_message('success', 'Item category deleted.');
+        }
+        redirect('index.php?page=item_types');
+    } elseif ($_GET['action'] === 'delete' && $id > 0) {
+        flash_message('warning', 'Please confirm deletion using the form button.');
         redirect('index.php?page=item_types');
     }
     if ($_GET['action'] === 'edit' && $id > 0) {
@@ -177,9 +202,12 @@ include_template('header', ['page' => 'item_types']);
                                                 <a href="index.php?page=item_types&action=edit&id=<?= $item['id'] ?>" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gray-50 text-gray-500 hover:text-amber-500 hover:bg-amber-50 hover:shadow-sm border border-transparent hover:border-amber-100 transition-all" title="Edit">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                                 </a>
-                                                <a href="index.php?page=item_types&action=delete&id=<?= $item['id'] ?>" onclick="return confirm('Are you sure you want to delete the category <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?>? This action cannot be undone.');" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gray-50 text-gray-500 hover:text-red-500 hover:bg-red-50 hover:shadow-sm border border-transparent hover:border-red-100 transition-all" title="Delete">
+                                                <form method="POST" action="index.php?page=item_types&action=delete&id=<?= (int)$item['id'] ?>" class="inline" onsubmit="return confirm('Delete this category?');">
+                                                    <?= csrf_input() ?><input type="hidden" name="delete_id" value="<?= (int)$item['id'] ?>">
+                                                    <button type="submit" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gray-50 text-gray-500 hover:text-red-500 hover:bg-red-50 hover:shadow-sm border border-transparent hover:border-red-100 transition-all" title="Delete">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                                </a>
+                                                    </button>
+                                                </form>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

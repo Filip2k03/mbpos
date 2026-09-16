@@ -3,6 +3,7 @@
 
 require_once 'config.php';
 require_once 'includes/functions.php';
+require_once 'includes/cache.php';
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -18,9 +19,12 @@ global $connection;
 $user_branch_id = get_user_branch_id();
 
 // --- Fetch Data for Filters ---
-$regions = [];
-$region_result = mysqli_query($connection, "SELECT id, region_name FROM regions ORDER BY region_name");
-if ($region_result) while ($row = mysqli_fetch_assoc($region_result)) $regions[] = $row;
+$regions = mbpos_cache_remember('lookup-regions', 'all', 300, function () use ($connection) {
+    $rows = [];
+    $region_result = mysqli_query($connection, "SELECT id, region_name FROM regions ORDER BY region_name");
+    if ($region_result) while ($row = mysqli_fetch_assoc($region_result)) $rows[] = $row;
+    return $rows;
+});
 $possible_statuses = ['Pending', 'In Transit', 'Delivered', 'Received', 'Cancelled', 'Returned', 'Maintenance'];
 $allowed_search_columns = ['voucher_code', 'sender_name', 'receiver_name', 'receiver_phone'];
 

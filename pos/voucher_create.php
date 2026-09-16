@@ -4,6 +4,7 @@
 
 require_once 'config.php';
 require_once 'includes/functions.php';
+require_once 'includes/cache.php';
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -36,28 +37,42 @@ $result_user = mysqli_stmt_get_result($stmt_user);
 if ($result_user) $user_info = mysqli_fetch_assoc($result_user);
 mysqli_stmt_close($stmt_user);
 
-$all_regions = [];
-$all_branches = [];
-$currencies = [];
-$item_types_list = [];
-$delivery_types = [];
-
-$region_result = mysqli_query($connection, "SELECT id, region_name, prefix, current_sequence FROM regions ORDER BY region_name");
-if ($region_result) while ($row = mysqli_fetch_assoc($region_result)) $all_regions[] = $row;
-$branch_result = mysqli_query($connection, "SELECT id, branch_name, region_id FROM branches ORDER BY branch_name");
-if ($branch_result) while ($row = mysqli_fetch_assoc($branch_result)) $all_branches[] = $row;
-$currency_result = mysqli_query($connection, "SELECT code FROM currencies ORDER BY code");
-if ($currency_result) while ($row = mysqli_fetch_assoc($currency_result)) $currencies[] = $row['code'];
+$all_regions = mbpos_cache_remember('lookup-regions', 'voucher-create', 30, function () use ($connection) {
+    $rows = [];
+    $region_result = mysqli_query($connection, "SELECT id, region_name, prefix, current_sequence FROM regions ORDER BY region_name");
+    if ($region_result) while ($row = mysqli_fetch_assoc($region_result)) $rows[] = $row;
+    return $rows;
+});
+$all_branches = mbpos_cache_remember('lookup-branches', 'all', 300, function () use ($connection) {
+    $rows = [];
+    $branch_result = mysqli_query($connection, "SELECT id, branch_name, region_id FROM branches ORDER BY branch_name");
+    if ($branch_result) while ($row = mysqli_fetch_assoc($branch_result)) $rows[] = $row;
+    return $rows;
+});
+$currencies = mbpos_cache_remember('lookup-currencies', 'codes', 300, function () use ($connection) {
+    $rows = [];
+    $currency_result = mysqli_query($connection, "SELECT code FROM currencies ORDER BY code");
+    if ($currency_result) while ($row = mysqli_fetch_assoc($currency_result)) $rows[] = $row['code'];
+    return $rows;
+});
 if (empty($currencies)) $currencies = ['MMK', 'RM', 'SGD', 'USD'];
 
-$item_type_result = mysqli_query($connection, "SELECT name FROM item_types ORDER BY name");
-if ($item_type_result) while ($row = mysqli_fetch_assoc($item_type_result)) $item_types_list[] = $row['name'];
+$item_types_list = mbpos_cache_remember('lookup-items', 'all', 300, function () use ($connection) {
+    $rows = [];
+    $item_type_result = mysqli_query($connection, "SELECT name FROM item_types ORDER BY name");
+    if ($item_type_result) while ($row = mysqli_fetch_assoc($item_type_result)) $rows[] = $row['name'];
+    return $rows;
+});
 if (empty($item_types_list)) {
     $item_types_list = ['Laptop', 'Bag', 'Book', 'Document', 'Fancy Gold', 'Power Bank', 'Medicine', 'Food / Snacks', 'Phone', 'Electronics', 'Clothing', 'Cosmetics'];
 }
 
-$delivery_type_result = mysqli_query($connection, "SELECT name FROM delivery_types ORDER BY name");
-if ($delivery_type_result) while ($row = mysqli_fetch_assoc($delivery_type_result)) $delivery_types[] = $row['name'];
+$delivery_types = mbpos_cache_remember('lookup-delivery-types', 'all', 300, function () use ($connection) {
+    $rows = [];
+    $delivery_type_result = mysqli_query($connection, "SELECT name FROM delivery_types ORDER BY name");
+    if ($delivery_type_result) while ($row = mysqli_fetch_assoc($delivery_type_result)) $rows[] = $row['name'];
+    return $rows;
+});
 if (empty($delivery_types)) {
     $delivery_types = ['ကားဂိတ်တင်', 'စင်တာမှ လွှဲပို့', 'စာတိုက်တင်', 'မလပးကွား ပို့ဆောင်', 'မော်လမြိုင် ရုံးထုတ်', 'ရန်ကုန် ရုံးထုတ်', 'အထူးဘိုင့်'];
 }

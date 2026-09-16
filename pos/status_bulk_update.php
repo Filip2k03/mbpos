@@ -23,12 +23,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // --- Handle POST request for bulk status update ---
-$stock_ids = $_POST['stock_ids'] ?? [];
+$stock_ids = array_values(array_unique(array_filter(array_map('intval', (array)($_POST['stock_ids'] ?? [])), function ($id) {
+    return $id > 0;
+})));
 $new_status = $_POST['new_status'] ?? '';
 $possible_statuses = ['Pending', 'In Transit', 'Delivered', 'Received', 'Maintenance'];
 
 
-if (empty($stock_ids)) {
+if (empty($stock_ids) || count($stock_ids) > 200) {
     flash_message('warning', 'No stock items were selected for update.');
     redirect('index.php?page=stock_list');
 }

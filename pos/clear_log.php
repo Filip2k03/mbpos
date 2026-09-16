@@ -16,6 +16,11 @@ if (!is_logged_in() || !is_developer()) {
 
 $log_file = __DIR__ . '/error_log';
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    flash_message('warning', 'Log clearing requires a confirmed POST request.');
+    redirect('index.php?page=error_log_viewer');
+}
+
 if (file_exists($log_file)) {
     // Open the file in write mode to truncate it
     $handle = fopen($log_file, 'w');

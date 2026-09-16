@@ -3,6 +3,7 @@
 
 require_once 'config.php';
 require_once 'includes/functions.php';
+require_once 'includes/cache.php';
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -22,9 +23,9 @@ mysqli_set_charset($connection, "utf8mb4");
 
 $edit_branch = null; // Variable to hold branch data for editing
 
-// --- Handle DELETE Request ---
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-    $branch_id = intval($_GET['id']);
+// --- Handle DELETE Request (POST only) ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    $branch_id = intval($_POST['delete_id']);
     $stmt = mysqli_prepare($connection, "DELETE FROM branches WHERE id = ?");
     mysqli_stmt_bind_param($stmt, 'i', $branch_id);
     if (mysqli_stmt_execute($stmt)) {
@@ -33,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
         flash_message('error', 'Failed to delete branch: ' . mysqli_stmt_error($stmt));
     }
     mysqli_stmt_close($stmt);
+    mbpos_cache_del(mbpos_cache_key('lookup-branches', 'all'));
     redirect('index.php?page=branches');
 }
 
@@ -63,6 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         mysqli_stmt_close($stmt);
+        mbpos_cache_del(mbpos_cache_key('lookup-branches', 'all'));
         redirect('index.php?page=branches');
     }
 }
@@ -224,9 +227,12 @@ include_template('header', ['page' => 'branches']);
                                                 <a href="index.php?page=branches&action=edit&id=<?= $branch['id'] ?>" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-slate-50 text-slate-500 hover:text-amber-500 hover:bg-amber-50 hover:shadow-sm border border-transparent hover:border-amber-100 transition-all" title="Edit">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                                 </a>
-                                                <a href="index.php?page=branches&action=delete&id=<?= $branch['id'] ?>" onclick="return confirm('Are you sure you want to delete the branch <?= htmlspecialchars($branch['branch_name'], ENT_QUOTES, 'UTF-8') ?>? This action cannot be undone.');" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-slate-50 text-slate-500 hover:text-red-500 hover:bg-red-50 hover:shadow-sm border border-transparent hover:border-red-100 transition-all" title="Delete">
+                                                <form method="POST" action="index.php?page=branches" class="inline" onsubmit="return confirm('Delete this branch?');">
+                                                    <?= csrf_input() ?><input type="hidden" name="delete_id" value="<?= (int)$branch['id'] ?>">
+                                                    <button type="submit" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-slate-50 text-slate-500 hover:text-red-500 hover:bg-red-50 hover:shadow-sm border border-transparent hover:border-red-100 transition-all" title="Delete">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                                </a>
+                                                    </button>
+                                                </form>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

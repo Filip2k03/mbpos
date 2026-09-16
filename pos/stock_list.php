@@ -3,6 +3,7 @@
 
 require_once 'config.php';
 require_once 'includes/functions.php';
+require_once 'includes/cache.php';
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -38,10 +39,12 @@ if ($user_id && ($user_type === 'Myanmar' || $user_type === 'Malay')) {
 
 // --- Handle POST request for bulk status update ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $stock_ids = $_POST['stock_ids'] ?? [];
+    $stock_ids = array_values(array_unique(array_filter(array_map('intval', (array)($_POST['stock_ids'] ?? [])), function ($id) {
+        return $id > 0;
+    })));
     $new_status = $_POST['new_status'] ?? '';
 
-    if (empty($stock_ids)) {
+    if (empty($stock_ids) || count($stock_ids) > 200) {
         flash_message('error', 'No stock items were selected for update.');
     } elseif (!in_array($new_status, $possible_statuses)) {
         flash_message('error', 'An invalid status was selected for the bulk update.');
@@ -83,15 +86,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // --- Fetch Data for Display ---
 $stock_items = [];
-$regions = [];
-
-// Fetch regions for the filter dropdown
-$region_result = mysqli_query($connection, "SELECT id, region_name FROM regions ORDER BY region_name");
-if ($region_result) {
-    while ($row = mysqli_fetch_assoc($region_result)) {
-        $regions[] = $row;
+$regions = mbpos_cache_remember('lookup-regions', 'all', 300, function () use ($connection) {
+    $rows = [];
+    $region_result = mysqli_query($connection, "SELECT id, region_name FROM regions ORDER BY region_name");
+    if ($region_result) {
+        while ($row = mysqli_fetch_assoc($region_result)) $rows[] = $row;
     }
-}
+    return $rows;
+});
 
 // Get filter parameters from GET request
 $start_date = $_GET['start_date'] ?? '';

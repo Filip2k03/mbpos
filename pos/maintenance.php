@@ -18,6 +18,17 @@ global $connection;
 $edit_category = null;
 
 // --- Handle POST Requests (Add/Update/Toggle) ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    $id = intval($_POST['delete_id']);
+    if ($id > 0) {
+        $stmt = mysqli_prepare($connection, "DELETE FROM maintenance WHERE id = ?");
+        mysqli_stmt_bind_param($stmt, 'i', $id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    }
+    redirect('index.php?page=maintenance');
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Toggle Status
     if (isset($_POST['toggle_id'])) {
@@ -46,16 +57,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     redirect('index.php?page=maintenance');
 }
 
-// --- Handle GET Requests (Delete/Edit) ---
+// --- Handle GET Requests (Edit only) ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
     $action = $_GET['action'];
     $id = intval($_GET['id'] ?? 0);
-    if ($action === 'delete' && $id > 0) {
-        $stmt = mysqli_prepare($connection, "DELETE FROM maintenance WHERE id = ?");
-        mysqli_stmt_bind_param($stmt, 'i', $id);
-        mysqli_stmt_execute($stmt);
-        redirect('index.php?page=maintenance');
-    }
     if ($action === 'edit' && $id > 0) {
         $stmt = mysqli_prepare($connection, "SELECT * FROM maintenance WHERE id = ?");
         mysqli_stmt_bind_param($stmt, 'i', $id);
@@ -113,7 +118,10 @@ include_template('header', ['page' => 'maintenance']);
                             </button>
                         </form>
                         <a href="index.php?page=maintenance&action=edit&id=<?= $cat['id'] ?>" class="text-indigo-600 hover:text-indigo-900">Edit</a>
-                        <a href="index.php?page=maintenance&action=delete&id=<?= $cat['id'] ?>" class="text-red-600 hover:text-red-900" onclick="return confirm('Are you sure?')">Delete</a>
+                        <form method="POST" action="index.php?page=maintenance" class="inline" onsubmit="return confirm('Delete this maintenance category?');">
+                            <?= csrf_input() ?><input type="hidden" name="delete_id" value="<?= (int)$cat['id'] ?>">
+                            <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
+                        </form>
                     </div>
                 </div>
             <?php endforeach; ?>

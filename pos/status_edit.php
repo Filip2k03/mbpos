@@ -1,5 +1,5 @@
 <?php
-// status_edit.php - Handles updating the status of a specific voucher.
+// pos/status_edit.php - Handles updating the status of a specific voucher.
 
 global $connection; // Access the global database connection
 
@@ -74,10 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!empty($errors)) {
         flash_message('error', implode('<br>', $errors));
-        // No redirect here, let the page reload with errors
     } else {
         $update_sql = "UPDATE vouchers SET status = ?, notes = ? WHERE id = ?";
-        // Add security check for update as well
         if ($user_type !== 'ADMIN') {
             $update_sql .= " AND created_by_user_id = ?";
         }
@@ -108,59 +106,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include_template('header', ['page' => 'status_edit']);
 ?>
 
-<div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl mx-auto">
-    <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Edit Voucher Status</h2>
+<div class="relative min-h-[85vh] p-4 sm:p-8 flex items-center justify-center font-sans">
+    <div class="w-full max-w-2xl v5-glass-card p-8 sm:p-10 shadow-2xl relative z-10 animate-fadeInDown">
+        
+        <!-- Header -->
+        <div class="flex items-center gap-4 mb-8 pb-5 border-b border-slate-100">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/25">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            </div>
+            <div>
+                <h2 class="text-2xl font-black text-slate-900 tracking-tight" data-i18n="Update Status">Update Voucher Status</h2>
+                <p class="text-xs font-semibold text-slate-400 mt-0.5">Modify shipment status and operational remarks</p>
+            </div>
+        </div>
 
-    <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-        <h3 class="text-xl font-semibold text-blue-800 mb-2">Voucher Details</h3>
-        <p class="text-gray-700 mb-1"><strong>Voucher Code:</strong> <?php echo htmlspecialchars($voucher['voucher_code']); ?></p>
-        <p class="text-gray-700 mb-1"><strong>Sender:</strong> <?php echo htmlspecialchars($voucher['sender_name']); ?></p>
-        <p class="text-gray-700 mb-1"><strong>Receiver:</strong> <?php echo htmlspecialchars($voucher['receiver_name']); ?> (<?php echo htmlspecialchars($voucher['receiver_phone']); ?>)</p>
-        <p class="text-gray-700 mb-1"><strong>Origin Region:</strong> <?php echo htmlspecialchars($voucher['origin_region_name']); ?></p>
-        <p class="text-gray-700 mb-1"><strong>Destination Region:</strong> <?php echo htmlspecialchars($voucher['destination_region_name']); ?></p>
-        <p class="text-gray-700"><strong>Current Status:</strong>
-            <span class="px-2 inline-flex text-sm leading-5 font-semibold rounded-full
-                <?php
-                    switch ($voucher['status']) {
-                        case 'Pending': echo 'bg-yellow-100 text-yellow-800'; break;
-                        case 'In Transit': echo 'bg-blue-100 text-blue-800'; break;
-                        case 'Delivered': echo 'bg-green-100 text-green-800'; break;
-                        case 'Cancelled': echo 'bg-red-100 text-red-800'; break;
-                        case 'Returned': echo 'bg-purple-100 text-purple-800'; break;
-                        default: echo 'bg-gray-100 text-gray-800'; break;
-                    }
-                ?>">
-                <?php echo htmlspecialchars($voucher['status']); ?>
-            </span>
-        </p>
-        <?php if (!empty($voucher['notes'])): ?>
-            <p class="text-gray-700 mt-2"><strong>Notes:</strong> <?php echo nl2br(htmlspecialchars($voucher['notes'])); ?></p>
-        <?php endif; ?>
+        <!-- Voucher Summary Card -->
+        <div class="mb-6 p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-2.5 text-sm">
+            <div class="flex justify-between items-center">
+                <span class="text-slate-500 font-bold text-xs uppercase tracking-wider" data-i18n="Voucher Code">Voucher Code</span>
+                <span class="font-mono font-bold text-blue-600"><?= htmlspecialchars($voucher['voucher_code']); ?></span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-slate-500 font-bold text-xs uppercase tracking-wider" data-i18n="Sender">Sender</span>
+                <span class="font-semibold text-slate-800"><?= htmlspecialchars($voucher['sender_name']); ?></span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-slate-500 font-bold text-xs uppercase tracking-wider" data-i18n="Receiver">Receiver</span>
+                <span class="font-semibold text-slate-800"><?= htmlspecialchars($voucher['receiver_name']); ?> (<?= htmlspecialchars($voucher['receiver_phone']); ?>)</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-slate-500 font-bold text-xs uppercase tracking-wider" data-i18n="Destination">Routing</span>
+                <span class="font-medium text-slate-700"><?= htmlspecialchars($voucher['origin_region_name']); ?> → <?= htmlspecialchars($voucher['destination_region_name']); ?></span>
+            </div>
+            <div class="flex justify-between items-center pt-2 border-t border-slate-200/60">
+                <span class="text-slate-500 font-bold text-xs uppercase tracking-wider" data-i18n="Status">Current Status</span>
+                <span class="v5-badge <?= match(strtolower($voucher['status'])) {
+                    'pending' => 'bg-amber-100 text-amber-800 border-amber-200',
+                    'in transit' => 'bg-blue-100 text-blue-800 border-blue-200',
+                    'delivered' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                    'cancelled' => 'bg-rose-100 text-rose-800 border-rose-200',
+                    default => 'bg-slate-100 text-slate-800 border-slate-200'
+                } ?>">
+                    <?= htmlspecialchars($voucher['status']); ?>
+                </span>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <form action="index.php?page=status_edit&id=<?= htmlspecialchars($voucher['id']); ?>" method="POST" class="space-y-5">
+            <div class="space-y-1.5">
+                <label for="status" class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1" data-i18n="Status">Update Status</label>
+                <select id="status" name="status" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" required>
+                    <?php foreach ($possible_statuses as $status_option): ?>
+                        <option value="<?= htmlspecialchars($status_option); ?>" <?= ($voucher['status'] === $status_option) ? 'selected' : ''; ?>>
+                            <?= htmlspecialchars($status_option); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="space-y-1.5">
+                <label for="notes" class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1" data-i18n="Operational Notes">Operational Notes (Optional)</label>
+                <textarea id="notes" name="notes" rows="3" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" placeholder="Enter remarks or delivery updates..."><?= htmlspecialchars($voucher['notes'] ?? ''); ?></textarea>
+            </div>
+
+            <div class="pt-3 flex items-center justify-between gap-4">
+                <a href="index.php?page=voucher_view&id=<?= htmlspecialchars($voucher['id']); ?>" class="px-5 py-3 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all" data-i18n="Cancel">Cancel</a>
+                <button type="submit" class="flex-1 btn-primary py-3 px-6 rounded-xl font-bold text-sm text-white shadow-lg shadow-blue-500/25 hover:opacity-95 transition-all" data-i18n="Update">Update Status</button>
+            </div>
+        </form>
     </div>
-
-    <form action="index.php?page=status_edit&id=<?php echo htmlspecialchars($voucher['id']); ?>" method="POST">
-        <div class="mb-4">
-            <label for="status" class="block text-gray-700 text-sm font-semibold mb-2">Update Status:</label>
-            <select id="status" name="status" class="form-select" required>
-                <?php foreach ($possible_statuses as $status_option): ?>
-                    <option value="<?php echo htmlspecialchars($status_option); ?>"
-                        <?php echo ($voucher['status'] === $status_option) ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($status_option); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-
-        <div class="mb-6">
-            <label for="notes" class="block text-gray-700 text-sm font-semibold mb-2">Update Notes (Optional):</label>
-            <textarea id="notes" name="notes" rows="4" class="form-input"><?php echo htmlspecialchars($voucher['notes'] ?? ''); ?></textarea>
-        </div>
-
-        <div class="flex justify-between items-center">
-            <a href="index.php?page=voucher_view&id=<?php echo htmlspecialchars($voucher['id']); ?>" class="btn bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-md">Cancel</a>
-            <button type="submit" class="btn bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg rounded-md shadow-md">Update Status</button>
-        </div>
-    </form>
 </div>
 
 <?php include_template('footer'); ?>

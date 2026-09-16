@@ -17,6 +17,7 @@ $is_user_staff = is_staff();
 
 // Page title
 $page_title = $page_title ?? ((APP_NAME ?? 'MBLOGISTICS POS') . ' V5');
+$asset_version = defined('APP_VERSION') ? rawurlencode(APP_VERSION) : '5';
 $current_page = $_GET['page'] ?? 'dashboard';
 $is_voucher_workspace = ($current_page === 'voucher_create');
 
@@ -52,7 +53,7 @@ if (is_logged_in()) {
     <!-- Tailwind + Custom Assets -->
     <!-- Toastify CSS for Notifications -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css?v=<?= $asset_version ?>">
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <?php if (function_exists('load_assets') && isset($page)) load_assets($page); ?>

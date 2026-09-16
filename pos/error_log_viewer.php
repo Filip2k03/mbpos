@@ -48,10 +48,13 @@ include_template('header', ['page' => 'error_log_viewer']);
                 <a href="index.php?page=developer_dashboard" class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70 text-slate-700 text-xs font-bold hover:bg-slate-50 transition-all">
                     ← <span data-i18n="Dev Center">Dev Center</span>
                 </a>
-                <a href="index.php?page=clear_log" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs shadow-lg shadow-rose-500/25 transition-all" onclick="return confirm('Are you sure you want to clear the error log? This action cannot be undone.')">
+                <form method="POST" action="index.php?page=clear_log" class="inline" onsubmit="return confirm('Clear the error log? This action cannot be undone.');">
+                    <?= csrf_input() ?>
+                    <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs shadow-lg shadow-rose-500/25 transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     <span>Clear Log Buffer</span>
-                </a>
+                    </button>
+                </form>
             </div>
         </div>
 

@@ -3,6 +3,7 @@
 
 require_once 'config.php';
 require_once 'includes/functions.php';
+require_once 'includes/cache.php';
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -43,14 +44,18 @@ if ($result) {
 mysqli_stmt_close($stmt);
 
 // --- Fetch Regional Sequence Trackers (Digital Show) ---
-$region_sequences = [];
-$seq_query = "SELECT region_name, prefix, current_sequence FROM regions ORDER BY current_sequence DESC";
-$seq_result = mysqli_query($connection, $seq_query);
-if ($seq_result) {
-    while ($row = mysqli_fetch_assoc($seq_result)) {
-        $region_sequences[] = $row;
+// This is read-only reference data, so a short Redis TTL removes repeated
+// dashboard queries without caching user-specific voucher records.
+$region_sequences = mbpos_cache_remember('dashboard-regions', 'sequence', 30, function () use ($connection) {
+    $rows = [];
+    $seq_result = mysqli_query($connection, "SELECT region_name, prefix, current_sequence FROM regions ORDER BY current_sequence DESC");
+    if ($seq_result) {
+        while ($row = mysqli_fetch_assoc($seq_result)) {
+            $rows[] = $row;
+        }
     }
-}
+    return $rows;
+});
 
 include_template('header', ['page' => 'dashboard']);
 ?>

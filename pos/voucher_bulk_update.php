@@ -25,10 +25,12 @@ $allowed_search_columns = ['voucher_code', 'sender_name', 'receiver_name', 'rece
 
 // --- Handle POST request for bulk status update ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $voucher_ids = $_POST['voucher_ids'] ?? [];
+    $voucher_ids = array_values(array_unique(array_filter(array_map('intval', (array)($_POST['voucher_ids'] ?? [])), function ($id) {
+        return $id > 0;
+    })));
     $new_status = $_POST['new_status'] ?? '';
 
-    if (empty($voucher_ids)) {
+    if (empty($voucher_ids) || count($voucher_ids) > 200) {
         flash_message('error', 'No vouchers were selected for update.');
     } elseif (!in_array($new_status, $possible_statuses)) {
         flash_message('error', 'An invalid status was selected.');

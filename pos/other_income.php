@@ -3,6 +3,7 @@
 
 require_once 'config.php';
 require_once 'includes/functions.php';
+require_once 'includes/cache.php';
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -19,15 +20,26 @@ $user_id = $_SESSION['user_id'];
 $edit_income = null;
 
 // --- Fetch Currencies for Dropdown ---
-$currencies = [];
-$currency_result = mysqli_query($connection, "SELECT code FROM currencies ORDER BY code ASC");
-if ($currency_result) {
-    while ($row = mysqli_fetch_assoc($currency_result)) {
-        $currencies[] = $row['code'];
+$currencies = mbpos_cache_remember('lookup-currencies', 'codes', 300, function () use ($connection) {
+    $rows = [];
+    $currency_result = mysqli_query($connection, "SELECT code FROM currencies ORDER BY code ASC");
+    if ($currency_result) {
+        while ($row = mysqli_fetch_assoc($currency_result)) $rows[] = $row['code'];
     }
-}
+    return $rows;
+});
 
 // --- Handle Add/Update/Delete ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    $income_id = intval($_POST['delete_id']);
+    $stmt = mysqli_prepare($connection, "DELETE FROM other_income WHERE id = ? AND created_by_user_id = ?");
+    mysqli_stmt_bind_param($stmt, 'ii', $income_id, $user_id);
+    if (mysqli_stmt_execute($stmt)) flash_message('success', 'Income record deleted successfully.');
+    else flash_message('error', 'Failed to delete income record.');
+    mysqli_stmt_close($stmt);
+    redirect('index.php?page=other_income');
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $income_id = intval($_POST['income_id'] ?? 0);
     $description = trim($_POST['description']);
@@ -57,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 if (isset($_GET['action'])) {
-    $action = $_GET['action'];
+    $action = (string)$_GET['action'];
     $id = intval($_GET['id'] ?? 0);
 
     if ($action === 'edit' && $id > 0) {
@@ -68,7 +80,7 @@ if (isset($_GET['action'])) {
         $edit_income = mysqli_fetch_assoc($result);
     }
     
-    if ($action === 'delete' && $id > 0) {
+    if ($action === 'delete' && $id > 0 && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = mysqli_prepare($connection, "DELETE FROM other_income WHERE id = ? AND created_by_user_id = ?");
         mysqli_stmt_bind_param($stmt, 'ii', $id, $user_id);
          if(mysqli_stmt_execute($stmt)){
@@ -76,6 +88,9 @@ if (isset($_GET['action'])) {
         } else {
             flash_message('error', 'Failed to delete income record.');
         }
+        redirect('index.php?page=other_income');
+    } elseif ($action === 'delete' && $id > 0) {
+        flash_message('warning', 'Please confirm deletion using the form button.');
         redirect('index.php?page=other_income');
     }
 }
@@ -152,7 +167,10 @@ include_template('header', ['page' => 'other_income']);
                         <td class="table-cell"><?= htmlspecialchars($income['currency']) ?> <?= number_format($income['amount'], 2) ?></td>
                         <td class="table-cell">
                             <!--<a href="index.php?page=other_income&action=edit&id=<?= $income['id'] ?>" class="text-indigo-600 hover:text-indigo-900">Edit</a>-->
-                            <a href="index.php?page=other_income&action=delete&id=<?= $income['id'] ?>" class="text-red-600 hover:text-red-900 ml-4" onclick="return confirm('Are you sure?')">Delete</a>
+                            <form method="POST" action="index.php?page=other_income&action=delete&id=<?= (int)$income['id'] ?>" class="inline ml-4" onsubmit="return confirm('Delete this income record?');">
+                                <?= csrf_input() ?><input type="hidden" name="delete_id" value="<?= (int)$income['id'] ?>">
+                                <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
+                            </form>
                         </td>
                     </tr>
                     <?php endforeach; ?>

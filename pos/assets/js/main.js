@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // to the same URL share one network operation, stalled requests abort, and
     // only transient failures are retried. Dynamic PHP responses bypass the
     // browser cache so authenticated records cannot become stale.
+    // Non-GET requests automatically attach the X-CSRF-Token header if available.
     window.mbposFetch = function (url, options) {
         options = options || {};
         const method = (options.method || 'GET').toUpperCase();
@@ -62,6 +63,22 @@ document.addEventListener('DOMContentLoaded', function () {
             delete requestOptions.timeout;
             delete requestOptions.attempts;
             delete requestOptions.dedupe;
+
+            // CSRF header injection for non-GET requests
+            if (method !== 'GET') {
+                const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                if (csrfMeta && csrfMeta.content) {
+                    if (!requestOptions.headers) requestOptions.headers = {};
+                    if (typeof requestOptions.headers.set === 'function') {
+                        if (!requestOptions.headers.has('X-CSRF-Token')) {
+                            requestOptions.headers.set('X-CSRF-Token', csrfMeta.content);
+                        }
+                    } else if (!requestOptions.headers['X-CSRF-Token']) {
+                        requestOptions.headers['X-CSRF-Token'] = csrfMeta.content;
+                    }
+                }
+            }
+
             if (method === 'GET' && String(url).includes('index.php')) {
                 requestOptions.cache = 'no-store';
             }
@@ -95,6 +112,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     const translations = {
+        // Core Shell & Navigation
         "Dashboard": "ဒက်ရှ်ဘုတ်",
         "Create Voucher": "ဘောက်ချာဖန်တီးရန်",
         "Shipments": "ပို့ဆောင်မှုများ",
@@ -107,6 +125,7 @@ document.addEventListener('DOMContentLoaded', function () {
         "Financials": "ဘဏ္ဍာရေး",
         "Admin Tools": "စီမံခန့်ခွဲမှုကိရိယာများ",
         "Admin Dashboard": "စီမံခန့်ခွဲသူ ဒက်ရှ်ဘုတ်",
+        "Admin Control Center": "စီမံခန့်ခွဲသူ ထိန်းချုပ်ကွက်",
         "User Management": "အသုံးပြုသူ စီမံခန့်ခွဲမှု",
         "Dev Center": "Developer စင်တာ",
         "Branches": "ရုံးခွဲများ",
@@ -116,6 +135,29 @@ document.addEventListener('DOMContentLoaded', function () {
         "Install app": "အက်ပ်ထည့်သွင်းရန်",
         "All rights reserved.": "မူပိုင်ခွင့်အားလုံး ထိန်းသိမ်းထားသည်။",
         "Engineered by": "ဖန်တီးသူ",
+        "Menu": "မီနူး",
+        "Navigation": "လမ်းညွှန်",
+        "Close Menu": "မီနူးပိတ်ရန်",
+
+        // Target IA Groups
+        "Operations": "လုပ်ငန်းဆောင်ရွက်မှု",
+        "Finance": "ဘဏ္ဍာရေး",
+        "Configuration": "စနစ်ဖွဲ့စည်းမှု",
+        "Administration": "စီမံခန့်ခွဲမှု",
+        "Voucher Ledger": "ဘောက်ချာ မှတ်တမ်း",
+        "Maintenance Zones": "စနစ်ထိန်းသိမ်းမှု ဇုန်များ",
+
+        // Command Palette & Search
+        "Command Palette": "အမြန်ညွှန်ကြားချက် ပလက်ဖောင်း",
+        "Quick Actions": "အမြန်ဆောင်ရွက်ချက်များ",
+        "Press Esc to close": "ပိတ်ရန် Esc ကိုနှိပ်ပါ",
+        "Search vouchers or jump to screen...": "ဘောက်ချာရှာရန် သို့မဟုတ် စာမျက်နှာသို့သွားရန်...",
+        "Search vouchers, actions...": "ဘောက်ချာ သို့မဟုတ် စာမျက်နှာ ရှာရန်...",
+        "Search vouchers, jumps, actions...": "ဘောက်ချာ သို့မဟုတ် ညွှန်ကြားချက်များ ရှာရန်...",
+        "Search vouchers": "ဘောက်ချာများ ရှာဖွေရန်",
+        "Jump to": "သွားရောက်ရန်",
+
+        // Voucher Create & Management
         "Create Delivery Voucher": "ပို့ဆောင်ရေးဘောက်ချာ ဖန်တီးရန်",
         "Record a new shipment into the ledger": "ပို့ဆောင်မှုအသစ်ကို မှတ်တမ်းတွင် ထည့်သွင်းပါ",
         "Sender Details": "ပို့သူအချက်အလက်",
@@ -153,6 +195,8 @@ document.addEventListener('DOMContentLoaded', function () {
         "Delivery Charge": "ပို့ဆောင်ခ",
         "Additional Charge": "ထပ်ဆောင်းခ",
         "Discount": "လျှော့စျေး",
+
+        // Statuses
         "Pending": "ဆိုင်းငံ့ထားဆဲ",
         "Created": "ဖန်တီးပြီး",
         "Picked Up": "လက်ခံရရှိပြီး",
@@ -162,6 +206,8 @@ document.addEventListener('DOMContentLoaded', function () {
         "Cancelled": "ပယ်ဖျက်ပြီး",
         "Paid": "ငွေချေပြီး",
         "Unpaid": "ငွေမချေသေး",
+
+        // Actions & Buttons
         "Save Draft": "မူကြမ်းသိမ်းရန်",
         "Preview": "အကြိုကြည့်ရှုရန်",
         "Print": "ပရင့်ထုတ်ရန်",
@@ -180,6 +226,12 @@ document.addEventListener('DOMContentLoaded', function () {
         "Download": "ဒေါင်းလုဒ်လုပ်ရန်",
         "Add New": "အသစ်ထည့်ရန်",
         "Bulk Update": "အစုလိုက် မွမ်းမံရန်",
+        "Selected Vouchers": "ရွေးချယ်ထားသော ဘောက်ချာများ",
+        "Apply Changes": "ပြောင်းလဲချက်များ အတည်ပြုရန်",
+        "Apply Bulk Updates": "အစုလိုက် မွမ်းမံမှု အတည်ပြုရန်",
+        "Reset Filters": "စစ်ထုတ်မှုများ ပြန်လည်သတ်မှတ်ရန်",
+
+        // Data Fields
         "Voucher Code": "ဘောက်ချာကုဒ်",
         "Tracking Number": "ခြေရာခံနံပါတ်",
         "Sender": "ပို့သူ",
@@ -193,30 +245,58 @@ document.addEventListener('DOMContentLoaded', function () {
         "Category": "အမျိုးအစား",
         "Price": "ဈေးနှုန်း",
         "Price / Kg": "၁ ကီလိုဈေးနှုန်း",
+
+        // Finance & Reports
         "Revenue": "ဝင်ငွေ",
+        "Gross Revenue": "စုစုပေါင်း ဝင်ငွေ",
         "Expenses": "အသုံးစရိတ်များ",
         "Expense": "အသုံးစရိတ်",
         "Profit": "အမြတ်",
         "Loss": "အရှုံး",
         "Profit & Loss": "အမြတ်နှင့် အရှုံး",
         "Net Profit": "အသားတင်အမြတ်",
+        "Net Margin": "အသားတင် အမြတ်နှုန်း",
         "Total Income": "စုစုပေါင်းဝင်ငွေ",
         "Total Expenses": "စုစုပေါင်းအသုံးစရိတ်",
         "Other Income": "အခြားဝင်ငွေ",
-        "Customer List": "ဖောက်သည်များ စာရင်း",
-        "Customer Name": "ဖောက်သည်အမည်",
-        "Register Customer": "ဖောက်သည်အသစ် မှတ်ပုံတင်ရန်",
+        "Daily Ledger": "နေ့စဉ် မှတ်တမ်း",
+        "Monthly Ledger": "လစဉ် မှတ်တမ်း",
+        "By Currency": "ငွေကြေးအလိုက်",
+
+        // Configuration
+        "Operating Branches": "ဖွင့်လှစ်ထားသော ရုံးခွဲများ",
         "Item Types": "ပစ္စည်းအမျိုးအစားများ",
+        "Item Categories": "ကုန်ပစ္စည်း အမျိုးအစားများ",
         "Delivery Types": "ပို့ဆောင်မှုအမျိုးအစားများ",
         "Currencies": "ငွေကြေးများ",
         "Branch Management": "ရုံးခွဲ စီမံခန့်ခွဲမှု",
+
+        // Diagnostics & Maintenance
         "Error Logs": "ချို့ယွင်းချက် မှတ်တမ်း",
         "System Diagnostics": "စနစ်စစ်ဆေးမှု",
         "High Load Alert": "ဝန်ထုပ်ဝန်ပိုးမြင့်မားနေပါသည်",
         "Routine maintenance & updates in progress": "ပုံမှန်စနစ်ထိန်းသိမ်းမှုနှင့် အဆင့်မြှင့်တင်မှုများ ဆောင်ရွက်နေပါသည်",
+        "Active Maintenance": "စနစ်ထိန်းသိမ်းနေဆဲ",
+        "Normal Operation": "ပုံမှန်လည်ပတ်နေသည်",
+
+        // Auth & Portal
+        "MBPOS Portal": "MBPOS စနစ်ဝင်ရောက်ရန်",
+        "Secure access to your operational dashboard": "လုပ်ငန်းခွင်ဒက်ရှ်ဘုတ်သို့ လုံခြုံစွာဝင်ရောက်ပါ",
+        "System Identity": "အသုံးပြုသူ အမည်",
+        "Access Key": "လျှို့ဝှက်ကုဒ်",
+        "Keep me signed in": "အကောင့်ဝင်ထားပြီးသားထားရန်",
+        "Authorize Access": "စနစ်သို့ ဝင်ရောက်မည်",
+        "Reveal": "ပြပါ",
+        "Hide": "ဝှက်ပါ",
+        "Enter your username": "အသုံးပြုသူအမည် ရိုက်ထည့်ပါ",
+
+        // System messages & feedback
         "You are offline. Saved pages remain available; live records require a connection.": "အင်တာနက်ချိတ်ဆက်မှု မရှိပါ။ သိမ်းထားသောစာမျက်နှာများကို အသုံးပြုနိုင်သော်လည်း တိုက်ရိုက်မှတ်တမ်းများအတွက် ချိတ်ဆက်မှုလိုအပ်ပါသည်။",
-        "Search customer, tracking number, or voucher...": "ဖောက်သည်၊ ခြေရာခံနံပါတ် သို့မဟုတ် ဘောက်ချာ ရှာရန်..."
+        "Search customer, tracking number, or voucher...": "ဖောက်သည်၊ ခြေရာခံနံပါတ် သို့မဟုတ် ဘောက်ချာ ရှာရန်...",
+        "No records found": "မှတ်တမ်းမတွေ့ရှိပါ",
+        "System Restored Online": "စနစ်အင်တာနက် ပြန်လည်ရရှိပါပြီ"
     };
+
     const english = Object.keys(translations).reduce((map, key) => {
         map[translations[key]] = key;
         return map;
@@ -246,7 +326,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const key = node.dataset.i18nPlaceholder;
             node.placeholder = language === 'mm' ? (translations[key] || key) : key;
         });
-        // Translate plain labels/options across legacy pages without touching form values.
+        // Translate plain text nodes without touching scripts, styles, or inputs
         const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
         const nodes = [];
         while (walker.nextNode()) nodes.push(walker.currentNode);
@@ -265,9 +345,26 @@ document.addEventListener('DOMContentLoaded', function () {
         const banner = document.getElementById('offline-status');
         if (banner) banner.hidden = !offline;
         document.body.classList.toggle('is-offline', offline);
+
+        if (!offline && typeof Toastify === 'function') {
+            Toastify({
+                text: currentLanguage() === 'mm' ? 'စနစ်အင်တာနက် ပြန်လည်ရရှိပါပြီ' : 'System Online: Connection restored',
+                duration: 3500,
+                gravity: 'top',
+                position: 'right',
+                style: {
+                    background: 'linear-gradient(135deg, #0ca678, #23c993)',
+                    color: '#ffffff',
+                    borderRadius: '12px',
+                    fontWeight: '700',
+                    fontSize: '13px'
+                }
+            }).showToast();
+        }
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        // Automatic CSRF input injection for all POST forms
         const csrfMeta = document.querySelector('meta[name="csrf-token"]');
         if (csrfMeta && csrfMeta.content) {
             document.querySelectorAll('form[method="POST"], form[method="post"]').forEach(function (form) {
@@ -279,9 +376,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 form.appendChild(csrfField);
             });
         }
+
+        // Apply saved language & offline status
         applyLanguage(currentLanguage());
         setOfflineState();
 
+        // Language toggle button listener
         const toggle = document.getElementById('language-toggle');
         if (toggle) toggle.addEventListener('click', function () {
             const language = currentLanguage() === 'mm' ? 'en' : 'mm';
@@ -289,31 +389,140 @@ document.addEventListener('DOMContentLoaded', function () {
             applyLanguage(language);
         });
 
-        const search = document.getElementById('global-search');
+        // ---------------------------------------------------------------------
+        // Command Palette (⌘K / Ctrl+K) Logic
+        // ---------------------------------------------------------------------
+        const cmdModal = document.getElementById('mbpos-cmd-palette');
+        const cmdInput = document.getElementById('mbpos-cmd-input');
+        const cmdBackdrop = cmdModal ? cmdModal.querySelector('.mbpos-cmd-backdrop') : null;
+        const cmdItems = cmdModal ? cmdModal.querySelectorAll('.mbpos-cmd-item[data-jump]') : [];
+        const cmdSearchItem = document.getElementById('mbpos-cmd-search-jump');
+
+        function openCommandPalette() {
+            if (!cmdModal) return;
+            cmdModal.hidden = false;
+            if (cmdInput) {
+                cmdInput.value = '';
+                filterCommandItems('');
+                setTimeout(() => cmdInput.focus(), 50);
+            }
+        }
+
+        function closeCommandPalette() {
+            if (!cmdModal) return;
+            cmdModal.hidden = true;
+        }
+
+        function filterCommandItems(query) {
+            const q = (query || '').toLowerCase().trim();
+            cmdItems.forEach(item => {
+                const text = (item.textContent || '').toLowerCase();
+                const match = !q || text.includes(q);
+                item.style.display = match ? 'flex' : 'none';
+            });
+            if (cmdSearchItem) {
+                if (q) {
+                    cmdSearchItem.style.display = 'flex';
+                    const targetSpan = cmdSearchItem.querySelector('.mbpos-cmd-query-text');
+                    if (targetSpan) targetSpan.textContent = query;
+                    cmdSearchItem.href = 'index.php?page=voucher_list&search=' + encodeURIComponent(query);
+                } else {
+                    cmdSearchItem.style.display = 'none';
+                }
+            }
+        }
+
         document.addEventListener('keydown', function (event) {
-            if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k' && search) {
+            if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
                 event.preventDefault();
-                search.focus();
+                if (cmdModal && !cmdModal.hidden) {
+                    closeCommandPalette();
+                } else {
+                    openCommandPalette();
+                }
+            } else if (event.key === 'Escape' && cmdModal && !cmdModal.hidden) {
+                closeCommandPalette();
             }
         });
-        if (search) {
-            const runSearch = function () {
-                const value = search.value.trim();
-                if (!value) return;
-                window.location.href = 'index.php?page=voucher_list&search=' + encodeURIComponent(value);
-            };
-            search.addEventListener('search', runSearch);
-            search.addEventListener('keydown', function (event) {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    runSearch();
+
+        if (cmdBackdrop) {
+            cmdBackdrop.addEventListener('click', closeCommandPalette);
+        }
+
+        if (cmdInput) {
+            cmdInput.addEventListener('input', function () {
+                filterCommandItems(this.value);
+            });
+            cmdInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const val = this.value.trim();
+                    if (!val) return;
+                    // If a visible item matches or search jump
+                    if (cmdSearchItem && cmdSearchItem.style.display !== 'none') {
+                        window.location.href = cmdSearchItem.href;
+                    } else {
+                        window.location.href = 'index.php?page=voucher_list&search=' + encodeURIComponent(val);
+                    }
                 }
             });
         }
+
+        // Global search input in header also opens the command palette or searches directly
+        const headerSearch = document.getElementById('global-search');
+        if (headerSearch) {
+            headerSearch.addEventListener('click', function (e) {
+                e.preventDefault();
+                openCommandPalette();
+            });
+            headerSearch.addEventListener('focus', function (e) {
+                e.preventDefault();
+                this.blur();
+                openCommandPalette();
+            });
+        }
+
+        // ---------------------------------------------------------------------
+        // Mobile Drawer Toggle
+        // ---------------------------------------------------------------------
+        const sidebar = document.querySelector('.mbpos-sidebar');
+        const drawerToggle = document.getElementById('mobile-drawer-toggle');
+        const mobileNavMore = document.getElementById('mobile-nav-more');
+        const sidebarClose = document.getElementById('mbpos-sidebar-close');
+
+        function toggleMobileDrawer(open) {
+            if (!sidebar) return;
+            const shouldOpen = (open !== undefined) ? open : !sidebar.classList.contains('drawer-open');
+            sidebar.classList.toggle('drawer-open', shouldOpen);
+
+            let backdrop = document.querySelector('.mbpos-drawer-backdrop');
+            if (shouldOpen) {
+                if (!backdrop) {
+                    backdrop = document.createElement('div');
+                    backdrop.className = 'mbpos-drawer-backdrop';
+                    backdrop.addEventListener('click', () => toggleMobileDrawer(false));
+                    document.body.appendChild(backdrop);
+                }
+            } else {
+                if (backdrop) backdrop.remove();
+            }
+        }
+
+        if (drawerToggle) {
+            drawerToggle.addEventListener('click', () => toggleMobileDrawer());
+        }
+        if (mobileNavMore) {
+            mobileNavMore.addEventListener('click', () => toggleMobileDrawer());
+        }
+        if (sidebarClose) {
+            sidebarClose.addEventListener('click', () => toggleMobileDrawer(false));
+        }
     });
+
     window.addEventListener('online', setOfflineState);
     window.addEventListener('offline', setOfflineState);
 
+    // Progressive PWA Install Prompt Handler
     let deferredInstallPrompt = null;
     window.addEventListener('beforeinstallprompt', function (event) {
         event.preventDefault();
@@ -331,10 +540,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // Progressive Service Worker Registration
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function () {
             navigator.serviceWorker.register('sw.js', { scope: './' }).catch(function () {
-                // Offline enhancement is progressive; the online POS remains usable if SW is unavailable.
+                // Progressive enhancement: offline shell gracefully falls back
             });
         });
     }

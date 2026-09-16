@@ -1,5 +1,5 @@
 <?php
-// pos/stock_list.php - Displays a filterable list of stock items and handles bulk status updates.
+// pos/stock_list.php - Displays a filterable list of stock items and handles bulk status updates (V5).
 
 require_once 'config.php';
 require_once 'includes/functions.php';
@@ -16,6 +16,7 @@ if (!is_logged_in()) {
 }
 
 global $connection;
+mysqli_set_charset($connection, "utf8mb4");
 
 // --- Define possible statuses and search columns ---
 $possible_statuses = ['Pending', 'In Transit', 'Delivered', 'Received', 'Maintenance'];
@@ -40,6 +41,7 @@ if ($user_id && ($user_type === 'Myanmar' || $user_type === 'Malay')) {
 
 // --- Handle POST request for bulk status update ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf_request();
     $stock_ids = array_values(array_unique(array_filter(array_map('intval', (array)($_POST['stock_ids'] ?? [])), function ($id) {
         return $id > 0;
     })));
@@ -68,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mysqli_stmt_bind_param($stmt_vouchers, $types, ...$lookup_values);
         mysqli_stmt_execute($stmt_vouchers);
         $result_vouchers = mysqli_stmt_get_result($stmt_vouchers);
-        
+
         $voucher_ids_to_update = [];
         while($row = mysqli_fetch_assoc($result_vouchers)){
             $voucher_ids_to_update[] = $row['voucher_id'];
@@ -79,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Now update the vouchers table
             $voucher_ids_placeholder = implode(',', array_fill(0, count($voucher_ids_to_update), '?'));
             $stmt_update = mysqli_prepare($connection, "UPDATE vouchers SET status = ? WHERE id IN ($voucher_ids_placeholder)");
-            
+
             $update_types = 's' . str_repeat('i', count($voucher_ids_to_update));
             mysqli_stmt_bind_param($stmt_update, $update_types, $new_status, ...$voucher_ids_to_update);
 
@@ -94,7 +96,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Redirect to the same page to show updated list and messages
     redirect('index.php?page=stock_list&' . http_build_query($_GET));
 }
-
 
 // --- Fetch Data for Display ---
 $stock_items = [];
@@ -181,46 +182,168 @@ include_template('header', ['page' => 'stock_list']);
 
 <div class="v5-page">
     <div class="v5-page-head">
-        <div class="v5-page-head__copy"><span class="v5-kicker">Shipment operations</span><h1 data-i18n="Shipments">Shipment Stock</h1><p>Search, monitor, and update the active logistics queue.</p></div>
-        <span class="v5-count"><?= count($stock_items) ?> records loaded · maximum 500</span>
+        <div class="v5-page-head__copy">
+            <span class="v5-kicker" data-i18n="Shipment Operations">Shipment Operations</span>
+            <h1 data-i18n="Shipments">Shipment Stock</h1>
+            <p data-i18n="Search, monitor, and update the active logistics queue.">Search, monitor, and update the active logistics queue.</p>
+        </div>
+        <div class="v5-page-actions">
+            <span class="v5-count"><?= count($stock_items) ?> <span data-i18n="records loaded · maximum 500">records loaded · maximum 500</span></span>
+        </div>
     </div>
 
-    <section class="v5-panel">
-        <div class="v5-panel__head"><h2>Shipment Filters</h2><a class="v5-btn-ghost" href="index.php?page=stock_list">Reset filters</a></div>
+    <!-- Filters Section -->
+    <section class="v5-panel mb-6">
+        <div class="v5-panel__head">
+            <h2 data-i18n="Shipment Filters">Shipment Filters</h2>
+            <a class="btn-ghost btn-sm" href="index.php?page=stock_list" data-i18n="Reset filters">Reset filters</a>
+        </div>
         <div class="v5-panel__body">
             <form action="index.php" method="GET" class="v5-filter-grid">
                 <input type="hidden" name="page" value="stock_list">
-                <div class="v5-field"><label for="start_date">Start date</label><input type="date" id="start_date" name="start_date" value="<?= htmlspecialchars($start_date, ENT_QUOTES, 'UTF-8') ?>"></div>
-                <div class="v5-field"><label for="end_date">End date</label><input type="date" id="end_date" name="end_date" value="<?= htmlspecialchars($end_date, ENT_QUOTES, 'UTF-8') ?>"></div>
-                <div class="v5-field"><label for="filter_region_id">Region</label><select id="filter_region_id" name="region_id"><option value="All">All Regions</option><?php foreach ($regions as $region): ?><option value="<?= (int)$region['id'] ?>" <?= strval($filter_region_id) === strval($region['id']) ? 'selected' : '' ?>><?= htmlspecialchars($region['region_name'], ENT_QUOTES, 'UTF-8') ?></option><?php endforeach; ?></select></div>
-                <div class="v5-field"><label for="filter_status">Status</label><select id="filter_status" name="status"><option value="">All Statuses</option><?php foreach ($possible_statuses as $status): ?><option value="<?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?>" <?= $filter_status === $status ? 'selected' : '' ?>><?= htmlspecialchars($status) ?></option><?php endforeach; ?></select></div>
-                <div class="v5-field v5-field--wide"><label for="search_term">Search</label><div class="v5-search-group"><select name="search_column"><option value="voucher_code" <?= $search_column === 'voucher_code' ? 'selected' : '' ?>>Voucher Code</option><option value="sender_name" <?= $search_column === 'sender_name' ? 'selected' : '' ?>>Sender</option><option value="receiver_name" <?= $search_column === 'receiver_name' ? 'selected' : '' ?>>Receiver</option><option value="receiver_phone" <?= $search_column === 'receiver_phone' ? 'selected' : '' ?>>Receiver Phone</option></select><input id="search_term" type="search" name="search" placeholder="Search shipment records" value="<?= htmlspecialchars($search_term, ENT_QUOTES, 'UTF-8') ?>"></div></div>
-                <div class="v5-field"><button type="submit" class="btn w-full">Apply Filters</button></div>
+
+                <div class="v5-field">
+                    <label for="start_date" class="v5-field-label" data-i18n="Start Date">Start Date</label>
+                    <input type="date" id="start_date" name="start_date" class="v5-input" value="<?= e($start_date) ?>">
+                </div>
+
+                <div class="v5-field">
+                    <label for="end_date" class="v5-field-label" data-i18n="End Date">End Date</label>
+                    <input type="date" id="end_date" name="end_date" class="v5-input" value="<?= e($end_date) ?>">
+                </div>
+
+                <div class="v5-field">
+                    <label for="filter_region_id" class="v5-field-label" data-i18n="Region">Region</label>
+                    <select id="filter_region_id" name="region_id" class="v5-input">
+                        <option value="All" data-i18n="All Regions">All Regions</option>
+                        <?php foreach ($regions as $region): ?>
+                            <option value="<?= (int)$region['id'] ?>" <?= strval($filter_region_id) === strval($region['id']) ? 'selected' : '' ?>><?= e($region['region_name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="v5-field">
+                    <label for="filter_status" class="v5-field-label" data-i18n="Status">Status</label>
+                    <select id="filter_status" name="status" class="v5-input">
+                        <option value="" data-i18n="All Statuses">All Statuses</option>
+                        <?php foreach ($possible_statuses as $status): ?>
+                            <option value="<?= e($status) ?>" <?= $filter_status === $status ? 'selected' : '' ?>><?= e($status) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="v5-field v5-field--wide">
+                    <label for="search_term" class="v5-field-label" data-i18n="Search">Search</label>
+                    <div class="v5-search-group">
+                        <select name="search_column" class="v5-input" style="max-width:160px;">
+                            <option value="voucher_code" <?= $search_column === 'voucher_code' ? 'selected' : '' ?> data-i18n="Voucher Code">Voucher Code</option>
+                            <option value="sender_name" <?= $search_column === 'sender_name' ? 'selected' : '' ?> data-i18n="Sender">Sender</option>
+                            <option value="receiver_name" <?= $search_column === 'receiver_name' ? 'selected' : '' ?> data-i18n="Receiver">Receiver</option>
+                            <option value="receiver_phone" <?= $search_column === 'receiver_phone' ? 'selected' : '' ?> data-i18n="Receiver Phone">Receiver Phone</option>
+                        </select>
+                        <input id="search_term" type="search" name="search" class="v5-input flex-1" placeholder="Search shipment records..." value="<?= e($search_term) ?>">
+                    </div>
+                </div>
+
+                <div class="v5-field flex items-end">
+                    <button type="submit" class="btn-primary w-full" data-i18n="Apply Filters">Apply Filters</button>
+                </div>
             </form>
         </div>
     </section>
 
-    <form action="index.php?page=stock_list&<?= htmlspecialchars(http_build_query($_GET), ENT_QUOTES, 'UTF-8') ?>" method="POST" id="stock-list-form" class="v5-panel">
+    <!-- Active Shipment Queue Table -->
+    <form action="index.php?page=stock_list&<?= e(http_build_query($_GET)) ?>" method="POST" id="stock-list-form" class="v5-panel">
         <?= csrf_input() ?>
-        <div class="v5-panel__head"><h2>Active Shipment Queue</h2><span class="v5-count">Live database records</span></div>
-        <?php if ($can_bulk_update): ?>
-            <div class="v5-toolbar"><div class="v5-toolbar__group"><label for="new_status">Selected status</label><select id="new_status" name="new_status" required><option value="">Choose status</option><?php foreach ($possible_statuses as $status): ?><option value="<?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($status) ?></option><?php endforeach; ?></select></div><button type="submit" class="btn-secondary">Update Selected</button></div>
-        <?php endif; ?>
-        <div class="overflow-x-auto">
-            <table class="min-w-full">
-                <thead><tr><?php if ($can_bulk_update): ?><th><input type="checkbox" id="select-all-stocks" aria-label="Select all shipments"></th><?php endif; ?><th>Voucher</th><th>Sender → Receiver</th><th>Origin</th><th>Status</th><th>Last Updated</th></tr></thead>
-                <tbody>
-                    <?php if (empty($stock_items)): ?><tr><td colspan="6"><div class="v5-empty"><span class="v5-empty__icon">◇</span><strong>No shipments match these filters</strong><p>Adjust the date, region, status, or search query.</p></div></td></tr>
-                    <?php else: foreach ($stock_items as $item): ?><tr>
-                        <?php if ($can_bulk_update): ?><td><input type="checkbox" name="stock_ids[]" value="<?= (int)$item['id'] ?>" class="stock-checkbox" aria-label="Select <?= htmlspecialchars($item['voucher_code'], ENT_QUOTES, 'UTF-8') ?>"></td><?php endif; ?>
-                        <td><a class="font-mono font-bold text-blue-600" href="index.php?page=voucher_view&id=<?= (int)($item['voucher_id'] ?? 0) ?>"><?= htmlspecialchars($item['voucher_code'], ENT_QUOTES, 'UTF-8') ?></a></td>
-                        <td><strong><?= htmlspecialchars($item['sender_name'], ENT_QUOTES, 'UTF-8') ?></strong><br><span class="text-xs text-slate-500">→ <?= htmlspecialchars($item['receiver_name'], ENT_QUOTES, 'UTF-8') ?> · <?= htmlspecialchars($item['receiver_phone'], ENT_QUOTES, 'UTF-8') ?></span></td>
-                        <td><?= htmlspecialchars($item['origin_region'] ?? 'N/A', ENT_QUOTES, 'UTF-8') ?></td>
-                        <td><span class="status-badge status-<?= strtolower(str_replace(' ', '-', $item['status'])) ?>"><?= htmlspecialchars($item['status'], ENT_QUOTES, 'UTF-8') ?></span></td>
-                        <td><?= date('M j, Y · H:i', strtotime($item['updated_at'])) ?></td>
-                    </tr><?php endforeach; endif; ?>
-                </tbody>
-            </table>
+
+        <div class="v5-panel__head flex-wrap gap-4">
+            <div>
+                <h2 data-i18n="Active Shipment Queue">Active Shipment Queue</h2>
+                <span class="v5-count" data-i18n="Live database records">Live database records</span>
+            </div>
+
+            <?php if ($can_bulk_update): ?>
+                <div class="v5-toolbar flex items-center gap-3">
+                    <div class="v5-toolbar__group flex items-center gap-2">
+                        <label for="new_status" class="text-xs font-bold text-muted uppercase" data-i18n="Selected Status:">Selected Status:</label>
+                        <select id="new_status" name="new_status" class="v5-input" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" required>
+                            <option value="" data-i18n="Choose status">Choose status</option>
+                            <?php foreach ($possible_statuses as $status): ?>
+                                <option value="<?= e($status) ?>"><?= e($status) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary btn-sm" id="btn-submit-stock-batch" data-i18n="Update Selected">Update Selected</button>
+                    <span id="stock-selected-counter" class="v5-badge v5-badge-info hidden">0 selected</span>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <div class="v5-panel__body p-0">
+            <div class="overflow-x-auto">
+                <table class="v5-table w-full">
+                    <thead>
+                        <tr>
+                            <?php if ($can_bulk_update): ?>
+                                <th style="width:40px;"><input type="checkbox" id="select-all-stocks" aria-label="Select all shipments"></th>
+                            <?php endif; ?>
+                            <th data-i18n="Voucher">Voucher</th>
+                            <th data-i18n="Sender → Receiver">Sender → Receiver</th>
+                            <th data-i18n="Origin">Origin</th>
+                            <th data-i18n="Status">Status</th>
+                            <th data-i18n="Last Updated">Last Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($stock_items)): ?>
+                            <tr>
+                                <td colspan="<?= $can_bulk_update ? 6 : 5 ?>">
+                                    <div class="v5-empty">
+                                        <span class="v5-empty__icon">◇</span>
+                                        <strong data-i18n="No shipments match these filters">No shipments match these filters</strong>
+                                        <p data-i18n="Adjust the date, region, status, or search query.">Adjust the date, region, status, or search query.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php else: foreach ($stock_items as $item):
+                            $status_class = match(strtolower($item['status'] ?? '')) {
+                                'delivered' => 'v5-badge-success',
+                                'in transit' => 'v5-badge-info',
+                                'pending' => 'v5-badge-warning',
+                                'received' => 'v5-badge-neutral',
+                                'maintenance' => 'v5-badge-danger',
+                                default => 'v5-badge-neutral'
+                            };
+                        ?>
+                            <tr>
+                                <?php if ($can_bulk_update): ?>
+                                    <td>
+                                        <input type="checkbox" name="stock_ids[]" value="<?= (int)$item['id'] ?>" class="stock-checkbox" aria-label="Select <?= e($item['voucher_code']) ?>">
+                                    </td>
+                                <?php endif; ?>
+                                <td>
+                                    <a class="font-mono font-bold text-primary hover:underline" href="index.php?page=voucher_view&id=<?= (int)($item['voucher_id'] ?? 0) ?>">
+                                        <?= e($item['voucher_code']) ?>
+                                    </a>
+                                </td>
+                                <td>
+                                    <strong><?= e($item['sender_name']) ?></strong>
+                                    <div class="text-xs text-muted">→ <?= e($item['receiver_name']) ?> · <?= e($item['receiver_phone']) ?></div>
+                                </td>
+                                <td>
+                                    <span class="v5-badge v5-badge-neutral"><?= e($item['origin_region'] ?? 'N/A') ?></span>
+                                </td>
+                                <td>
+                                    <span class="v5-badge <?= $status_class ?>"><?= e($item['status']) ?></span>
+                                </td>
+                                <td class="text-xs text-muted font-mono">
+                                    <?= date('M j, Y · H:i', strtotime($item['updated_at'])) ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </form>
 </div>
@@ -229,18 +352,55 @@ include_template('header', ['page' => 'stock_list']);
 document.addEventListener('DOMContentLoaded', function () {
     const selectAllCheckbox = document.getElementById('select-all-stocks');
     const stockCheckboxes = document.querySelectorAll('.stock-checkbox');
+    const counter = document.getElementById('stock-selected-counter');
 
-    if(selectAllCheckbox) {
+    function updateStockCounter() {
+        const checkedCount = document.querySelectorAll('.stock-checkbox:checked').length;
+        if (counter) {
+            if (checkedCount > 0) {
+                counter.textContent = checkedCount + ' selected';
+                counter.classList.remove('hidden');
+            } else {
+                counter.classList.add('hidden');
+            }
+        }
+    }
+
+    if (selectAllCheckbox) {
         selectAllCheckbox.addEventListener('change', function () {
             stockCheckboxes.forEach(checkbox => {
                 checkbox.checked = this.checked;
             });
+            updateStockCounter();
+        });
+    }
+
+    stockCheckboxes.forEach(cb => {
+        cb.addEventListener('change', updateStockCounter);
+    });
+
+    const form = document.getElementById('stock-list-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const checkedCount = document.querySelectorAll('.stock-checkbox:checked').length;
+            if (checkedCount === 0) {
+                e.preventDefault();
+                alert('Please select at least one stock item to update.');
+                return false;
+            }
+            if (checkedCount > 200) {
+                e.preventDefault();
+                alert('You can select a maximum of 200 items per batch update.');
+                return false;
+            }
+            const statusSelect = document.getElementById('new_status');
+            if (!confirm('Are you sure you want to update ' + checkedCount + ' stock items to "' + statusSelect.value + '"?')) {
+                e.preventDefault();
+                return false;
+            }
         });
     }
 });
 </script>
 
-<?php
-include_template('footer');
-?>
-
+<?php include_template('footer'); ?>

@@ -1,5 +1,5 @@
 <?php
-// pos/stock_bulk_update.php - Processes bulk status updates for stock items.
+// pos/status_bulk_update.php - Processes bulk status updates for stock items with CSRF and region scoping.
 
 require_once 'config.php';
 require_once 'includes/functions.php';
@@ -16,11 +16,12 @@ if (!is_logged_in() || (!is_admin() && !is_developer() && !is_myanmar_user() && 
 
 global $connection;
 
-// --- FIX: Add check for POST request method ---
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     flash_message('error', 'Invalid request method.');
     redirect('index.php?page=stock_list');
 }
+
+require_csrf_request();
 
 // --- Handle POST request for bulk status update ---
 $stock_ids = array_values(array_unique(array_filter(array_map('intval', (array)($_POST['stock_ids'] ?? [])), function ($id) {
@@ -29,9 +30,13 @@ $stock_ids = array_values(array_unique(array_filter(array_map('intval', (array)(
 $new_status = $_POST['new_status'] ?? '';
 $possible_statuses = ['Pending', 'In Transit', 'Delivered', 'Received', 'Maintenance'];
 
-
-if (empty($stock_ids) || count($stock_ids) > 200) {
+if (empty($stock_ids)) {
     flash_message('warning', 'No stock items were selected for update.');
+    redirect('index.php?page=stock_list');
+}
+
+if (count($stock_ids) > 200) {
+    flash_message('error', 'A maximum of 200 items can be updated per batch.');
     redirect('index.php?page=stock_list');
 }
 
@@ -51,7 +56,7 @@ $result_vouchers = mysqli_stmt_get_result($stmt_vouchers);
 
 $voucher_ids_to_update = [];
 while ($row = mysqli_fetch_assoc($result_vouchers)) {
-    $voucher_ids_to_update[] = $row['voucher_id'];
+    $voucher_ids_to_update[] = (int)$row['voucher_id'];
 }
 mysqli_stmt_close($stmt_vouchers);
 
@@ -76,4 +81,3 @@ if (!empty($voucher_ids_to_update)) {
 
 redirect('index.php?page=stock_list');
 ?>
-

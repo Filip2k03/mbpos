@@ -77,14 +77,14 @@ if ($stmt) {
     // --- Generate CSV Output ---
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="vouchers_export_' . date('Y-m-d') . '.csv"');
-    
+
     $output = fopen('php://output', 'w');
-    
+
     // Add UTF-8 BOM to ensure Excel properly handles special characters
     fputs($output, "\xEF\xBB\xBF");
 
     // Add header row
-    fputcsv($output, ['Voucher Code', 'Sender', 'Sender_Phone', 'Receiver', 'Receiver Phone', 'Origin', 'Destination', 'total_amount', 'weight_kg', 'Date', 'Created By']);
+    fputcsv($output, ['Voucher Code', 'Sender', 'Sender Phone', 'Receiver', 'Receiver Phone', 'Origin', 'Destination', 'Status', 'Total Amount', 'Weight (kg)', 'Date', 'Created By']);
 
     // Add data rows
     while ($row = mysqli_fetch_assoc($result)) {
@@ -96,9 +96,9 @@ if ($stmt) {
             $row['receiver_phone'],
             $row['origin_region'] . ' / ' . $row['origin_branch'],
             $row['destination_region'] . ' / ' . $row['destination_branch'],
+            $row['status'],
             $row['currency'] . ' ' . number_format($row['total_amount'], 2),
             $row['weight_kg'],
-            // $row['status'],
             $row['created_at'],
             $row['created_by_username'] . ' (' . $row['creator_branch_name'] . ')'
         ]);
@@ -114,4 +114,3 @@ if ($stmt) {
     redirect('index.php?page=voucher_bulk_update');
 }
 ?>
-

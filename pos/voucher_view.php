@@ -31,20 +31,20 @@ if ($voucher_id <= 0) {
 $possible_statuses = ['Pending', 'In Transit', 'Delivered', 'Received', 'Cancelled', 'Returned', 'Maintenance'];
 
 // --- Fetch Full Voucher Data First (Needed for appending notes) ---
-$query = "SELECT 
-            v.*,
-            r_origin.region_name AS origin_region_name,
-            r_dest.region_name AS destination_region_name,
-            b_origin.branch_name AS origin_branch_name,
-            b_dest.branch_name AS destination_branch_name,
-            u.username AS created_by_username
-          FROM vouchers v
-          LEFT JOIN regions r_origin ON v.region_id = r_origin.id
-          LEFT JOIN regions r_dest ON v.destination_region_id = r_dest.id
-          LEFT JOIN branches b_origin ON v.origin_branch_id = b_origin.id
-          LEFT JOIN branches b_dest ON v.destination_branch_id = b_dest.id
-          LEFT JOIN users u ON v.created_by_user_id = u.id
-          WHERE v.id = ?";
+$query = "SELECT\n" .
+         "v.*,\n" .
+         "r_origin.region_name AS origin_region_name,\n" .
+         "r_dest.region_name AS destination_region_name,\n" .
+         "b_origin.branch_name AS origin_branch_name,\n" .
+         "b_dest.branch_name AS destination_branch_name,\n" .
+         "u.username AS created_by_username\n" .
+         "FROM vouchers v\n" .
+         "LEFT JOIN regions r_origin ON v.region_id = r_origin.id\n" .
+         "LEFT JOIN regions r_dest ON v.destination_region_id = r_dest.id\n" .
+         "LEFT JOIN branches b_origin ON v.origin_branch_id = b_origin.id\n" .
+         "LEFT JOIN branches b_dest ON v.destination_branch_id = b_dest.id\n" .
+         "LEFT JOIN users u ON v.created_by_user_id = u.id\n" .
+         "WHERE v.id = ?";
 
 $stmt = mysqli_prepare($connection, $query);
 mysqli_stmt_bind_param($stmt, 'i', $voucher_id);
@@ -60,6 +60,7 @@ if (!$voucher) {
 
 // --- Handle POST request for status/notes update ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf_request();
     $new_status = trim($_POST['status'] ?? '');
     $new_note_text = trim($_POST['new_note'] ?? '');
 
@@ -69,11 +70,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($new_note_text)) {
         $author = $_SESSION['username'] ?? 'Unknown User';
         $date = date('Y-m-d H:i:s');
-        
+
         // Structured format for parsing later
         $header = "[[{$author} @ {$date}]]";
         $entry = $header . "\n" . $new_note_text;
-        
+
         if (empty(trim($final_notes))) {
             $final_notes = $entry;
         } else {
@@ -94,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         flash_message('error', 'Invalid status selected.');
     }
-    
+
     // Redirect to prevent form resubmission
     redirect('index.php?page=voucher_view&id=' . $voucher_id);
 }
@@ -108,7 +109,7 @@ if (!empty(trim($raw_notes))) {
     foreach ($parts as $part) {
         $part = trim($part);
         if (empty($part)) continue;
-        
+
         // Try to extract the structured header
         if (preg_match('/^\[\[(.*?) @ (.*?)\]\]\n(.*)/s', $part, $matches)) {
             $chat_bubbles[] = [
@@ -129,7 +130,6 @@ if (!empty(trim($raw_notes))) {
     }
 }
 
-
 // --- Dynamic Status Colors ---
 $statusClass = match(strtolower($voucher['status'])) {
     'pending' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
@@ -146,13 +146,11 @@ include_template('header', ['page' => 'voucher_view']);
 
 <!-- V3 Liquid UI Wrapper -->
 <div class="relative min-h-[85vh] bg-gray-50/30 p-4 sm:p-8 overflow-hidden font-sans">
-    
     <!-- Ambient Background Glows -->
     <div class="absolute top-[0%] left-[-10%] w-[600px] h-[600px] bg-blue-400/10 rounded-full blur-[120px] pointer-events-none"></div>
     <div class="absolute bottom-[0%] right-[-10%] w-[600px] h-[600px] bg-purple-400/10 rounded-full blur-[120px] pointer-events-none"></div>
 
     <div class="max-w-6xl mx-auto relative z-10">
-        
         <!-- Header Actions -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-5">
             <a href="index.php?page=voucher_list" class="group flex items-center gap-2 text-gray-500 hover:text-indigo-600 transition-colors font-medium text-sm bg-white/50 px-4 py-2 rounded-xl backdrop-blur-sm border border-white shadow-sm hover:shadow-md">
@@ -166,7 +164,6 @@ include_template('header', ['page' => 'voucher_view']);
         </div>
 
         <div class="bg-white/70 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-white/80 p-6 sm:p-10">
-            
             <!-- Tracking Header -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 pb-8 border-b border-gray-100 gap-6">
                 <div class="flex items-center gap-5">
@@ -190,10 +187,8 @@ include_template('header', ['page' => 'voucher_view']);
 
             <!-- Details Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
                 <!-- Left Column: Key Info Cards (Spans 4 columns) -->
                 <div class="lg:col-span-4 space-y-5">
-                    
                     <!-- Sender Card -->
                     <div class="bg-white/50 backdrop-blur-sm border border-gray-100 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow group relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-24 h-24 bg-blue-100/50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
@@ -241,7 +236,6 @@ include_template('header', ['page' => 'voucher_view']);
 
                 <!-- Right Column: Shipment Details & Forms (Spans 8 columns) -->
                 <div class="lg:col-span-8 space-y-8">
-                    
                     <!-- Metrics Grid -->
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div class="bg-gray-50/80 rounded-2xl p-4 border border-gray-100 text-center hover:bg-white hover:shadow-md transition-all">
@@ -272,7 +266,7 @@ include_template('header', ['page' => 'voucher_view']);
                             </div>
                             Operational Timeline
                         </h3>
-                        
+
                         <div class="space-y-6 mb-8 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                             <?php if (empty($chat_bubbles)): ?>
                                 <div class="text-center py-6">
@@ -306,10 +300,10 @@ include_template('header', ['page' => 'voucher_view']);
 
                         <!-- Operational Update Form -->
                         <form action="index.php?page=voucher_view&id=<?= $voucher_id ?>" method="POST" accept-charset="UTF-8" class="bg-blue-50/50 p-5 sm:p-6 rounded-2xl border border-blue-100">
-                            
+                            <?= csrf_input() ?>
                             <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
                                 <div class="md:col-span-4 space-y-2">
-                                    <label for="status" class="block text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Current Status</label>
+                                    <label for="status" class="block text-xs font-bold text-gray-500 uppercase tracking-wider ml-1" data-i18n="Current Status">Current Status</label>
                                     <select id="status" name="status" class="w-full rounded-xl border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm font-bold text-gray-700 py-3 shadow-sm appearance-none" required>
                                         <?php foreach($possible_statuses as $status): ?>
                                             <option value="<?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?>" <?= ($voucher['status'] === $status) ? 'selected' : '' ?>>
@@ -318,22 +312,21 @@ include_template('header', ['page' => 'voucher_view']);
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-                                
+
                                 <div class="md:col-span-8 space-y-2">
-                                    <label for="new_note" class="block text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Add to Conversation</label>
+                                    <label for="new_note" class="block text-xs font-bold text-gray-500 uppercase tracking-wider ml-1" data-i18n="Add to Conversation">Add to Conversation</label>
                                     <textarea id="new_note" name="new_note" rows="2" class="w-full rounded-xl border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm font-medium text-gray-800 py-3 px-4 shadow-sm" placeholder="Write an operational note... (Supports English & Myanmar)"></textarea>
                                 </div>
                             </div>
-                            
+
                             <div class="mt-5 flex justify-end">
-                                <button type="submit" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 px-6 rounded-xl font-bold text-sm hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500/30 shadow-[0_8px_20px_rgb(79,70,229,0.2)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2">
+                                <button type="submit" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 px-6 rounded-xl font-bold text-sm hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500/30 shadow-[0_8px_20px_rgb(79,70,229,0.2)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2" data-i18n="Add Entry & Update">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                                     Add Entry & Update
                                 </button>
                             </div>
                         </form>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -346,15 +339,15 @@ include_template('header', ['page' => 'voucher_view']);
         width: 6px;
     }
     .custom-scrollbar::-webkit-scrollbar-track {
-        background: rgba(243, 244, 246, 0.5); 
+        background: rgba(243, 244, 246, 0.5);
         border-radius: 4px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(199, 210, 254, 0.8); 
+        background: rgba(199, 210, 254, 0.8);
         border-radius: 4px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(129, 140, 248, 1); 
+        background: rgba(129, 140, 248, 1);
     }
 </style>
 

@@ -21,6 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirect('index.php?page=error_log_viewer');
 }
 
+require_csrf_request();
+
 if (file_exists($log_file)) {
     // Open the file in write mode to truncate it
     $handle = fopen($log_file, 'w');

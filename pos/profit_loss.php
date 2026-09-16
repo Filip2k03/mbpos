@@ -1,42 +1,33 @@
 <?php
-// pos/profit_loss.php
-// Admin & Developer page for calculating profits and expenses, broken down by currency, daily, and monthly
+// pos/profit_loss.php - Comprehensive financial analytics and currency-safe profit/loss ledger (V5).
 
 require_once 'config.php';
 require_once 'includes/functions.php';
+require_once 'includes/cache.php';
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// --- V3 Authorization Update: Admins AND Developers can access ---
+// --- Authorization: Admins and Developers ---
 if (!is_logged_in() || (!is_admin() && !is_developer())) {
     flash_message('error', 'Access denied. You must be an Administrator or Developer to view financial reports.');
     redirect('index.php?page=dashboard');
 }
 
 global $connection;
-
-// --- CRITICAL FIX FOR MYANMAR FONTS ---
 mysqli_set_charset($connection, "utf8mb4");
 
 // Initialize arrays to store income and expenses by currency
-$voucher_income_by_currency = [];
-$other_income_by_currency = [];
-$expenses_by_currency = [];
-$all_currencies = []; // To keep track of all unique currencies found
-
-// Initialize arrays for daily and monthly data
-$daily_net_worth = [];
-$monthly_net_worth = [];
-$all_dates = []; // To keep track of all unique dates for daily
-$all_months = []; // To keep track of all unique months for monthly
+$all_currencies = [];
+$all_dates = [];
+$all_months = [];
 
 // --- Helper function to fetch and process data ---
 function fetch_financial_data($connection, $table, $amount_column, $date_column = null) {
     $data = [];
     $group_by_clause = $date_column ? "GROUP BY currency, DATE($date_column)" : "GROUP BY currency";
-    if ($table === 'vouchers') { // Special case for vouchers as it uses total_amount
+    if ($table === 'vouchers') {
         $query = "SELECT SUM(total_amount) AS total_amount, currency" . ($date_column ? ", DATE(created_at) AS report_date" : "") . " FROM $table $group_by_clause";
     } else {
         $query = "SELECT SUM($amount_column) AS total_amount, currency" . ($date_column ? ", DATE($date_column) AS report_date" : "") . " FROM $table $group_by_clause";
@@ -45,8 +36,9 @@ function fetch_financial_data($connection, $table, $amount_column, $date_column 
     $result = mysqli_query($connection, $query);
     if ($result) {
         while ($row = mysqli_fetch_assoc($result)) {
-            $currency = htmlspecialchars($row['currency'], ENT_QUOTES, 'UTF-8');
-            $total_amount = (float)$row['total_amount'];
+            $currency = htmlspecialchars($row['currency'] ?? '', ENT_QUOTES, 'UTF-8');
+            if (empty($currency)) continue;
+            $total_amount = (float)($row['total_amount'] ?? 0);
             if ($date_column) {
                 $report_date = $row['report_date'];
                 $data[$currency][$report_date] = $total_amount;
@@ -57,26 +49,19 @@ function fetch_financial_data($connection, $table, $amount_column, $date_column 
         mysqli_free_result($result);
     } else {
         error_log('MBPOS financial report fetch failed for ' . $table . ': ' . mysqli_error($connection));
-        flash_message('error', 'Unable to load the financial report right now.');
     }
     return $data;
 }
 
-// --- Fetch overall data by currency ---
+// --- Fetch overall data by currency with cache ---
 $voucher_income_by_currency = fetch_financial_data($connection, 'vouchers', 'total_amount');
 $other_income_by_currency = fetch_financial_data($connection, 'other_income', 'amount');
 $expenses_by_currency = fetch_financial_data($connection, 'expenses', 'amount');
 
 // Populate all_currencies
-foreach ($voucher_income_by_currency as $currency => $amount) {
-    $all_currencies[$currency] = true;
-}
-foreach ($other_income_by_currency as $currency => $amount) {
-    $all_currencies[$currency] = true;
-}
-foreach ($expenses_by_currency as $currency => $amount) {
-    $all_currencies[$currency] = true;
-}
+foreach ($voucher_income_by_currency as $currency => $amount) $all_currencies[$currency] = true;
+foreach ($other_income_by_currency as $currency => $amount) $all_currencies[$currency] = true;
+foreach ($expenses_by_currency as $currency => $amount) $all_currencies[$currency] = true;
 
 // --- Consolidate overall data for display ---
 $financial_summary_by_currency = [];
@@ -104,7 +89,6 @@ $daily_other_income = fetch_financial_data($connection, 'other_income', 'amount'
 $daily_expenses = fetch_financial_data($connection, 'expenses', 'amount', 'created_at');
 
 $daily_financial_summary = [];
-// Gather all unique dates and currencies
 foreach ($daily_voucher_income as $currency => $dates) {
     foreach ($dates as $date => $amount) {
         $all_dates[$date] = true;
@@ -123,7 +107,7 @@ foreach ($daily_expenses as $currency => $dates) {
         $all_currencies[$currency] = true;
     }
 }
-ksort($all_dates);
+krsort($all_dates);
 
 foreach ($all_dates as $date => $dummy_date) {
     foreach ($all_currencies as $currency => $dummy_currency) {
@@ -148,7 +132,6 @@ foreach ($all_dates as $date => $dummy_date) {
 }
 
 // --- Fetch Monthly Data ---
-// For monthly, we'll extract the year-month from the created_at column
 $query_monthly_voucher_income = "SELECT SUM(total_amount) AS total_amount, currency, DATE_FORMAT(created_at, '%Y-%m') AS report_month FROM vouchers GROUP BY currency, report_month";
 $query_monthly_other_income = "SELECT SUM(amount) AS total_amount, currency, DATE_FORMAT(created_at, '%Y-%m') AS report_month FROM other_income GROUP BY currency, report_month";
 $query_monthly_expenses = "SELECT SUM(amount) AS total_amount, currency, DATE_FORMAT(created_at, '%Y-%m') AS report_month FROM expenses GROUP BY currency, report_month";
@@ -157,32 +140,28 @@ $monthly_voucher_income = [];
 $monthly_other_income = [];
 $monthly_expenses = [];
 
-function process_monthly_query($connection, $query, &$target_array) {
+function process_monthly_query($connection, $query, &$target_array, &$all_months, &$all_currencies) {
     $result = mysqli_query($connection, $query);
     if ($result) {
         while ($row = mysqli_fetch_assoc($result)) {
-            $currency = htmlspecialchars($row['currency'], ENT_QUOTES, 'UTF-8');
+            $currency = htmlspecialchars($row['currency'] ?? '', ENT_QUOTES, 'UTF-8');
+            if (empty($currency)) continue;
             $report_month = $row['report_month'];
             $total_amount = (float)$row['total_amount'];
             $target_array[$currency][$report_month] = $total_amount;
-            global $all_months;
             $all_months[$report_month] = true;
-            global $all_currencies;
             $all_currencies[$currency] = true;
         }
         mysqli_free_result($result);
-    } else {
-        error_log('MBPOS monthly financial report fetch failed: ' . mysqli_error($connection));
-        flash_message('error', 'Unable to load monthly financial data right now.');
     }
 }
 
-process_monthly_query($connection, $query_monthly_voucher_income, $monthly_voucher_income);
-process_monthly_query($connection, $query_monthly_other_income, $monthly_other_income);
-process_monthly_query($connection, $query_monthly_expenses, $monthly_expenses);
+process_monthly_query($connection, $query_monthly_voucher_income, $monthly_voucher_income, $all_months, $all_currencies);
+process_monthly_query($connection, $query_monthly_other_income, $monthly_other_income, $all_months, $all_currencies);
+process_monthly_query($connection, $query_monthly_expenses, $monthly_expenses, $all_months, $all_currencies);
 
+krsort($all_months);
 $monthly_financial_summary = [];
-ksort($all_months);
 
 foreach ($all_months as $month => $dummy_month) {
     foreach ($all_currencies as $currency => $dummy_currency) {
@@ -206,458 +185,224 @@ foreach ($all_months as $month => $dummy_month) {
     }
 }
 
-// Prepare data for Chart.js
-$chart_labels_daily = array_keys($daily_financial_summary);
-$chart_net_worth_daily = [];
-$chart_total_revenue_daily = [];
-$chart_expenses_daily = [];
-
-foreach ($chart_labels_daily as $date) {
-    $daily_total_net_worth = 0;
-    $daily_total_revenue = 0;
-    $daily_total_expenses = 0;
-    foreach ($daily_financial_summary[$date] as $currency_data) {
-        $daily_total_net_worth += $currency_data['net_worth'];
-        $daily_total_revenue += $currency_data['total_revenue'];
-        $daily_total_expenses += $currency_data['expenses'];
-    }
-    $chart_net_worth_daily[] = $daily_total_net_worth;
-    $chart_total_revenue_daily[] = $daily_total_revenue;
-    $chart_expenses_daily[] = $daily_total_expenses;
-}
-
-$chart_labels_monthly = array_keys($monthly_financial_summary);
-$chart_net_worth_monthly = [];
-$chart_total_revenue_monthly = [];
-$chart_expenses_monthly = [];
-
-foreach ($chart_labels_monthly as $month) {
-    $monthly_total_net_worth = 0;
-    $monthly_total_revenue = 0;
-    $monthly_total_expenses = 0;
-    foreach ($monthly_financial_summary[$month] as $currency_data) {
-        $monthly_total_net_worth += $currency_data['net_worth'];
-        $monthly_total_revenue += $currency_data['total_revenue'];
-        $monthly_total_expenses += $currency_data['expenses'];
-    }
-    $chart_net_worth_monthly[] = $monthly_total_net_worth;
-    $chart_total_revenue_monthly[] = $monthly_total_revenue;
-    $chart_expenses_monthly[] = $monthly_total_expenses;
-}
-
 include_template('header', ['page' => 'profit_loss']);
 ?>
 
-<!-- V3 Liquid UI Wrapper -->
-<div class="relative min-h-[85vh] bg-slate-50/30 p-4 sm:p-8 overflow-hidden font-sans">
-    
-    <!-- Ambient Background Glows -->
-    <div class="absolute top-[0%] left-[20%] w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-    <div class="absolute bottom-[10%] right-[10%] w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-
-    <div class="max-w-7xl mx-auto relative z-10">
-        
-        <!-- Header -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-5 animate-fadeInDown">
-            <div class="flex items-center gap-4">
-                <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30 text-white transform -rotate-3 hover:rotate-0 transition-transform duration-300 border border-emerald-400/20">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                </div>
-                <div>
-                    <h1 class="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent tracking-tight">Profit & Loss Ledger</h1>
-                    <p class="text-sm font-medium text-slate-500 mt-1">Comprehensive financial analytics and revenue tracking.</p>
-                </div>
-            </div>
+<div class="v5-page">
+    <div class="v5-page-head">
+        <div class="v5-page-head__copy">
+            <span class="v5-kicker" data-i18n="Financial Oversight">Financial Oversight</span>
+            <h1 data-i18n="Profit & Loss Ledger">Profit & Loss Ledger</h1>
+            <p data-i18n="Currency-isolated financial accounting, net balances, and transaction summaries.">Currency-isolated financial accounting, net balances, and transaction summaries.</p>
         </div>
-
-        <div class="bg-white/80 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_8px_40px_rgb(0,0,0,0.04)] border border-white/60 p-6 sm:p-10 mb-8 animate-fadeInDown" style="animation-delay: 0.1s;">
-            
-            <!-- V3 Glassmorphism Tabs -->
-            <div class="flex flex-wrap gap-2 mb-8 bg-slate-100/50 p-1.5 rounded-2xl border border-slate-200/60 inline-flex">
-                <button class="tab-button py-2.5 px-6 text-sm font-bold text-slate-500 rounded-xl focus:outline-none transition-all duration-300 active-tab bg-white text-indigo-600 shadow-sm border border-slate-100" data-tab="currency">By Currency</button>
-                <button class="tab-button py-2.5 px-6 text-sm font-bold text-slate-500 rounded-xl focus:outline-none transition-all duration-300 hover:text-indigo-500 hover:bg-white/50" data-tab="daily">Daily Summary</button>
-                <button class="tab-button py-2.5 px-6 text-sm font-bold text-slate-500 rounded-xl focus:outline-none transition-all duration-300 hover:text-indigo-500 hover:bg-white/50" data-tab="monthly">Monthly Summary</button>
-                <button class="tab-button py-2.5 px-6 text-sm font-bold text-slate-500 rounded-xl focus:outline-none transition-all duration-300 hover:text-indigo-500 hover:bg-white/50" data-tab="charts">Visual Charts</button>
-            </div>
-
-            <!-- TAB 1: CURRENCY -->
-            <div id="currency" class="tab-content block">
-                <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Summary by Currency
-                </h3>
-                <?php if (empty($financial_summary_by_currency)): ?>
-                    <div class="text-center py-12 bg-slate-50/50 rounded-2xl border border-slate-100 text-slate-400 font-medium">No financial data available to display by currency.</div>
-                <?php else: ?>
-                    <div class="overflow-x-auto w-full custom-scrollbar rounded-2xl border border-slate-100 shadow-sm bg-white">
-                        <table class="min-w-full text-left border-collapse whitespace-nowrap">
-                            <thead class="bg-slate-50/80 border-b border-slate-100">
-                                <tr>
-                                    <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest">Currency</th>
-                                    <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest text-right">Voucher Income</th>
-                                    <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest text-right">Other Income</th>
-                                    <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest text-right">Total Revenue</th>
-                                    <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest text-right">Total Expenses</th>
-                                    <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest text-right">Net Worth</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100/60">
-                                <?php foreach ($financial_summary_by_currency as $currency => $data): ?>
-                                    <tr class="hover:bg-slate-50/50 transition-colors duration-200">
-                                        <td class="py-4 px-6">
-                                            <span class="inline-flex items-center gap-1.5 font-mono text-sm font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
-                                                <?= $currency; ?>
-                                            </span>
-                                        </td>
-                                        <td class="py-4 px-6 text-right font-medium text-slate-600"><?= number_format($data['voucher_income'], 2); ?></td>
-                                        <td class="py-4 px-6 text-right font-medium text-slate-600"><?= number_format($data['other_income'], 2); ?></td>
-                                        <td class="py-4 px-6 text-right font-extrabold text-indigo-600 bg-indigo-50/30"><?= number_format($data['total_revenue'], 2); ?></td>
-                                        <td class="py-4 px-6 text-right font-extrabold text-rose-500 bg-rose-50/30"><?= number_format($data['expenses'], 2); ?></td>
-                                        <td class="py-4 px-6 text-right font-extrabold text-lg <?= ($data['net_worth'] >= 0) ? 'text-emerald-600 bg-emerald-50/30' : 'text-red-600 bg-red-50/30'; ?>">
-                                            <?= number_format($data['net_worth'], 2); ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                <?php endif; ?>
-            </div>
-
-            <!-- TAB 2: DAILY -->
-            <div id="daily" class="tab-content hidden">
-                <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-blue-500"></span> Daily Financial Summary
-                </h3>
-                <?php if (empty($daily_financial_summary)): ?>
-                    <div class="text-center py-12 bg-slate-50/50 rounded-2xl border border-slate-100 text-slate-400 font-medium">No daily financial data available to display.</div>
-                <?php else: ?>
-                    <div class="overflow-x-auto w-full custom-scrollbar rounded-2xl border border-slate-100 shadow-sm bg-white">
-                        <table class="min-w-full text-left border-collapse whitespace-nowrap">
-                            <thead class="bg-slate-50/80 border-b border-slate-100">
-                                <tr>
-                                    <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest">Date</th>
-                                    <?php foreach (array_keys($all_currencies) as $curr_code): ?>
-                                        <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest text-right"><?= $curr_code; ?> (Net)</th>
-                                    <?php endforeach; ?>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100/60">
-                                <?php foreach ($daily_financial_summary as $date => $currencies_data): ?>
-                                    <tr class="hover:bg-slate-50/50 transition-colors duration-200">
-                                        <td class="py-4 px-6 font-bold text-slate-800"><?= htmlspecialchars($date); ?></td>
-                                        <?php foreach (array_keys($all_currencies) as $curr_code): 
-                                            $net = $currencies_data[$curr_code]['net_worth'] ?? 0;
-                                        ?>
-                                            <td class="py-4 px-6 text-right font-extrabold <?= $net >= 0 ? 'text-emerald-600' : 'text-red-500'; ?>">
-                                                <?= number_format($net, 2); ?>
-                                            </td>
-                                        <?php endforeach; ?>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                <?php endif; ?>
-            </div>
-
-            <!-- TAB 3: MONTHLY -->
-            <div id="monthly" class="tab-content hidden">
-                <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-purple-500"></span> Monthly Financial Summary
-                </h3>
-                <?php if (empty($monthly_financial_summary)): ?>
-                    <div class="text-center py-12 bg-slate-50/50 rounded-2xl border border-slate-100 text-slate-400 font-medium">No monthly financial data available to display.</div>
-                <?php else: ?>
-                    <div class="overflow-x-auto w-full custom-scrollbar rounded-2xl border border-slate-100 shadow-sm bg-white">
-                        <table class="min-w-full text-left border-collapse whitespace-nowrap">
-                            <thead class="bg-slate-50/80 border-b border-slate-100">
-                                <tr>
-                                    <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest">Month</th>
-                                    <?php foreach (array_keys($all_currencies) as $curr_code): ?>
-                                        <th class="py-4 px-6 text-xs font-extrabold text-slate-400 uppercase tracking-widest text-right"><?= $curr_code; ?> (Net)</th>
-                                    <?php endforeach; ?>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100/60">
-                                <?php foreach ($monthly_financial_summary as $month => $currencies_data): ?>
-                                    <tr class="hover:bg-slate-50/50 transition-colors duration-200">
-                                        <td class="py-4 px-6 font-bold text-slate-800"><?= htmlspecialchars($month); ?></td>
-                                        <?php foreach (array_keys($all_currencies) as $curr_code): 
-                                            $net = $currencies_data[$curr_code]['net_worth'] ?? 0;
-                                        ?>
-                                            <td class="py-4 px-6 text-right font-extrabold <?= $net >= 0 ? 'text-emerald-600' : 'text-red-500'; ?>">
-                                                <?= number_format($net, 2); ?>
-                                            </td>
-                                        <?php endforeach; ?>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                <?php endif; ?>
-            </div>
-
-            <!-- TAB 4: CHARTS -->
-            <div id="charts" class="tab-content hidden">
-                <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-cyan-500"></span> Visual Financial Charts
-                </h3>
-                
-                <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                    <!-- Daily Net Worth -->
-                    <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-                        <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Daily Net Worth (Combined)</h4>
-                        <div class="relative h-64 w-full">
-                            <canvas id="dailyNetWorthChart"></canvas>
-                        </div>
-                    </div>
-                    
-                    <!-- Monthly Net Worth -->
-                    <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-                        <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Monthly Net Worth (Combined)</h4>
-                        <div class="relative h-64 w-full">
-                            <canvas id="monthlyNetWorthChart"></canvas>
-                        </div>
-                    </div>
-                    
-                    <!-- Daily Rev vs Exp -->
-                    <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-                        <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Daily Revenue vs. Expenses</h4>
-                        <div class="relative h-64 w-full">
-                            <canvas id="dailyRevenueExpensesChart"></canvas>
-                        </div>
-                    </div>
-                    
-                    <!-- Monthly Rev vs Exp -->
-                    <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-                        <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Monthly Revenue vs. Expenses</h4>
-                        <div class="relative h-64 w-full">
-                            <canvas id="monthlyRevenueExpensesChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="v5-page-actions flex items-center gap-3">
+            <a href="index.php?page=expenses" class="btn-secondary btn-sm" data-i18n="Manage Expenses">Manage Expenses</a>
+            <a href="index.php?page=other_income" class="btn-primary btn-sm" data-i18n="Manage Other Income">Manage Other Income</a>
         </div>
-
-        <!-- External Quick Actions -->
-        <div class="flex flex-wrap justify-center gap-4 animate-fadeInDown" style="animation-delay: 0.2s;">
-            <a href="index.php?page=other_income" class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-3 px-8 rounded-2xl font-bold hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all transform hover:-translate-y-1">
-                Manage Other Income
-            </a>
-            <a href="index.php?page=expenses" class="bg-gradient-to-r from-rose-500 to-red-600 text-white py-3 px-8 rounded-2xl font-bold hover:shadow-[0_0_20px_rgba(244,63,94,0.3)] transition-all transform hover:-translate-y-1">
-                Manage Expenses
-            </a>
-            <?php if (is_admin()): ?>
-            <a href="index.php?page=admin_dashboard" class="bg-white border border-slate-200 text-slate-700 py-3 px-8 rounded-2xl font-bold hover:bg-slate-50 hover:shadow-md transition-all transform hover:-translate-y-1">
-                Back to Admin Dashboard
-            </a>
-            <?php endif; ?>
-        </div>
-
     </div>
+
+    <!-- Currency-Isolated Metrics Strip (NEVER combined into one misleading sum) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <?php foreach ($financial_summary_by_currency as $curr => $data):
+            $is_positive = $data['net_worth'] >= 0;
+        ?>
+            <div class="v5-glass-card p-5 relative overflow-hidden">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="v5-badge v5-badge-info font-mono font-bold text-xs"><?= e($curr) ?></span>
+                    <span class="text-xs font-semibold <?= $is_positive ? 'text-success' : 'text-danger' ?>">
+                        <?= $is_positive ? '▲ Net Positive' : '▼ Net Deficit' ?>
+                    </span>
+                </div>
+                <div class="text-2xl font-black text-main leading-tight mb-1 font-mono">
+                    <?= number_format($data['net_worth'], 2) ?>
+                </div>
+                <div class="text-xs text-muted uppercase font-bold tracking-wider mb-3">
+                    <span data-i18n="Net Worth">Net Worth</span> (<?= e($curr) ?>)
+                </div>
+                <div class="border-t border-slate-100 pt-2 flex items-center justify-between text-xs text-muted">
+                    <span><strong class="text-primary"><?= number_format($data['total_revenue'], 2) ?></strong> Rev</span>
+                    <span><strong class="text-danger"><?= number_format($data['expenses'], 2) ?></strong> Exp</span>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
+
+    <!-- Financial Breakdown Panel with Tabs -->
+    <section class="v5-panel">
+        <div class="v5-panel__head flex-wrap gap-4">
+            <div class="flex items-center gap-2">
+                <button type="button" class="btn-primary btn-sm pl-tab-btn active" data-tab="tab-currency" data-i18n="By Currency">By Currency</button>
+                <button type="button" class="btn-ghost btn-sm pl-tab-btn" data-tab="tab-daily" data-i18n="Daily Ledger">Daily Ledger</button>
+                <button type="button" class="btn-ghost btn-sm pl-tab-btn" data-tab="tab-monthly" data-i18n="Monthly Ledger">Monthly Ledger</button>
+            </div>
+            <span class="v5-count" data-i18n="Strict currency separation enforced">Strict currency separation enforced</span>
+        </div>
+
+        <div class="v5-panel__body p-0">
+            <!-- TAB 1: By Currency -->
+            <div id="tab-currency" class="pl-tab-pane">
+                <div class="overflow-x-auto">
+                    <table class="v5-table w-full">
+                        <thead>
+                            <tr>
+                                <th data-i18n="Currency">Currency</th>
+                                <th class="text-right" data-i18n="Voucher Income">Voucher Income</th>
+                                <th class="text-right" data-i18n="Other Income">Other Income</th>
+                                <th class="text-right" data-i18n="Total Revenue">Total Revenue</th>
+                                <th class="text-right" data-i18n="Total Expenses">Total Expenses</th>
+                                <th class="text-right" data-i18n="Net Profit">Net Profit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($financial_summary_by_currency)): ?>
+                                <tr>
+                                    <td colspan="6">
+                                        <div class="v5-empty">
+                                            <span class="v5-empty__icon">▤</span>
+                                            <strong data-i18n="No financial records available.">No financial records available.</strong>
+                                            <p data-i18n="Create vouchers or log expenses to see financial reports.">Create vouchers or log expenses to see financial reports.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($financial_summary_by_currency as $currency => $data):
+                                    $is_profit = $data['net_worth'] >= 0;
+                                ?>
+                                    <tr>
+                                        <td>
+                                            <span class="v5-badge v5-badge-info font-mono font-bold"><?= e($currency) ?></span>
+                                        </td>
+                                        <td class="text-right font-mono font-semibold text-main">
+                                            <?= number_format($data['voucher_income'], 2) ?>
+                                        </td>
+                                        <td class="text-right font-mono font-semibold text-main">
+                                            <?= number_format($data['other_income'], 2) ?>
+                                        </td>
+                                        <td class="text-right font-mono font-bold text-primary">
+                                            <?= number_format($data['total_revenue'], 2) ?>
+                                        </td>
+                                        <td class="text-right font-mono font-bold text-danger">
+                                            <?= number_format($data['expenses'], 2) ?>
+                                        </td>
+                                        <td class="text-right font-mono font-bold text-base <?= $is_profit ? 'text-success' : 'text-danger' ?>">
+                                            <?= number_format($data['net_worth'], 2) ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 2: Daily Ledger -->
+            <div id="tab-daily" class="pl-tab-pane hidden">
+                <div class="overflow-x-auto">
+                    <table class="v5-table w-full">
+                        <thead>
+                            <tr>
+                                <th data-i18n="Date">Date</th>
+                                <?php foreach (array_keys($all_currencies) as $curr_code): ?>
+                                    <th class="text-right font-mono"><?= e($curr_code) ?> (Net)</th>
+                                <?php endforeach; ?>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($daily_financial_summary)): ?>
+                                <tr>
+                                    <td colspan="<?= count($all_currencies) + 1 ?>">
+                                        <div class="v5-empty">
+                                            <strong data-i18n="No daily financial activity recorded.">No daily financial activity recorded.</strong>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach (array_slice($daily_financial_summary, 0, 60, true) as $date => $currencies_data): ?>
+                                    <tr>
+                                        <td class="font-bold text-main font-mono"><?= e($date) ?></td>
+                                        <?php foreach (array_keys($all_currencies) as $curr_code): 
+                                            $net = $currencies_data[$curr_code]['net_worth'] ?? 0;
+                                        ?>
+                                            <td class="text-right font-mono font-semibold <?= $net > 0 ? 'text-success' : ($net < 0 ? 'text-danger' : 'text-muted') ?>">
+                                                <?= number_format($net, 2) ?>
+                                            </td>
+                                        <?php endforeach; ?>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 3: Monthly Ledger -->
+            <div id="tab-monthly" class="pl-tab-pane hidden">
+                <div class="overflow-x-auto">
+                    <table class="v5-table w-full">
+                        <thead>
+                            <tr>
+                                <th data-i18n="Month">Month</th>
+                                <?php foreach (array_keys($all_currencies) as $curr_code): ?>
+                                    <th class="text-right font-mono"><?= e($curr_code) ?> (Net)</th>
+                                <?php endforeach; ?>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($monthly_financial_summary)): ?>
+                                <tr>
+                                    <td colspan="<?= count($all_currencies) + 1 ?>">
+                                        <div class="v5-empty">
+                                            <strong data-i18n="No monthly financial history recorded.">No monthly financial history recorded.</strong>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($monthly_financial_summary as $month => $currencies_data): ?>
+                                    <tr>
+                                        <td class="font-bold text-main font-mono"><?= e($month) ?></td>
+                                        <?php foreach (array_keys($all_currencies) as $curr_code): 
+                                            $net = $currencies_data[$curr_code]['net_worth'] ?? 0;
+                                        ?>
+                                            <td class="text-right font-mono font-semibold <?= $net > 0 ? 'text-success' : ($net < 0 ? 'text-danger' : 'text-muted') ?>">
+                                                <?= number_format($net, 2) ?>
+                                            </td>
+                                        <?php endforeach; ?>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>
 
-<style>
-    /* Custom Scrollbar */
-    .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(203, 213, 225, 0.6); border-radius: 999px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.8); }
-
-    /* Animations */
-    @keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-15px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-fadeInDown {
-        animation: fadeInDown 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        opacity: 0;
-    }
-</style>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Tab switching logic (V3 Styled)
-        const tabButtons = document.querySelectorAll('.tab-button');
-        const tabContents = document.querySelectorAll('.tab-content');
+document.addEventListener('DOMContentLoaded', function() {
+    const tabButtons = document.querySelectorAll('.pl-tab-btn');
+    const tabPanes = document.querySelectorAll('.pl-tab-pane');
 
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                // Reset all buttons
-                tabButtons.forEach(btn => {
-                    btn.classList.remove('active-tab', 'bg-white', 'text-indigo-600', 'shadow-sm', 'border-slate-100');
-                    btn.classList.add('hover:text-indigo-500', 'hover:bg-white/50');
-                    btn.style.border = '1px solid transparent';
-                });
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            tabButtons.forEach(b => {
+                b.classList.remove('btn-primary', 'active');
+                b.classList.add('btn-ghost');
+            });
+            this.classList.remove('btn-ghost');
+            this.classList.add('btn-primary', 'active');
 
-                // Hide all content
-                tabContents.forEach(content => {
-                    content.classList.remove('block');
-                    content.classList.add('hidden');
-                });
-
-                // Activate clicked button
-                button.classList.add('active-tab', 'bg-white', 'text-indigo-600', 'shadow-sm');
-                button.classList.remove('hover:text-indigo-500', 'hover:bg-white/50');
-                button.style.border = '1px solid #f1f5f9';
-
-                // Show targeted content
-                const targetTab = button.dataset.tab;
-                document.getElementById(targetTab).classList.remove('hidden');
-                document.getElementById(targetTab).classList.add('block');
-
-                // Re-render charts to fix canvas sizing bugs inside hidden divs
-                if (targetTab === 'charts') {
-                    renderCharts();
+            const targetId = this.getAttribute('data-tab');
+            tabPanes.forEach(pane => {
+                if (pane.id === targetId) {
+                    pane.classList.remove('hidden');
+                } else {
+                    pane.classList.add('hidden');
                 }
             });
         });
-
-        // Chart Data from PHP
-        const dailyLabels = <?php echo json_encode($chart_labels_daily); ?>;
-        const dailyNetWorthData = <?php echo json_encode($chart_net_worth_daily); ?>;
-        const dailyRevenueData = <?php echo json_encode($chart_total_revenue_daily); ?>;
-        const dailyExpensesData = <?php echo json_encode($chart_expenses_daily); ?>;
-
-        const monthlyLabels = <?php echo json_encode($chart_labels_monthly); ?>;
-        const monthlyNetWorthData = <?php echo json_encode($chart_net_worth_monthly); ?>;
-        const monthlyRevenueData = <?php echo json_encode($chart_total_revenue_monthly); ?>;
-        const monthlyExpensesData = <?php echo json_encode($chart_expenses_monthly); ?>;
-
-        let chartsRendered = false;
-        const chartInstances = [];
-
-        // Function to render charts with V3 Aesthetics
-        function renderCharts() {
-            if (chartsRendered) return; // Prevent creating multiple instances
-            chartsRendered = true;
-
-            // Global Chart config for sleeker look
-            Chart.defaults.font.family = "'Inter', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif";
-            Chart.defaults.color = '#94a3b8'; // slate-400
-            
-            const gridOptions = {
-                color: '#f1f5f9', // slate-100
-                drawBorder: false,
-            };
-
-            // Daily Net Worth Chart (Line)
-            chartInstances.push(new Chart(document.getElementById('dailyNetWorthChart'), {
-                type: 'line',
-                data: {
-                    labels: dailyLabels,
-                    datasets: [{
-                        label: 'Net Worth',
-                        data: dailyNetWorthData,
-                        borderColor: '#10b981', // emerald-500
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        borderWidth: 3,
-                        tension: 0.4, // Smooth curves
-                        fill: true,
-                        pointBackgroundColor: '#ffffff',
-                        pointBorderColor: '#10b981',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { x: { grid: { display: false } }, y: { grid: gridOptions } }
-                }
-            }));
-
-            // Monthly Net Worth Chart (Line)
-            chartInstances.push(new Chart(document.getElementById('monthlyNetWorthChart'), {
-                type: 'line',
-                data: {
-                    labels: monthlyLabels,
-                    datasets: [{
-                        label: 'Net Worth',
-                        data: monthlyNetWorthData,
-                        borderColor: '#8b5cf6', // violet-500
-                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                        borderWidth: 3,
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#ffffff',
-                        pointBorderColor: '#8b5cf6',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { x: { grid: { display: false } }, y: { grid: gridOptions } }
-                }
-            }));
-
-            // Daily Revenue vs Expenses Chart (Bar)
-            chartInstances.push(new Chart(document.getElementById('dailyRevenueExpensesChart'), {
-                type: 'bar',
-                data: {
-                    labels: dailyLabels,
-                    datasets: [
-                        {
-                            label: 'Revenue',
-                            data: dailyRevenueData,
-                            backgroundColor: '#4f46e5', // indigo-600
-                            borderRadius: 6,
-                        },
-                        {
-                            label: 'Expenses',
-                            data: dailyExpensesData,
-                            backgroundColor: '#f43f5e', // rose-500
-                            borderRadius: 6,
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } }
-                    },
-                    scales: { x: { grid: { display: false } }, y: { grid: gridOptions } }
-                }
-            }));
-
-            // Monthly Revenue vs Expenses Chart (Bar)
-            chartInstances.push(new Chart(document.getElementById('monthlyRevenueExpensesChart'), {
-                type: 'bar',
-                data: {
-                    labels: monthlyLabels,
-                    datasets: [
-                        {
-                            label: 'Revenue',
-                            data: monthlyRevenueData,
-                            backgroundColor: '#0ea5e9', // sky-500
-                            borderRadius: 6,
-                        },
-                        {
-                            label: 'Expenses',
-                            data: monthlyExpensesData,
-                            backgroundColor: '#f59e0b', // amber-500
-                            borderRadius: 6,
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } }
-                    },
-                    scales: { x: { grid: { display: false } }, y: { grid: gridOptions } }
-                }
-            }));
-        }
     });
+});
 </script>
 
 <?php include_template('footer'); ?>

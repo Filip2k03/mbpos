@@ -1,5 +1,5 @@
 <?php
-// pos/dashboard.php - Main dashboard for staff and general users.
+// pos/dashboard.php - Main operations workstation dashboard (V5 Modern Enterprise).
 
 require_once 'config.php';
 require_once 'includes/functions.php';
@@ -9,29 +9,24 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// --- Authentication & Role-based routing ---
+// --- Authentication ---
 if (!is_logged_in()) {
     redirect('index.php?page=login');
 }
 
-// Redirect Admins and Developers to their specific dashboards
-// if (is_developer()) {
-//     redirect('index.php?page=developer_dashboard');
-// } elseif (is_admin()) {
-//     redirect('index.php?page=admin_dashboard');
-// }
-
 global $connection;
+mysqli_set_charset($connection, "utf8mb4");
+
 $user_id = $_SESSION['user_id'];
+$username = $_SESSION['username'] ?? 'Staff Operator';
 
 // --- Fetch recent vouchers created by the current user ---
 $recent_vouchers = [];
-// FIX: Added 'currency' to the SELECT statement to fix the display bug.
-$query = "SELECT id, voucher_code, receiver_name, total_amount, currency, status 
-          FROM vouchers 
-          WHERE created_by_user_id = ? 
-          ORDER BY created_at DESC 
-          LIMIT 5";
+$query = "SELECT id, voucher_code, receiver_name, total_amount, currency, status, created_at\n" .
+         "FROM vouchers\n" .
+         "WHERE created_by_user_id = ?\n" .
+         "ORDER BY created_at DESC\n" .
+         "LIMIT 8";
 $stmt = mysqli_prepare($connection, $query);
 mysqli_stmt_bind_param($stmt, 'i', $user_id);
 mysqli_stmt_execute($stmt);
@@ -43,9 +38,7 @@ if ($result) {
 }
 mysqli_stmt_close($stmt);
 
-// --- Fetch Regional Sequence Trackers (Digital Show) ---
-// This is read-only reference data, so a short Redis TTL removes repeated
-// dashboard queries without caching user-specific voucher records.
+// --- Fetch Regional Sequence Trackers with cache ---
 $region_sequences = mbpos_cache_remember('dashboard-regions', 'sequence', 30, function () use ($connection) {
     $rows = [];
     $seq_result = mysqli_query($connection, "SELECT region_name, prefix, current_sequence FROM regions ORDER BY current_sequence DESC");
@@ -60,161 +53,132 @@ $region_sequences = mbpos_cache_remember('dashboard-regions', 'sequence', 30, fu
 include_template('header', ['page' => 'dashboard']);
 ?>
 
-<!-- V3 Liquid UI Wrapper -->
-<div class="relative min-h-[85vh] bg-slate-50/50 p-4 sm:p-8 overflow-hidden font-sans">
-    
-    <!-- Ambient Background Glows -->
-    <div class="absolute top-[0%] left-[-10%] w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-    <div class="absolute bottom-[10%] right-[-10%] w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-
-    <div class="max-w-7xl mx-auto relative z-10">
-        
-        <!-- Welcome Header -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-5 animate-fadeInDown">
-            <div>
-                <h1 class="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-slate-900 to-indigo-800 bg-clip-text text-transparent tracking-tight">
-                    Welcome back, <?= htmlspecialchars($_SESSION['username']); ?>
-                </h1>
-                <p class="text-sm font-medium text-slate-500 mt-1">Here's what's happening with your logistics operations today.</p>
+<div class="v5-page">
+    <!-- Welcome Header -->
+    <div class="v5-page-head">
+        <div class="v5-page-head__copy">
+            <span class="v5-kicker" data-i18n="Operational Station">Operational Station</span>
+            <h1><span data-i18n="Welcome back,">Welcome back,</span> <?= e($username) ?></h1>
+            <p data-i18n="Active regional sequences, live queue oversight, and operational dispatch.">Active regional sequences, live queue oversight, and operational dispatch.</p>
+        </div>
+        <div class="v5-page-actions flex items-center gap-3">
+            <div class="bg-slate-900 border border-slate-700 px-3.5 py-1.5 rounded-xl shadow-inner flex items-center gap-2">
+                <svg class="w-3.5 h-3.5 text-cyan-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span id="digital-clock" class="font-mono text-xs font-bold text-cyan-300 tracking-widest">00:00:00 AM</span>
             </div>
-            <div class="hidden md:flex items-center gap-3 bg-white/70 backdrop-blur-md border border-white/60 px-5 py-2.5 rounded-2xl shadow-sm">
-                <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                <span class="text-sm font-bold text-slate-700">System Online</span>
+            <a href="index.php?page=voucher_create" class="btn-primary" data-i18n="Create Voucher">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                Create Voucher
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Actions Module -->
+    <section class="mb-6">
+        <?php include_template('dashboard_actions'); ?>
+    </section>
+
+    <!-- Global Regional Sequence Trackers (Digital Show) -->
+    <section class="v5-panel mb-8">
+        <div class="v5-panel__head">
+            <div class="flex items-center gap-3">
+                <span style="width:2rem;height:2rem;border-radius:.6rem;background:#ecfeff;display:grid;place-items:center;flex-shrink:0;">
+                    <svg width="15" height="15" fill="none" stroke="#0891b2" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                </span>
+                <h2 data-i18n="Live Regional Sequence Sync">Live Regional Sequence Sync</h2>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="v5-badge v5-badge-success text-xs font-mono">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping inline-block mr-1"></span>
+                    SYNC GMT+6:30
+                </span>
             </div>
         </div>
 
-        <!-- Quick Actions Module (Injected V3 Template) -->
-        <section class="mb-10 animate-fadeInDown" style="animation-delay: 0.1s;">
-            <?php include_template('dashboard_actions'); ?>
-        </section>
-
-        <!-- NEW: Global Regional Sequence Trackers (Digital/Analog Display) -->
-        <section class="mb-10 animate-fadeInDown" style="animation-delay: 0.15s;">
-            <div class="bg-white/80 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_40px_rgb(0,0,0,0.04)] border border-white/60 p-6 sm:p-8">
-                
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-                    <h2 class="text-xl font-bold text-gray-800 flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center shadow-inner">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                        </div>
-                        Live Regional Sequence Sync
-                    </h2>
-                    
-                    <div class="flex items-center gap-3">
-                        <!-- Live Device Clock -->
-                        <div class="bg-[#0f172a] border border-slate-700 px-4 py-2.5 rounded-xl shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] flex items-center gap-2">
-                            <svg class="w-4 h-4 text-cyan-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            <span id="digital-clock" class="font-mono text-sm font-bold text-cyan-400 tracking-widest drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">00:00:00 AM</span>
-                        </div>
-                        <!-- Live Sync Badge -->
-                        <span class="hidden md:flex bg-slate-900 text-emerald-400 py-2.5 px-4 rounded-xl text-[10px] font-bold tracking-widest border border-slate-700 shadow-sm uppercase items-center gap-2">
-                            <div class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></div>
-                            Syncing
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Digital LED Displays -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
-                    <?php foreach ($region_sequences as $reg): ?>
-                        <div class="bg-[#0f172a] rounded-2xl p-4 border border-slate-800 shadow-[inset_0_4px_20px_rgba(0,0,0,0.5)] relative overflow-hidden group flex flex-col items-center justify-center text-center">
-                            
-                            <!-- Ambient LED Glows -->
-                            <div class="absolute -top-4 -right-4 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/30 transition-colors duration-500 pointer-events-none"></div>
-                            <div class="absolute -bottom-4 -left-4 w-16 h-16 bg-cyan-500/10 rounded-full blur-xl group-hover:bg-cyan-500/30 transition-colors duration-500 pointer-events-none"></div>
-                            
-                            <!-- Region Name -->
-                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 w-full truncate border-b border-slate-800 pb-2 relative z-10">
-                                <?= htmlspecialchars($reg['region_name']) ?>
-                            </p>
-                            
-                            <!-- Vertical Stack: Prefix (Top) -> Sequence (Bottom) -->
-                            <div class="flex flex-col items-center gap-1.5 relative z-10 w-full">
-                                <span class="text-[11px] font-black text-cyan-400 bg-cyan-400/10 px-2 py-0.5 rounded border border-cyan-400/20 tracking-widest shadow-[0_0_10px_rgba(34,211,238,0.2)]">
-                                    <?= htmlspecialchars($reg['prefix']) ?>
-                                </span>
-                                <!-- Digital Monospace Counter (6 Digits) without font-weight -->
-                                <div class="font-mono text-2xl sm:text-3xl text-emerald-400 tracking-widest drop-shadow-[0_0_12px_rgba(52,211,153,0.8)] leading-none mt-1 group-hover:text-emerald-300 transition-colors">
-                                    <?= sprintf('%06d', $reg['current_sequence']) ?>
-                                </div>
+        <div class="v5-panel__body">
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
+                <?php foreach ($region_sequences as $reg): ?>
+                    <div style="background:#0f172a;border:1px solid #1e293b;border-radius:14px;padding:0.9rem 0.6rem;text-align:center;box-shadow:inset 0 2px 10px rgba(0,0,0,0.5);">
+                        <p style="font-size:0.65rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.5rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            <?= e($reg['region_name']) ?>
+                        </p>
+                        <div class="flex flex-col items-center gap-1">
+                            <span style="font-size:0.68rem;font-weight:900;color:#38bdf8;background:rgba(56,189,248,0.12);padding:0.15rem 0.5rem;border-radius:6px;border:1px solid rgba(56,189,248,0.25);letter-spacing:0.08em;">
+                                <?= e($reg['prefix']) ?>
+                            </span>
+                            <div style="font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:1.35rem;font-weight:800;color:#34d399;letter-spacing:0.1em;line-height:1.2;margin-top:0.2rem;text-shadow:0 0 10px rgba(52,211,153,0.5);">
+                                <?= sprintf('%06d', $reg['current_sequence']) ?>
                             </div>
                         </div>
-                    <?php endforeach; ?>
-                </div>
+                    </div>
+                <?php endforeach; ?>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- Main Dashboard Content Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fadeInDown" style="animation-delay: 0.2s;">
-            
-            <!-- Recent Vouchers Table -->
-            <div class="lg:col-span-8">
-                <div class="bg-white/80 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_8px_40px_rgb(0,0,0,0.04)] border border-white/60 overflow-hidden h-full flex flex-col">
-                    
-                    <div class="p-6 sm:p-8 border-b border-gray-100 flex items-center justify-between bg-white/50">
-                        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-                            </div>
-                            Your Recent Vouchers
-                        </h2>
-                        <a href="index.php?page=voucher_list" class="text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-xl">View All</a>
+    <!-- Main Content: Recent Vouchers + Cloud Architecture Hub -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- Recent Vouchers Table (8 cols) -->
+        <div class="lg:col-span-8">
+            <section class="v5-panel">
+                <div class="v5-panel__head">
+                    <div class="flex items-center gap-2">
+                        <h2 data-i18n="Your Recent Vouchers">Your Recent Vouchers</h2>
                     </div>
+                    <a href="index.php?page=voucher_list" class="btn-ghost btn-sm" data-i18n="View All">View All</a>
+                </div>
 
-                    <div class="overflow-x-auto w-full custom-scrollbar flex-1 p-2">
-                        <table class="w-full text-left border-collapse whitespace-nowrap">
+                <div class="v5-panel__body p-0">
+                    <div class="overflow-x-auto">
+                        <table class="v5-table w-full">
                             <thead>
                                 <tr>
-                                    <th class="py-4 px-6 text-xs font-extrabold text-gray-400 uppercase tracking-widest border-b border-gray-100">Tracking Code</th>
-                                    <th class="py-4 px-6 text-xs font-extrabold text-gray-400 uppercase tracking-widest border-b border-gray-100">Receiver</th>
-                                    <th class="py-4 px-6 text-xs font-extrabold text-gray-400 uppercase tracking-widest border-b border-gray-100">Value</th>
-                                    <th class="py-4 px-6 text-xs font-extrabold text-gray-400 uppercase tracking-widest border-b border-gray-100">Status</th>
-                                    <th class="py-4 px-6 text-xs font-extrabold text-gray-400 uppercase tracking-widest border-b border-gray-100 text-center">Action</th>
+                                    <th data-i18n="Tracking Code">Tracking Code</th>
+                                    <th data-i18n="Receiver">Receiver</th>
+                                    <th data-i18n="Amount">Amount</th>
+                                    <th data-i18n="Status">Status</th>
+                                    <th class="text-right" data-i18n="Action">Action</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100/60">
+                            <tbody>
                                 <?php if (empty($recent_vouchers)): ?>
                                     <tr>
-                                        <td colspan="5" class="py-16 text-center">
-                                            <div class="flex flex-col items-center justify-center text-gray-400">
-                                                <svg class="w-12 h-12 mb-3 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
-                                                <span class="text-sm font-bold text-gray-500">No vouchers issued yet.</span>
-                                                <a href="index.php?page=voucher_create" class="mt-4 text-xs font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-lg hover:bg-indigo-100 transition-colors">Create your first entry</a>
+                                        <td colspan="5">
+                                            <div class="v5-empty">
+                                                <span class="v5-empty__icon">▤</span>
+                                                <strong data-i18n="No vouchers issued yet.">No vouchers issued yet.</strong>
+                                                <p><a href="index.php?page=voucher_create" class="text-primary font-bold hover:underline" data-i18n="Create your first entry">Create your first entry</a></p>
                                             </div>
                                         </td>
                                     </tr>
                                 <?php else: ?>
-                                    <?php foreach ($recent_vouchers as $voucher): 
-                                        $statusClass = match(strtolower($voucher['status'])) {
-                                            'pending' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
-                                            'in transit' => 'bg-blue-100 text-blue-700 border-blue-200',
-                                            'delivered' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
-                                            'received' => 'bg-teal-100 text-teal-700 border-teal-200',
-                                            'cancelled' => 'bg-red-100 text-red-700 border-red-200',
-                                            'returned' => 'bg-orange-100 text-orange-700 border-orange-200',
-                                            default => 'bg-gray-100 text-gray-600 border-gray-200',
+                                    <?php foreach ($recent_vouchers as $voucher):
+                                        $status_class = match(strtolower($voucher['status'] ?? '')) {
+                                            'delivered' => 'v5-badge-success',
+                                            'in transit' => 'v5-badge-info',
+                                            'pending' => 'v5-badge-warning',
+                                            'cancelled', 'returned' => 'v5-badge-danger',
+                                            default => 'v5-badge-neutral'
                                         };
                                     ?>
-                                        <tr class="hover:bg-white/90 transition-colors duration-200 group">
-                                            <td class="py-4 px-6">
-                                                <span class="inline-flex items-center gap-1.5 font-mono text-sm font-bold text-indigo-700 bg-indigo-50/50 px-2.5 py-1.5 rounded-lg border border-indigo-100 shadow-sm">
-                                                    <?= htmlspecialchars($voucher['voucher_code']) ?>
-                                                </span>
+                                        <tr>
+                                            <td>
+                                                <a class="font-mono font-bold text-primary hover:underline" href="index.php?page=voucher_view&id=<?= (int)$voucher['id'] ?>">
+                                                    <?= e($voucher['voucher_code']) ?>
+                                                </a>
                                             </td>
-                                            <td class="py-4 px-6">
-                                                <span class="font-bold text-gray-800"><?= htmlspecialchars($voucher['receiver_name']) ?></span>
+                                            <td>
+                                                <strong class="text-main"><?= e($voucher['receiver_name']) ?></strong>
                                             </td>
-                                            <td class="py-4 px-6">
-                                                <span class="font-extrabold text-slate-700"><?= htmlspecialchars($voucher['currency']) ?> <?= number_format($voucher['total_amount'], 2) ?></span>
+                                            <td class="font-mono font-bold text-main">
+                                                <span class="text-xs text-muted"><?= e($voucher['currency']) ?></span> <?= number_format($voucher['total_amount'], 2) ?>
                                             </td>
-                                            <td class="py-4 px-6">
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] uppercase tracking-wider font-bold border <?= $statusClass ?> shadow-sm">
-                                                    <?= htmlspecialchars($voucher['status']) ?>
-                                                </span>
+                                            <td>
+                                                <span class="v5-badge <?= $status_class ?>"><?= e($voucher['status']) ?></span>
                                             </td>
-                                            <td class="py-4 px-6 text-center">
-                                                <a href="index.php?page=voucher_view&id=<?= $voucher['id'] ?>" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gray-50 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 hover:shadow-sm border border-transparent hover:border-indigo-100 transition-all" title="View Details">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                            <td class="text-right">
+                                                <a href="index.php?page=voucher_view&id=<?= (int)$voucher['id'] ?>" class="btn-ghost btn-sm" data-i18n="Details">
+                                                    Details
                                                 </a>
                                             </td>
                                         </tr>
@@ -224,196 +188,123 @@ include_template('header', ['page' => 'dashboard']);
                         </table>
                     </div>
                 </div>
-            </div>
+            </section>
+        </div>
 
-            <!-- Support / Cloud Services Card -->
-            <div class="lg:col-span-4">
-                <div class="bg-gradient-to-br from-slate-900 to-indigo-950 rounded-[2.5rem] shadow-2xl border border-slate-700 p-8 sm:p-10 flex flex-col items-center text-center relative overflow-hidden h-full group">
-                    
-                    <!-- Decorative Elements -->
-                    <div class="absolute top-0 right-0 w-48 h-48 bg-indigo-500/20 rounded-bl-full pointer-events-none transition-transform group-hover:scale-110"></div>
-                    <div class="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/20 rounded-tr-full pointer-events-none transition-transform group-hover:scale-110"></div>
-                    
-                    <div class="relative z-10 flex flex-col items-center h-full">
-                        <div class="mb-6 bg-slate-800/80 p-5 rounded-3xl border border-slate-600 shadow-inner backdrop-blur-sm">
-                            <svg class="w-10 h-10 text-cyan-400" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                                <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                            </svg>
-                        </div>
-                        
-                        <h2 class="text-2xl font-bold text-white mb-3">Tech & Cloud Solutions</h2>
-                        <p class="text-slate-400 text-sm mb-8 leading-relaxed">System architecture, seamless payments, and cloud infrastructure powered by TechyyFilip.</p>
-                        
-                        <div class="mt-auto w-full">
-                            <button id="contactDeveloperBtn" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-3.5 px-6 rounded-2xl shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                Access Tech Hub
-                            </button>
-                        </div>
+        <!-- Tech & Cloud Hub (4 cols) -->
+        <div class="lg:col-span-4">
+            <div style="background:linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);border:1px solid #334155;border-radius:18px;padding:2rem 1.75rem;color:#f8fafc;box-shadow:0 15px 40px rgba(15,23,42,0.3);position:relative;overflow:hidden;">
+                <div class="flex items-center gap-3 mb-4">
+                    <span style="width:2.5rem;height:2.5rem;border-radius:.75rem;background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.3);display:grid;place-items:center;">
+                        <svg width="18" height="18" fill="none" stroke="#38bdf8" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </span>
+                    <div>
+                        <strong style="display:block;font-size:1.1rem;font-weight:900;" data-i18n="Tech & Cloud Hub">Tech & Cloud Hub</strong>
+                        <span style="font-size:0.75rem;color:#94a3b8;" data-i18n="Architecture & Diagnostics">Architecture & Diagnostics</span>
                     </div>
                 </div>
+
+                <p style="font-size:0.85rem;color:#cbd5e1;line-height:1.6;margin-bottom:1.5rem;" data-i18n="High-availability logistics cloud infrastructure, fail-open Redis caching, and real-time ledger sync powered by TechyyFilip.">
+                    High-availability logistics cloud infrastructure, fail-open Redis caching, and real-time ledger sync powered by TechyyFilip.
+                </p>
+
+                <button type="button" id="contactDeveloperBtn" class="btn-primary w-full justify-center" data-i18n="Access Tech Hub">
+                    Access Tech Hub
+                </button>
             </div>
-            
         </div>
     </div>
 </div>
 
-<!-- Premium V3 Glassmorphism Contact Modal -->
+<!-- Developer Support Modal -->
 <div id="contactModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center hidden z-[100] transition-opacity duration-300 opacity-0">
-    <div class="bg-white/90 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl p-8 sm:p-10 w-full max-w-xl border border-white/60 transform scale-95 transition-transform duration-300 relative overflow-hidden" id="contactModalInner">
-        
-        <!-- Decorative bg -->
-        <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-2xl"></div>
-        
-        <button id="closeModalBtn" class="absolute top-6 right-6 w-10 h-10 bg-slate-100 text-slate-500 hover:text-slate-800 hover:bg-slate-200 rounded-full flex items-center justify-center transition-colors z-20">
+    <div class="bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-lg border border-white/60 transform scale-95 transition-transform duration-300 relative overflow-hidden" id="contactModalInner">
+
+        <button id="closeModalBtn" class="absolute top-4 right-4 w-9 h-9 bg-slate-100 text-slate-500 hover:text-slate-800 hover:bg-slate-200 rounded-full flex items-center justify-center transition-colors z-20">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
-        
+
         <div class="relative z-10">
-            <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30 text-white mx-auto mb-6">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+            <div class="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 mx-auto mb-4">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
             </div>
-            
-            <h2 class="text-3xl font-extrabold text-slate-900 mb-2 text-center tracking-tight">Developer Hub</h2>
-            <p class="text-slate-500 text-center text-sm font-medium mb-8">Choose a support channel or explore our ecosystem.</p>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                
-                <!-- Direct Contact -->
-                <a href="tel:+959954480806" class="group bg-white border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 rounded-2xl p-4 flex flex-col items-center justify-center text-center transition-all hover:shadow-md hover:-translate-y-1">
-                    <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                    </div>
-                    <span class="font-bold text-slate-800 block text-sm">Direct Call</span>
-                    <span class="text-xs text-slate-500 font-mono mt-1">+95 9954480806</span>
-                </a>
-                
-                <!-- Telegram -->
-                <a href="https://t.me/Stephanfilip" target="_blank" class="group bg-white border border-slate-200 hover:border-sky-300 hover:bg-sky-50 rounded-2xl p-4 flex flex-col items-center justify-center text-center transition-all hover:shadow-md hover:-translate-y-1">
-                    <div class="w-10 h-10 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.287 5.906c-.778.324-2.334.994-4.608 1.976l-.623 2.406.846.065 1.706-.938c.834-.46 1.137-.624 1.288-.661.04-.017.071-.03.092-.04.072-.049.088-.047.172-.004.09.042.138.113.177.26.04.148.026.316-.06.495-.061.168-.117.29-.16.38-.11.234-.2.416-.232.462-.02.036-.026.044-.028.047-.002.003-.005.006-.008.01L7.182 11.89c-.194.165-.42.261-.603.261-.586 0-1.068-.377-1.391-.659-.62-.542-1.2-.956-1.282-1.003-.054-.03-.109-.048-.163-.048-.092 0-.125.016-.166.043l-.062.042-.164.117-.104.07a1 1 0 0 1-.354.129c-.326.076-.41.07-.517-.006l-.06-.05-.167-.145-1.47-1.336c-.44-.41-.75-.6-.916-.628-.06-.01-.105-.015-.147-.015-.093 0-.178.04-.252.115-.12.148-.18.276-.22.465-.036.162-.056.28-.064.307-.005.013-.008.016-.011.018-.002.002-.004.004-.007.006-.003.003-.006.005-.008.008a6.76 6.76 0 0 1-.162.09c-.026.012-.057.028-.087.04-.03.013-.058.022-.088.033-.3.093-.654.097-.7.091C.013 9.728 0 9.693 0 9.636c0-.024.029-.074.103-.178.026-.038.059-.074.097-.108l.056-.051 1.077-.965c1.078-.96 1.45-1.295 1.552-1.356.12-.072.247-.132.379-.18.237-.087.48-.17.714-.242.42-.137.833-.242 1.092-.261.685-.045 1.38-.104 2.052-.168.973-.096 1.254-.127 1.524-.127H16V8a8 8 0 0 0-7.713-7.906z"/></svg>
-                    </div>
-                    <span class="font-bold text-slate-800 block text-sm">Telegram Chat</span>
-                    <span class="text-xs text-slate-500 font-mono mt-1">@stephanfilip2k03</span>
+
+            <h2 class="text-2xl font-black text-slate-900 mb-1 text-center tracking-tight" data-i18n="Developer Support Hub">Developer Support Hub</h2>
+            <p class="text-slate-500 text-center text-xs font-medium mb-6" data-i18n="Direct assistance and technical engineering contacts.">Direct assistance and technical engineering contacts.</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <a href="tel:+959954480806" class="v5-record-row text-center flex-col items-center p-3 rounded-xl border border-slate-100 hover:border-blue-200">
+                    <span class="font-bold text-slate-800 text-sm" data-i18n="Direct Call">Direct Call</span>
+                    <span class="text-xs text-primary font-mono mt-0.5">+95 9954480806</span>
                 </a>
 
-                <!-- Payvia Asia -->
-                <a href="https://payvia.asia" target="_blank" class="group bg-white border border-slate-200 hover:border-purple-300 hover:bg-purple-50 rounded-2xl p-4 flex flex-col items-center justify-center text-center transition-all hover:shadow-md hover:-translate-y-1">
-                    <div class="w-10 h-10 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                    </div>
-                    <span class="font-bold text-slate-800 block text-sm">FinTech & Payments</span>
-                    <span class="text-xs text-purple-600 font-bold mt-1 bg-purple-100/50 px-2 py-0.5 rounded">payvia.asia</span>
+                <a href="https://t.me/Stephanfilip" target="_blank" class="v5-record-row text-center flex-col items-center p-3 rounded-xl border border-slate-100 hover:border-blue-200">
+                    <span class="font-bold text-slate-800 text-sm" data-i18n="Telegram Support">Telegram Support</span>
+                    <span class="text-xs text-primary font-mono mt-0.5">@stephanfilip2k03</span>
                 </a>
 
-                <!-- Payvia Space -->
-                <a href="https://payvia.space" target="_blank" class="group bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 rounded-2xl p-4 flex flex-col items-center justify-center text-center transition-all hover:shadow-md hover:-translate-y-1">
-                    <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                    </div>
-                    <span class="font-bold text-slate-800 block text-sm">Cloud Infrastructure</span>
-                    <span class="text-xs text-indigo-600 font-bold mt-1 bg-indigo-100/50 px-2 py-0.5 rounded">payvia.space</span>
+                <a href="https://payvia.asia" target="_blank" class="v5-record-row text-center flex-col items-center p-3 rounded-xl border border-slate-100 hover:border-blue-200">
+                    <span class="font-bold text-slate-800 text-sm">FinTech Core</span>
+                    <span class="text-xs text-muted mt-0.5">payvia.asia</span>
+                </a>
+
+                <a href="https://payvia.space" target="_blank" class="v5-record-row text-center flex-col items-center p-3 rounded-xl border border-slate-100 hover:border-blue-200">
+                    <span class="font-bold text-slate-800 text-sm">Cloud Operations</span>
+                    <span class="text-xs text-muted mt-0.5">payvia.space</span>
                 </a>
             </div>
-            
-            <div class="mt-6 text-center">
-                 <p class="text-xs font-medium text-slate-400">Developed by <a href="https://techyyfilip.vercel.app" target="_blank" class="text-indigo-500 hover:underline">TechyyFilip</a> (Stephan)</p>
+
+            <div class="mt-5 text-center">
+                 <p class="text-xs font-medium text-slate-400">Maintained by <a href="https://techyyfilip.vercel.app" target="_blank" class="text-primary font-semibold hover:underline">TechyyFilip</a></p>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-    /* Sleek scrollbar for the table */
-    .custom-scrollbar::-webkit-scrollbar {
-        height: 6px;
-        width: 6px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent; 
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(148, 163, 184, 0.3); 
-        border-radius: 999px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(148, 163, 184, 0.6); 
-    }
-    
-    /* Animations */
-    @keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-15px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-fadeInDown {
-        animation: fadeInDown 0.4s ease-out forwards;
-        opacity: 0; /* Starts hidden until animation */
-    }
-</style>
-
 <script>
-  const contactDeveloperBtn = document.getElementById('contactDeveloperBtn');
-  const contactModal = document.getElementById('contactModal');
-  const contactModalInner = document.getElementById('contactModalInner');
-  const closeModalBtn = document.getElementById('closeModalBtn');
+document.addEventListener('DOMContentLoaded', () => {
+    // Digital Clock
+    function updateClock() {
+        const now = new Date();
+        let h = now.getHours();
+        const m = String(now.getMinutes()).padStart(2, '0');
+        const s = String(now.getSeconds()).padStart(2, '0');
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        const clock = document.getElementById('digital-clock');
+        if (clock) clock.textContent = `${String(h).padStart(2, '0')}:${m}:${s} ${ampm}`;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
 
-  function showModal() {
-    contactModal.classList.remove('hidden');
-    // Tiny delay to allow display:block to apply before animating opacity
-    setTimeout(() => {
-        contactModal.classList.remove('opacity-0');
-        contactModalInner.classList.remove('scale-95');
-        contactModalInner.classList.add('scale-100');
-    }, 10);
-  }
-  function hideModal() {
-    contactModal.classList.add('opacity-0');
-    contactModalInner.classList.remove('scale-100');
-    contactModalInner.classList.add('scale-95');
-    // Wait for transition to finish before hiding completely
-    setTimeout(() => {
-        contactModal.classList.add('hidden');
-    }, 300);
-  }
+    // Modal
+    const btn = document.getElementById('contactDeveloperBtn');
+    const modal = document.getElementById('contactModal');
+    const inner = document.getElementById('contactModalInner');
+    const close = document.getElementById('closeModalBtn');
 
-  if (contactDeveloperBtn) contactDeveloperBtn.addEventListener('click', showModal);
-  if (closeModalBtn) closeModalBtn.addEventListener('click', hideModal);
-  if (contactModal) contactModal.addEventListener('click', e => { 
-      // Close if clicking outside the inner modal box
-      if(e.target === contactModal) hideModal(); 
-  });
-  document.addEventListener('keydown', e => { 
-      if (e.key === 'Escape' && !contactModal.classList.contains('hidden')) hideModal(); 
-  });
+    function openModal() {
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            inner.classList.remove('scale-95');
+            inner.classList.add('scale-100');
+        }, 10);
+    }
+    function closeModal() {
+        if (!modal) return;
+        modal.classList.add('opacity-0');
+        inner.classList.remove('scale-100');
+        inner.classList.add('scale-95');
+        setTimeout(() => modal.classList.add('hidden'), 250);
+    }
 
-  // Digital Clock Logic
-  function updateDigitalClock() {
-      const now = new Date();
-      let hours = now.getHours();
-      let minutes = now.getMinutes();
-      let seconds = now.getSeconds();
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      
-      hours = hours % 12;
-      hours = hours ? hours : 12; // the hour '0' should be '12'
-      
-      hours = hours < 10 ? '0' + hours : hours;
-      minutes = minutes < 10 ? '0' + minutes : minutes;
-      seconds = seconds < 10 ? '0' + seconds : seconds;
-      
-      const clockElement = document.getElementById('digital-clock');
-      if (clockElement) {
-          clockElement.textContent = hours + ':' + minutes + ':' + seconds + ' ' + ampm;
-      }
-  }
-  
-  // Initialize and tick clock
-  updateDigitalClock();
-  setInterval(updateDigitalClock, 1000);
+    if (btn) btn.addEventListener('click', openModal);
+    if (close) close.addEventListener('click', closeModal);
+    if (modal) modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) closeModal(); });
+});
 </script>
 
-<?php
-include_template('footer');
-?>
+<?php include_template('footer'); ?>

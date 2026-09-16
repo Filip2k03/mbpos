@@ -1,22 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // --- Page Loader ---
-    const loader = document.getElementById('shipLoader');
-    const progress = document.getElementById('loaderProgress');
-
-    if (loader && progress) {
-        // Simulate loading progress
-        let width = 0;
-        const interval = setInterval(function () {
-            if (width >= 100) {
-                clearInterval(interval);
-                setTimeout(() => loader.classList.add('hidden'), 300); // Hide after a short delay
-            } else {
-                width += 2;
-                progress.style.width = width + '%';
-            }
-        }, 20); // Adjust timing for desired speed
-    }
-
     // --- Mobile menu toggle ---
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.getElementById('mobile-menu');

@@ -58,6 +58,8 @@ if (is_logged_in()) {
     <?php if (function_exists('load_assets') && isset($page)) load_assets($page); ?>
 
     <style>
+        /* The legacy loader is disabled; it must never cover the POS workspace. */
+        #shipLoader { display: none !important; }
         :root {
             --color-burgundy: #800020;
             --color-bg: #ffffff;
@@ -259,7 +261,7 @@ if (is_logged_in()) {
     <span class="offline-status-dot" aria-hidden="true"></span>
     <span data-i18n="You are offline. Saved pages remain available; live records require a connection.">You are offline. Saved pages remain available; live records require a connection.</span>
 </div>
-<!-- V5 Logistics Loader -->
+<?php if (false): // Legacy loader intentionally disabled. ?>
 <div class="ship-loader" id="shipLoader">
     <!-- Custom Animated Logistics Truck SVG -->
     <svg class="truck-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">
@@ -310,7 +312,9 @@ if (is_logged_in()) {
     <div class="mb-logo-loader">MBLOGISTICS</div>
     <div class="progress-bar-v3"><div class="progress-v3" id="loaderProgress"></div></div>
 </div>
+-->
 
+<?php endif; ?>
 <?php if (!$is_voucher_workspace): ?>
 <div class="mbpos-global-shell">
     <?php if (is_logged_in()): ?>
@@ -433,25 +437,5 @@ document.addEventListener('DOMContentLoaded', function() {
     // Poll every 10 seconds
     setInterval(fetchNotifications, 10000);
     
-    // V3 Loader Logic
-    const loader = document.getElementById("shipLoader");
-    const progress = document.getElementById("loaderProgress");
-
-    let load = 0;
-    const interval = setInterval(() => {
-        // Variable speed loader effect
-        load += Math.floor(Math.random() * 15) + 5; 
-        if (load > 100) load = 100;
-        progress.style.width = load + "%";
-
-        if (load >= 100) {
-            clearInterval(interval);
-            setTimeout(() => {
-                loader.classList.add("hidden");
-                setTimeout(() => loader.style.display = "none", 600); // Fully remove from DOM flow
-            }, 200);
-
-        }
-    }, 150);
 });
 </script>

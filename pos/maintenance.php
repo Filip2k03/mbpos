@@ -82,51 +82,69 @@ if ($result) {
 include_template('header', ['page' => 'maintenance']);
 ?>
 
-<div class="container mx-auto p-6">
-    <h1 class="text-3xl font-bold mb-6">Maintenance Settings</h1>
-
-    <!-- Add/Edit Form -->
-    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-        <h2 class="text-2xl font-semibold mb-4"><?= $edit_category ? 'Edit Category' : 'Add New Category' ?></h2>
-        <form action="index.php?page=maintenance" method="POST">
-            <?php if ($edit_category): ?>
-                <input type="hidden" name="id" value="<?= $edit_category['id'] ?>">
-            <?php endif; ?>
-            <div class="flex items-center space-x-4">
-                <input type="text" name="name" placeholder="Category Name" class="form-input flex-grow" value="<?= htmlspecialchars($edit_category['name'] ?? '') ?>" required>
-                <button type="submit" class="btn"><?= $edit_category ? 'Update' : 'Add' ?></button>
-            </div>
-        </form>
+<div class="v5-page">
+    <div class="v5-page-head">
+        <div class="v5-page-head__copy">
+            <span class="v5-kicker">Developer configuration</span>
+            <h1 data-i18n="Maintenance Settings">Maintenance Settings</h1>
+            <p>Control operational maintenance categories without interrupting active POS sessions.</p>
+        </div>
+        <span class="v5-count"><?= count($categories) ?> configured categories</span>
     </div>
 
-    <!-- Categories List -->
-    <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-semibold mb-4">Maintenance Categories</h2>
-        <div class="space-y-4">
-            <?php foreach ($categories as $cat): ?>
-                <div class="flex items-center justify-between p-4 border rounded-lg">
-                    <span class="font-semibold text-lg"><?= htmlspecialchars($cat['name']) ?></span>
-                    <div class="flex items-center space-x-4">
-                        <span class="font-bold <?= $cat['is_active'] ? 'text-red-600' : 'text-green-600' ?>">
-                            <?= $cat['is_active'] ? 'ACTIVE' : 'INACTIVE' ?>
-                        </span>
-                        <form action="index.php?page=maintenance" method="POST" class="inline">
-                            <input type="hidden" name="toggle_id" value="<?= $cat['id'] ?>">
-                            <input type="hidden" name="current_status" value="<?= $cat['is_active'] ?>">
-                            <button type="submit" class="text-white font-bold py-2 px-4 rounded <?= $cat['is_active'] ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600' ?>">
-                                Toggle
-                            </button>
-                        </form>
-                        <a href="index.php?page=maintenance&action=edit&id=<?= $cat['id'] ?>" class="text-indigo-600 hover:text-indigo-900">Edit</a>
-                        <form method="POST" action="index.php?page=maintenance" class="inline" onsubmit="return confirm('Delete this maintenance category?');">
-                            <?= csrf_input() ?><input type="hidden" name="delete_id" value="<?= (int)$cat['id'] ?>">
-                            <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
-                        </form>
+    <section class="v5-panel">
+        <div class="v5-panel__head">
+            <h2><?= $edit_category ? 'Edit Maintenance Category' : 'Add Maintenance Category' ?></h2>
+            <?php if ($edit_category): ?><a class="v5-btn-ghost" href="index.php?page=maintenance">Cancel edit</a><?php endif; ?>
+        </div>
+        <div class="v5-panel__body">
+            <form action="index.php?page=maintenance" method="POST">
+                <?= csrf_input() ?>
+                <?php if ($edit_category): ?><input type="hidden" name="id" value="<?= (int)$edit_category['id'] ?>"><?php endif; ?>
+                <div class="v5-filter-grid">
+                    <div class="v5-field v5-field--wide">
+                        <label for="maintenance-name">Category name</label>
+                        <input id="maintenance-name" type="text" name="name" maxlength="120" placeholder="e.g. Exchange rate synchronization" value="<?= htmlspecialchars($edit_category['name'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
+                    </div>
+                    <div class="v5-field">
+                        <button type="submit" class="btn w-full"><?= $edit_category ? 'Save Changes' : 'Add Category' ?></button>
                     </div>
                 </div>
-            <?php endforeach; ?>
+            </form>
         </div>
-    </div>
+    </section>
+
+    <section class="v5-panel">
+        <div class="v5-panel__head"><h2>Operational Categories</h2><span class="v5-count">Live controls</span></div>
+        <div class="v5-panel__body">
+            <?php if (empty($categories)): ?>
+                <div class="v5-empty"><span class="v5-empty__icon">⚙</span><strong>No maintenance categories configured</strong><p>Add the first category above.</p></div>
+            <?php else: ?>
+                <div class="v5-record-list">
+                    <?php foreach ($categories as $cat): ?>
+                        <article class="v5-record-row">
+                            <div class="v5-record-row__main">
+                                <strong><?= htmlspecialchars($cat['name'], ENT_QUOTES, 'UTF-8') ?></strong>
+                                <span>Category ID #<?= (int)$cat['id'] ?></span>
+                            </div>
+                            <div class="v5-record-row__actions">
+                                <span class="v5-status-dot <?= $cat['is_active'] ? 'v5-status-dot--on' : 'v5-status-dot--off' ?>"><?= $cat['is_active'] ? 'Active' : 'Inactive' ?></span>
+                                <form action="index.php?page=maintenance" method="POST">
+                                    <?= csrf_input() ?><input type="hidden" name="toggle_id" value="<?= (int)$cat['id'] ?>"><input type="hidden" name="current_status" value="<?= (int)$cat['is_active'] ?>">
+                                    <button type="submit" class="<?= $cat['is_active'] ? 'v5-btn-success' : 'v5-btn-ghost' ?>"><?= $cat['is_active'] ? 'Deactivate' : 'Activate' ?></button>
+                                </form>
+                                <a href="index.php?page=maintenance&action=edit&id=<?= (int)$cat['id'] ?>" class="v5-btn-ghost">Edit</a>
+                                <form method="POST" action="index.php?page=maintenance" onsubmit="return confirm('Delete this maintenance category?');">
+                                    <?= csrf_input() ?><input type="hidden" name="delete_id" value="<?= (int)$cat['id'] ?>">
+                                    <button type="submit" class="v5-btn-danger">Delete</button>
+                                </form>
+                            </div>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </section>
 </div>
 
 <?php include_template('footer'); ?>

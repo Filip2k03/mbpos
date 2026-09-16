@@ -98,85 +98,47 @@ if (isset($_GET['action'])) {
 
 // --- Fetch Income for Display ---
 $incomes = [];
+$income_totals = [];
 $query = "SELECT * FROM other_income ORDER BY income_date DESC";
 $result = mysqli_query($connection, $query);
 if($result){
     while($row = mysqli_fetch_assoc($result)){
         $incomes[] = $row;
+        $code = $row['currency'] ?: 'N/A';
+        $income_totals[$code] = ($income_totals[$code] ?? 0) + (float)$row['amount'];
     }
 }
 
 include_template('header', ['page' => 'other_income']);
 ?>
-<div class="container mx-auto p-6">
-    <h1 class="text-3xl font-bold mb-6">Manage Other Income</h1>
-
-     <!-- Add/Edit Form -->
-    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-        <h2 class="text-2xl font-semibold mb-4"><?= $edit_income ? 'Edit Income Record' : 'Add New Income Record' ?></h2>
-        <form action="index.php?page=other_income" method="POST">
-            <input type="hidden" name="income_id" value="<?= $edit_income['id'] ?? '' ?>">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="md:col-span-2">
-                    <label for="description" class="form-label">Description</label>
-                    <input type="text" id="description" name="description" class="form-input" value="<?= htmlspecialchars($edit_income['description'] ?? '') ?>" required>
-                </div>
-                <div>
-                    <label for="amount" class="form-label">Amount</label>
-                    <input type="number" step="0.01" id="amount" name="amount" class="form-input" value="<?= htmlspecialchars($edit_income['amount'] ?? '') ?>" required>
-                </div>
-                 <div>
-                    <label for="currency" class="form-label">Currency</label>
-                     <select id="currency" name="currency" class="form-select" required>
-                        <?php foreach($currencies as $currency_code): ?>
-                            <option value="<?= htmlspecialchars($currency_code) ?>" <?= (isset($edit_income) && $edit_income['currency'] === $currency_code) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($currency_code) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div>
-                    <label for="income_date" class="form-label">Date</label>
-                    <input type="date" id="income_date" name="income_date" class="form-input" value="<?= htmlspecialchars($edit_income['income_date'] ?? date('Y-m-d')) ?>" required>
-                </div>
-                <div class="md:col-span-4 text-right">
-                    <button type="submit" class="btn"><?= $edit_income ? 'Update Record' : 'Add Record' ?></button>
-                </div>
-            </div>
-        </form>
+<div class="v5-page">
+    <div class="v5-page-head">
+        <div class="v5-page-head__copy"><span class="v5-kicker">Financial operations</span><h1 data-i18n="Other Income">Other Income</h1><p>Record non-freight revenue with currency-safe totals and an auditable history.</p></div>
+        <span class="v5-count"><?= count($incomes) ?> income records</span>
     </div>
 
-    <!-- Income List -->
-    <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-semibold mb-4">Income History</h2>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="table-header">Date</th>
-                        <th class="table-header">Description</th>
-                        <th class="table-header">Amount</th>
-                        <th class="table-header">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                     <?php foreach($incomes as $income): ?>
-                    <tr>
-                        <td class="table-cell"><?= htmlspecialchars($income['income_date']) ?></td>
-                        <td class="table-cell"><?= htmlspecialchars($income['description']) ?></td>
-                        <td class="table-cell"><?= htmlspecialchars($income['currency']) ?> <?= number_format($income['amount'], 2) ?></td>
-                        <td class="table-cell">
-                            <!--<a href="index.php?page=other_income&action=edit&id=<?= $income['id'] ?>" class="text-indigo-600 hover:text-indigo-900">Edit</a>-->
-                            <form method="POST" action="index.php?page=other_income&action=delete&id=<?= (int)$income['id'] ?>" class="inline ml-4" onsubmit="return confirm('Delete this income record?');">
-                                <?= csrf_input() ?><input type="hidden" name="delete_id" value="<?= (int)$income['id'] ?>">
-                                <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+    <?php if ($income_totals): ?><div class="v5-toolbar"><?php foreach ($income_totals as $code => $total): ?><span class="v5-count"><strong><?= htmlspecialchars($code, ENT_QUOTES, 'UTF-8') ?></strong> <?= number_format($total, 2) ?></span><?php endforeach; ?></div><?php endif; ?>
+
+    <section class="v5-panel">
+        <div class="v5-panel__head"><h2><?= $edit_income ? 'Edit Income Record' : 'Add Income Record' ?></h2><?php if ($edit_income): ?><a class="v5-btn-ghost" href="index.php?page=other_income">Cancel edit</a><?php endif; ?></div>
+        <div class="v5-panel__body">
+            <form action="index.php?page=other_income" method="POST" class="v5-filter-grid">
+                <?= csrf_input() ?><input type="hidden" name="income_id" value="<?= (int)($edit_income['id'] ?? 0) ?>">
+                <div class="v5-field v5-field--wide"><label for="description">Description</label><input type="text" id="description" name="description" maxlength="255" placeholder="Describe the income source" value="<?= htmlspecialchars($edit_income['description'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required></div>
+                <div class="v5-field"><label for="amount">Amount</label><input type="number" min="0.01" step="0.01" id="amount" name="amount" value="<?= htmlspecialchars($edit_income['amount'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required></div>
+                <div class="v5-field"><label for="currency">Currency</label><select id="currency" name="currency" required><?php foreach($currencies as $currency_code): ?><option value="<?= htmlspecialchars($currency_code, ENT_QUOTES, 'UTF-8') ?>" <?= $edit_income && $edit_income['currency'] === $currency_code ? 'selected' : '' ?>><?= htmlspecialchars($currency_code) ?></option><?php endforeach; ?></select></div>
+                <div class="v5-field"><label for="income_date">Income date</label><input type="date" id="income_date" name="income_date" value="<?= htmlspecialchars($edit_income['income_date'] ?? date('Y-m-d'), ENT_QUOTES, 'UTF-8') ?>" required></div>
+                <div class="v5-field"><button type="submit" class="btn w-full"><?= $edit_income ? 'Save Changes' : 'Add Income' ?></button></div>
+            </form>
         </div>
-    </div>
+    </section>
+
+    <section class="v5-panel">
+        <div class="v5-panel__head"><h2>Income History</h2><span class="v5-count">Newest first</span></div>
+        <div class="overflow-x-auto"><table class="min-w-full"><thead><tr><th>Date</th><th>Description</th><th>Currency</th><th>Amount</th><th>Actions</th></tr></thead><tbody>
+            <?php if (empty($incomes)): ?><tr><td colspan="5"><div class="v5-empty"><span class="v5-empty__icon">＋</span><strong>No additional income recorded</strong><p>Add the first record using the form above.</p></div></td></tr>
+            <?php else: foreach($incomes as $income): ?><tr><td><?= date('M j, Y', strtotime($income['income_date'])) ?></td><td><strong><?= htmlspecialchars($income['description'], ENT_QUOTES, 'UTF-8') ?></strong></td><td><span class="v5-count"><?= htmlspecialchars($income['currency'], ENT_QUOTES, 'UTF-8') ?></span></td><td class="font-bold"><?= number_format($income['amount'], 2) ?></td><td><div class="v5-toolbar__group"><a href="index.php?page=other_income&action=edit&id=<?= (int)$income['id'] ?>" class="v5-btn-ghost">Edit</a><form method="POST" action="index.php?page=other_income" onsubmit="return confirm('Delete this income record?');"><?= csrf_input() ?><input type="hidden" name="delete_id" value="<?= (int)$income['id'] ?>"><button type="submit" class="v5-btn-danger">Delete</button></form></div></td></tr><?php endforeach; endif; ?>
+        </tbody></table></div>
+    </section>
 </div>
 <?php include_template('footer'); ?>

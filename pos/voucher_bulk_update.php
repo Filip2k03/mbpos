@@ -30,16 +30,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     })));
     $new_status = $_POST['new_status'] ?? '';
 
-    if (empty($voucher_ids) || count($voucher_ids) > 200) {
+    if (empty($voucher_ids)) {
         flash_message('error', 'No vouchers were selected for update.');
+    } elseif (count($voucher_ids) > 200) {
+        flash_message('error', 'A maximum of 200 vouchers can be updated per request.');
     } elseif (!in_array($new_status, $possible_statuses)) {
         flash_message('error', 'An invalid status was selected.');
     } else {
         $ids_placeholder = implode(',', array_fill(0, count($voucher_ids), '?'));
-        $stmt = mysqli_prepare($connection, "UPDATE vouchers SET status = ? WHERE id IN ($ids_placeholder)");
-
+        $update_query = "UPDATE vouchers SET status = ? WHERE id IN ($ids_placeholder)";
         $types = 's' . str_repeat('i', count($voucher_ids));
-        mysqli_stmt_bind_param($stmt, $types, $new_status, ...$voucher_ids);
+        $update_values = array_merge([$new_status], $voucher_ids);
+        if (is_staff() && $user_branch_id) {
+            $update_query .= " AND (origin_branch_id = ? OR (destination_branch_id = ? AND status != 'Pending'))";
+            $types .= 'ii';
+            $update_values[] = $user_branch_id;
+            $update_values[] = $user_branch_id;
+        }
+        $stmt = mysqli_prepare($connection, $update_query);
+        mysqli_stmt_bind_param($stmt, $types, ...$update_values);
 
         if (mysqli_stmt_execute($stmt)) {
             $count = mysqli_stmt_affected_rows($stmt);
@@ -50,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mysqli_stmt_close($stmt);
     }
     // Redirect back to the same page with filters preserved to see the result
-    redirect('index.php?page=voucher_bulk_update'. http_build_query($_GET));
+    redirect('index.php?page=voucher_bulk_update&' . http_build_query($_GET));
 }
 
 
@@ -132,7 +141,7 @@ if (!empty($search_term) && in_array($search_column, $allowed_search_columns)) {
 if (!empty($where_clauses)) {
     $query .= " WHERE " . implode(' AND ', $where_clauses);
 }
-$query .= " ORDER BY v.created_at DESC";
+$query .= " ORDER BY v.created_at DESC LIMIT 500";
 
 $stmt = mysqli_prepare($connection, $query);
 if ($stmt) {
@@ -159,183 +168,30 @@ $export_url = 'index.php?page=export_vouchers&' . $export_query_string;
 include_template('header', ['page' => 'voucher_bulk_update']);
 ?>
 
-<div class="container mx-auto p-6">
-    <h1 class="text-3xl font-bold mb-6">Voucher Bulk Status Update</h1>
+<div class="v5-page">
+    <div class="v5-page-head"><div class="v5-page-head__copy"><span class="v5-kicker">Ledger operations</span><h1 data-i18n="Bulk Update">Bulk Voucher Update</h1><p>Filter up to 500 ledger records and apply controlled shipment-status changes.</p></div><span class="v5-count"><?= count($vouchers) ?> records loaded</span></div>
 
-<form action="index.php" method="GET" class="mb-6 bg-white p-6 rounded-2xl shadow-md border border-gray-100 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <section class="v5-panel">
+        <div class="v5-panel__head"><h2>Voucher Filters</h2><div class="v5-toolbar__group"><a class="v5-btn-ghost" href="index.php?page=voucher_bulk_update">Reset</a><a class="v5-btn-success" href="<?= htmlspecialchars($export_url, ENT_QUOTES, 'UTF-8') ?>">Export Excel</a></div></div>
+        <div class="v5-panel__body"><form action="index.php" method="GET" class="v5-filter-grid"><input type="hidden" name="page" value="voucher_bulk_update">
+            <div class="v5-field"><label for="start_date">Start date</label><input type="date" id="start_date" name="start_date" value="<?= htmlspecialchars($start_date, ENT_QUOTES, 'UTF-8') ?>"></div>
+            <div class="v5-field"><label for="end_date">End date</label><input type="date" id="end_date" name="end_date" value="<?= htmlspecialchars($end_date, ENT_QUOTES, 'UTF-8') ?>"></div>
+            <div class="v5-field"><label for="filter_origin_region_id">Origin region</label><select id="filter_origin_region_id" name="origin_region_id"><option value="All">All origins</option><?php foreach ($regions as $r): ?><option value="<?= (int)$r['id'] ?>" <?= strval($filter_origin_region_id) === strval($r['id']) ? 'selected' : '' ?>><?= htmlspecialchars($r['region_name'], ENT_QUOTES, 'UTF-8') ?></option><?php endforeach; ?></select></div>
+            <div class="v5-field"><label for="filter_destination_region_id">Destination</label><select id="filter_destination_region_id" name="destination_region_id"><option value="All">All destinations</option><?php foreach ($regions as $r): ?><option value="<?= (int)$r['id'] ?>" <?= strval($filter_destination_region_id) === strval($r['id']) ? 'selected' : '' ?>><?= htmlspecialchars($r['region_name'], ENT_QUOTES, 'UTF-8') ?></option><?php endforeach; ?></select></div>
+            <div class="v5-field"><label for="filter_status">Status</label><select id="filter_status" name="status"><option value="">All statuses</option><?php foreach ($possible_statuses as $s): ?><option value="<?= htmlspecialchars($s, ENT_QUOTES, 'UTF-8') ?>" <?= $filter_status === $s ? 'selected' : '' ?>><?= htmlspecialchars($s) ?></option><?php endforeach; ?></select></div>
+            <div class="v5-field v5-field--wide"><label for="search_term">Search</label><div class="v5-search-group"><select name="search_column"><option value="voucher_code" <?= $search_column === 'voucher_code' ? 'selected' : '' ?>>Voucher Code</option><option value="sender_name" <?= $search_column === 'sender_name' ? 'selected' : '' ?>>Sender</option><option value="receiver_name" <?= $search_column === 'receiver_name' ? 'selected' : '' ?>>Receiver</option><option value="receiver_phone" <?= $search_column === 'receiver_phone' ? 'selected' : '' ?>>Receiver Phone</option></select><input id="search_term" type="search" name="search" placeholder="Search ledger records" value="<?= htmlspecialchars($search_term, ENT_QUOTES, 'UTF-8') ?>"></div></div>
+            <div class="v5-field"><button type="submit" class="btn w-full">Apply Filters</button></div>
+        </form></div>
+    </section>
 
-    <input type="hidden" name="page" value="voucher_bulk_update">
-
-    <!-- Start Date -->
-    <div class="relative">
-        <label for="start_date" class="form-label block mb-1 font-semibold text-gray-700">Start Date:</label>
-        <div class="relative">
-            <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-blue-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2v-7H3v7a2 2 0 002 2z" />
-            </svg>
-            <input type="date" id="start_date" name="start_date" class="form-input pl-10" value="<?= htmlspecialchars($start_date) ?>">
-        </div>
-    </div>
-
-    <!-- End Date -->
-    <div class="relative">
-        <label for="end_date" class="form-label block mb-1 font-semibold text-gray-700">End Date:</label>
-        <div class="relative">
-            <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-blue-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2v-7H3v7a2 2 0 002 2z" />
-            </svg>
-            <input type="date" id="end_date" name="end_date" class="form-input pl-10" value="<?= htmlspecialchars($end_date) ?>">
-        </div>
-    </div>
-
-    <!-- Origin Region -->
-    <div>
-        <label for="filter_origin_region_id" class="form-label block mb-1 font-semibold text-gray-700 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 1.104-.896 2-2 2s-2-.896-2-2 .896-2 2-2 2 .896 2 2zM19 11c0 1.104-.896 2-2 2s-2-.896-2-2 .896-2 2-2 2 .896 2 2z" />
-            </svg>
-            Origin Region:
-        </label>
-        <select id="filter_origin_region_id" name="origin_region_id" class="form-select">
-            <option value="All">All</option>
-            <?php foreach ($regions as $r): ?>
-                <option value="<?= $r['id'] ?>" <?= ($filter_origin_region_id == $r['id']) ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($r['region_name']) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-    </div>
-
-    <!-- Destination Region -->
-    <div>
-        <label for="filter_destination_region_id" class="form-label block mb-1 font-semibold text-gray-700 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 1.104-.896 2-2 2s-2-.896-2-2 .896-2 2-2 2 .896 2 2zM19 11c0 1.104-.896 2-2 2s-2-.896-2-2 .896-2 2-2 2 .896 2 2z" />
-            </svg>
-            Destination Region:
-        </label>
-        <select id="filter_destination_region_id" name="destination_region_id" class="form-select">
-            <option value="All">All</option>
-            <?php foreach ($regions as $r): ?>
-                <option value="<?= $r['id'] ?>" <?= ($filter_destination_region_id == $r['id']) ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($r['region_name']) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-    </div>
-
-    <!-- Status -->
-    <div>
-        <label for="filter_status" class="form-label block mb-1 font-semibold text-gray-700 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            Status:
-        </label>
-        <select id="filter_status" name="status" class="form-select">
-            <option value="">All</option>
-            <?php foreach ($possible_statuses as $s): ?>
-                <option value="<?= $s ?>" <?= ($filter_status === $s) ? 'selected' : '' ?>><?= $s ?></option>
-            <?php endforeach; ?>
-        </select>
-    </div>
-
-    <!-- Search -->
-    <div class="lg:col-span-2">
-        <label for="search_term" class="form-label block mb-1 font-semibold text-gray-700 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            Search:
-        </label>
-        <div class="flex">
-            <select name="search_column" class="form-select rounded-r-none border-r-0">
-                <option value="voucher_code" <?= ($search_column === 'voucher_code') ? 'selected' : '' ?>>Voucher Code</option>
-                <option value="sender_name" <?= ($search_column === 'sender_name') ? 'selected' : '' ?>>Sender</option>
-                <option value="receiver_name" <?= ($search_column === 'receiver_name') ? 'selected' : '' ?>>Receiver</option>
-            </select>
-            <input type="text" name="search" placeholder="Enter search term..." class="form-input rounded-l-none pl-4" value="<?= htmlspecialchars($search_term) ?>">
-        </div>
-    </div>
-
-    <!-- Buttons -->
-    <div class="self-end flex items-center gap-2">
-        <button type="submit" class="px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 font-medium">Filter</button>
-        <a href="<?= htmlspecialchars($export_url) ?>" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium">Export to Excel</a>
-    </div>
-
-</form>
-
-
-
-    <form action="index.php?page=voucher_bulk_update&<?= http_build_query($_GET) ?>" method="POST" id="bulk-update-form">
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <div class="mb-4 flex flex-wrap items-center gap-4 p-4 bg-yellow-50 rounded-lg shadow-inner">
-
-  <label for="new_status" class="font-semibold flex items-center gap-2">
-    Set selected to:
-    <!--<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">-->
-    <!--  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />-->
-    <!--</svg>-->
-  </label>
-
-  <div class="relative w-auto">
-    <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-yellow-600 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-    </svg>
-    <select id="new_status" name="new_status" class="form-select pl-10 pr-4 w-auto" required>
-      <option value="">Select New Status</option>
-      <?php foreach ($possible_statuses as $status): ?>
-        <option value="<?= htmlspecialchars($status) ?>"><?= htmlspecialchars($status) ?></option>
-      <?php endforeach; ?>
-    </select>
-  </div>
-
-  <button type="submit" class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-700 font-medium">Update Selected</button>
-</div>
-
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="table-header w-4"><input type="checkbox" id="select-all-vouchers"></th>
-                            <th class="table-header">Voucher Code</th>
-                            <th class="table-header">Sender/Receiver</th>
-                            <th class="table-header">Origin/Destination</th>
-                            <th class="table-header">Status</th>
-                            <th class="table-header">Date</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        <?php if (empty($vouchers)): ?>
-                            <tr>
-                                <td colspan="6" class="text-center py-4">No vouchers found matching your criteria.</td>
-                            </tr>
-                        <?php else: ?>
-                            <?php foreach ($vouchers as $voucher): ?>
-                                <tr>
-                                    <td data-label="Select" class="table-cell"><input type="checkbox" name="voucher_ids[]" value="<?= $voucher['id'] ?>" class="voucher-checkbox"></td>
-                                    <td data-label="Voucher Code" class="table-cell font-mono text-indigo-600"><?= htmlspecialchars($voucher['voucher_code']) ?></td>
-                                    <td data-label="Sender/" class="table-cell">
-                                        <?= htmlspecialchars($voucher['sender_name']) ?><br>
-                                        <span class="text-sm text-gray-500">&rarr; <?= htmlspecialchars($voucher['receiver_name']) ?></span>
-                                    </td>
-                                    <td data-label="Origin/" class="table-cell">
-                                        <?= htmlspecialchars($voucher['origin_region'] ?? 'N/A') ?> / <?= htmlspecialchars($voucher['origin_branch'] ?? 'N/A') ?><br>
-                                        <span class="text-sm text-gray-500">&rarr; <?= htmlspecialchars($voucher['destination_region'] ?? 'N/A') ?> / <?= htmlspecialchars($voucher['destination_branch'] ?? 'N/A') ?></span>
-                                    </td>
-                                    <td data-label="Status" class="table-cell">
-                                        <span class="status-badge status-<?= strtolower(str_replace(' ', '-', $voucher['status'])) ?>"><?= htmlspecialchars($voucher['status']) ?></span>
-                                    </td>
-                                    <td data-label="Date" class="table-cell"><?= date('Y-m-d', strtotime($voucher['created_at'])) ?></td>
-                                </tr>
-
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <form action="index.php?page=voucher_bulk_update&<?= htmlspecialchars(http_build_query($_GET), ENT_QUOTES, 'UTF-8') ?>" method="POST" id="bulk-update-form" class="v5-panel">
+        <?= csrf_input() ?>
+        <div class="v5-panel__head"><h2>Filtered Voucher Ledger</h2><span class="v5-count">Maximum 200 updates per request</span></div>
+        <div class="v5-toolbar"><div class="v5-toolbar__group"><label for="new_status">Set selected to</label><select id="new_status" name="new_status" required><option value="">Choose status</option><?php foreach ($possible_statuses as $status): ?><option value="<?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($status) ?></option><?php endforeach; ?></select></div><button type="submit" class="btn-secondary">Update Selected</button></div>
+        <div class="overflow-x-auto"><table class="min-w-full"><thead><tr><th><input type="checkbox" id="select-all-vouchers" aria-label="Select all vouchers"></th><th>Voucher</th><th>Sender → Receiver</th><th>Route</th><th>Status</th><th>Created</th></tr></thead><tbody>
+            <?php if (empty($vouchers)): ?><tr><td colspan="6"><div class="v5-empty"><span class="v5-empty__icon">▤</span><strong>No vouchers match these filters</strong><p>Adjust the search or reset the filter set.</p></div></td></tr>
+            <?php else: foreach ($vouchers as $voucher): ?><tr><td><input type="checkbox" name="voucher_ids[]" value="<?= (int)$voucher['id'] ?>" class="voucher-checkbox" aria-label="Select <?= htmlspecialchars($voucher['voucher_code'], ENT_QUOTES, 'UTF-8') ?>"></td><td><a class="font-mono font-bold text-blue-600" href="index.php?page=voucher_view&id=<?= (int)$voucher['id'] ?>"><?= htmlspecialchars($voucher['voucher_code'], ENT_QUOTES, 'UTF-8') ?></a></td><td><strong><?= htmlspecialchars($voucher['sender_name'], ENT_QUOTES, 'UTF-8') ?></strong><br><span class="text-xs text-slate-500">→ <?= htmlspecialchars($voucher['receiver_name'], ENT_QUOTES, 'UTF-8') ?></span></td><td><?= htmlspecialchars($voucher['origin_region'] ?? 'N/A', ENT_QUOTES, 'UTF-8') ?> / <?= htmlspecialchars($voucher['origin_branch'] ?? 'N/A', ENT_QUOTES, 'UTF-8') ?><br><span class="text-xs text-slate-500">→ <?= htmlspecialchars($voucher['destination_region'] ?? 'N/A', ENT_QUOTES, 'UTF-8') ?> / <?= htmlspecialchars($voucher['destination_branch'] ?? 'N/A', ENT_QUOTES, 'UTF-8') ?></span></td><td><span class="status-badge status-<?= strtolower(str_replace(' ', '-', $voucher['status'])) ?>"><?= htmlspecialchars($voucher['status'], ENT_QUOTES, 'UTF-8') ?></span></td><td><?= date('M j, Y', strtotime($voucher['created_at'])) ?></td></tr><?php endforeach; endif; ?>
+        </tbody></table></div>
     </form>
 </div>
 

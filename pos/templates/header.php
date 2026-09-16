@@ -58,8 +58,6 @@ if (is_logged_in()) {
     <?php if (function_exists('load_assets') && isset($page)) load_assets($page); ?>
 
     <style>
-        /* The legacy loader is disabled; it must never cover the POS workspace. */
-        #shipLoader { display: none !important; }
         :root {
             --color-burgundy: #800020;
             --color-bg: #ffffff;
@@ -148,95 +146,6 @@ if (is_logged_in()) {
             100% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0); }
         }
 
-        /* V3 Loader - Logistics Edition */
-        .ship-loader {
-            position: fixed;
-            inset: 0;
-            background: #ffffff;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 99999;
-            opacity: 1;
-            visibility: visible;
-            transition: opacity 0.6s ease, visibility 0.6s ease;
-        }
-        .ship-loader.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-        
-        .truck-svg {
-            width: 140px;
-            height: auto;
-            animation: drive 3s ease-in-out infinite;
-            filter: drop-shadow(0 10px 15px rgba(99, 102, 241, 0.3));
-        }
-
-        /* Truck Animations */
-        .wheel {
-            animation: spin 1s linear infinite;
-            transform-origin: center;
-            transform-box: fill-box;
-        }
-        .exhaust {
-            animation: puff 1s ease-out infinite;
-            opacity: 0;
-        }
-        .exhaust-2 { animation-delay: 0.3s; }
-        .exhaust-3 { animation-delay: 0.6s; }
-
-        @keyframes drive {
-            0%   { transform: translateY(0) rotate(0deg); }
-            25%  { transform: translateY(-4px) rotate(-1deg); }
-            50%  { transform: translateY(0) rotate(0deg); }
-            75%  { transform: translateY(-2px) rotate(1deg); }
-            100% { transform: translateY(0) rotate(0deg); }
-        }
-        @keyframes spin {
-            100% { transform: rotate(360deg); }
-        }
-        @keyframes puff {
-            0% { opacity: 0; transform: translate(0, 0) scale(0.5); }
-            50% { opacity: 0.6; transform: translate(-10px, -5px) scale(1); }
-            100% { opacity: 0; transform: translate(-20px, -10px) scale(1.5); }
-        }
-
-        .mb-logo-loader {
-            font-size: 28px;
-            font-weight: 900;
-            background: linear-gradient(to right, #2563eb, #7c3aed);
-            -webkit-background-clip: text;
-            color: transparent;
-            margin-top: 20px;
-            letter-spacing: 3px;
-        }
-        .progress-bar-v3 {
-            width: 240px;
-            height: 6px;
-            background: #f1f5f9;
-            border-radius: 999px;
-            margin-top: 24px;
-            overflow: hidden;
-            position: relative;
-        }
-        .progress-v3 {
-            position: absolute;
-            top: 0; left: 0; bottom: 0;
-            background: linear-gradient(90deg, #2563eb, #7c3aed, #2563eb);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s linear infinite;
-            width: 0%;
-            transition: width 0.3s ease-out;
-            border-radius: 999px;
-        }
-        @keyframes shimmer {
-            from { background-position: 200% 0; }
-            to   { background-position: -200% 0; }
-        }
-        
         /* Mobile Nav Active Item */
         .mobile-nav-item.active {
             color: var(--v3-primary);
@@ -261,60 +170,6 @@ if (is_logged_in()) {
     <span class="offline-status-dot" aria-hidden="true"></span>
     <span data-i18n="You are offline. Saved pages remain available; live records require a connection.">You are offline. Saved pages remain available; live records require a connection.</span>
 </div>
-<?php if (false): // Legacy loader intentionally disabled. ?>
-<div class="ship-loader" id="shipLoader">
-    <!-- Custom Animated Logistics Truck SVG -->
-    <svg class="truck-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">
-        <!-- Exhaust puffs -->
-        <circle class="exhaust exhaust-1" cx="15" cy="45" r="3" fill="#cbd5e1"/>
-        <circle class="exhaust exhaust-2" cx="10" cy="40" r="4" fill="#cbd5e1"/>
-        <circle class="exhaust exhaust-3" cx="5" cy="35" r="5" fill="#cbd5e1"/>
-        
-        <!-- Main Body / Cargo Area (Gradient) -->
-        <defs>
-            <linearGradient id="cargoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#4f46e5"/>
-                <stop offset="100%" stop-color="#7c3aed"/>
-            </linearGradient>
-            <linearGradient id="cabGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#3b82f6"/>
-                <stop offset="100%" stop-color="#2563eb"/>
-            </linearGradient>
-        </defs>
-        
-        <path d="M20 20 h 55 v 30 h -55 z" fill="url(#cargoGradient)" rx="4" />
-        
-        <!-- MBPOS text on cargo -->
-        <text x="35" y="40" fill="white" font-family="Arial" font-weight="900" font-size="12" letter-spacing="1">MBPOS</text>
-        
-        <!-- Truck Cabin -->
-        <path d="M 75 25 h 15 l 10 10 v 15 h -25 z" fill="url(#cabGradient)" />
-        
-        <!-- Window -->
-        <path d="M 78 28 h 10 l 6 6 v 5 h -16 z" fill="#e0f2fe" />
-        
-        <!-- Wheels -->
-        <g class="wheel">
-            <circle cx="35" cy="55" r="8" fill="#1e293b"/>
-            <circle cx="35" cy="55" r="4" fill="#94a3b8"/>
-            <circle cx="35" cy="55" r="2" fill="#ffffff"/>
-        </g>
-        <g class="wheel">
-            <circle cx="85" cy="55" r="8" fill="#1e293b"/>
-            <circle cx="85" cy="55" r="4" fill="#94a3b8"/>
-            <circle cx="85" cy="55" r="2" fill="#ffffff"/>
-        </g>
-        
-        <!-- Headlight -->
-        <path d="M 98 42 h 4 v 4 h -4 z" fill="#fbbf24" />
-    </svg>
-
-    <div class="mb-logo-loader">MBLOGISTICS</div>
-    <div class="progress-bar-v3"><div class="progress-v3" id="loaderProgress"></div></div>
-</div>
--->
-
-<?php endif; ?>
 <?php if (!$is_voucher_workspace): ?>
 <div class="mbpos-global-shell">
     <?php if (is_logged_in()): ?>
@@ -368,7 +223,7 @@ if (is_logged_in()) {
 <?php endif; ?>
 
 <?php if (!$is_voucher_workspace): ?>
-<main class="mbpos-global-main container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 relative z-10">
+<main class="mbpos-global-main container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 relative z-10" data-v5-page="<?= htmlspecialchars($current_page, ENT_QUOTES, 'UTF-8') ?>">
     <?php display_flash_messages(); ?>
 <?php else: ?>
     <?php display_flash_messages(); ?>

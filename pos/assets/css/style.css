@@ -675,3 +675,212 @@ textarea:focus {
     margin: 0 !important;
   }
 }
+
+/* =========================================================================
+   V5 FULL-SCREEN CONSOLIDATION
+   These rules are intentionally scoped to the shared POS main region. They
+   let every legacy route use the same enterprise visual language without
+   touching voucher_print.php or the print-preview markup.
+   ========================================================================= */
+
+/* The retired loader can never become visible again, even from a stale DOM. */
+#shipLoader,
+.ship-loader,
+#pos-maintenance-banner,
+#pos-maintenance-modal {
+  display: none !important;
+}
+
+.mbpos-global-main {
+  box-sizing: border-box;
+  max-width: 100% !important;
+  padding-top: clamp(1.25rem, 2.8vw, 2.5rem) !important;
+  padding-bottom: clamp(2rem, 4vw, 4rem) !important;
+}
+
+.mbpos-global-main > .container,
+.mbpos-global-main > .relative.min-h-\[85vh\],
+.mbpos-global-main > .max-w-4xl {
+  width: min(100%, 1440px) !important;
+  max-width: 1440px !important;
+  margin-inline: auto !important;
+  box-sizing: border-box;
+}
+
+/* Normalize page canvases so old route-specific backgrounds do not create a
+   second visual shell below the single global header. */
+.mbpos-global-main > .container,
+.mbpos-global-main > .relative.min-h-\[85vh\] {
+  min-height: 0 !important;
+  padding: clamp(1rem, 2.4vw, 2rem) !important;
+  background: transparent !important;
+}
+
+.mbpos-global-main h1 {
+  margin-top: 0;
+  color: var(--v5-text);
+  font-size: clamp(1.65rem, 3vw, 2.5rem);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+.mbpos-global-main h2 {
+  color: var(--v5-text);
+  font-weight: 850;
+  letter-spacing: -0.02em;
+}
+.mbpos-global-main h3 {
+  color: var(--v5-text);
+  font-weight: 800;
+}
+
+/* Shared V5 surfaces for forms, tables, reports, lists, and settings. */
+.mbpos-global-main .bg-white,
+.mbpos-global-main .bg-white\/50,
+.mbpos-global-main .bg-white\/70,
+.mbpos-global-main .bg-white\/80,
+.mbpos-global-main .bg-gray-50,
+.mbpos-global-main .bg-gray-50\/30,
+.mbpos-global-main .bg-slate-50\/50 {
+  border-color: var(--v5-border) !important;
+}
+.mbpos-global-main .shadow-md,
+.mbpos-global-main .shadow-lg,
+.mbpos-global-main .shadow-xl,
+.mbpos-global-main .shadow-2xl {
+  box-shadow: var(--v5-shadow) !important;
+}
+.mbpos-global-main form {
+  border-radius: var(--v5-radius);
+}
+.mbpos-global-main label,
+.mbpos-global-main .form-label {
+  color: var(--v5-muted);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+}
+.mbpos-global-main input:not([type="checkbox"]):not([type="radio"]),
+.mbpos-global-main select,
+.mbpos-global-main textarea,
+.mbpos-global-main .form-input,
+.mbpos-global-main .form-select {
+  box-sizing: border-box;
+  min-height: 2.8rem;
+  border: 1px solid #d7e3ef !important;
+  border-radius: .8rem !important;
+  background: rgba(255,255,255,.92) !important;
+  color: var(--v5-text) !important;
+  font-size: .86rem;
+  font-weight: 600;
+  padding: .65rem .8rem;
+}
+.mbpos-global-main textarea { min-height: 7rem; }
+.mbpos-global-main button,
+.mbpos-global-main .btn,
+.mbpos-global-main .btn-primary,
+.mbpos-global-main .btn-secondary,
+.mbpos-global-main a.btn {
+  min-height: 2.65rem;
+  border-radius: .8rem;
+  font-weight: 800;
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.mbpos-global-main button:hover,
+.mbpos-global-main .btn:hover,
+.mbpos-global-main .btn-primary:hover,
+.mbpos-global-main .btn-secondary:hover,
+.mbpos-global-main a.btn:hover {
+  transform: translateY(-1px);
+}
+.mbpos-global-main .btn,
+.mbpos-global-main .btn-primary,
+.mbpos-global-main a.btn-primary {
+  border: 0 !important;
+  background: var(--v5-primary-gradient) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 20px rgba(11,111,245,.2);
+}
+.mbpos-global-main .btn-secondary {
+  border: 1px solid #d7e3ef !important;
+  background: #fff !important;
+  color: var(--v5-text) !important;
+}
+
+.mbpos-global-main table {
+  width: 100%;
+  border-collapse: separate !important;
+  border-spacing: 0;
+  overflow: hidden;
+}
+.mbpos-global-main table thead th {
+  background: #f1f7fc !important;
+  color: #60748d !important;
+  border-bottom: 1px solid #dbe7f2 !important;
+  font-size: .68rem !important;
+  font-weight: 900 !important;
+  letter-spacing: .06em;
+  padding: .85rem .9rem !important;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.mbpos-global-main table tbody td {
+  border-bottom: 1px solid #e9f0f6 !important;
+  color: #243b59;
+  font-size: .82rem;
+  padding: .85rem .9rem !important;
+  vertical-align: middle;
+}
+.mbpos-global-main table tbody tr:last-child td { border-bottom: 0 !important; }
+.mbpos-global-main table tbody tr:hover td { background: #f7fbff !important; }
+.mbpos-global-main .overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-color: #a9c8e5 transparent;
+}
+
+/* Route headings and toolbars stay readable on narrow screens. */
+.mbpos-global-main > .container > .flex:first-child,
+.mbpos-global-main > .relative.min-h-\[85vh\] > .max-w-7xl > .flex:first-child {
+  gap: 1rem;
+}
+.mbpos-global-main .flash-message {
+  position: relative;
+  z-index: 2;
+  border: 1px solid currentColor;
+  border-radius: .9rem;
+  box-shadow: 0 8px 20px rgba(31,83,135,.06);
+}
+
+@media (max-width: 768px) {
+  .mbpos-global-main { padding-inline: .5rem !important; }
+  .mbpos-global-main > .container,
+  .mbpos-global-main > .relative.min-h-\[85vh\] { padding-inline: .65rem !important; }
+  .mbpos-global-main table { min-width: 640px; }
+  .mbpos-global-main table thead { display: table-header-group !important; }
+  .mbpos-global-main table tbody { display: table-row-group !important; }
+  .mbpos-global-main table tbody tr {
+    display: table-row !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    opacity: 1 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .mbpos-global-main table tbody td {
+    display: table-cell !important;
+    padding: .75rem .65rem !important;
+    white-space: nowrap;
+  }
+  .mbpos-global-main table tbody td::before { content: none !important; }
+  .mbpos-global-main .grid { min-width: 0; }
+  .mbpos-global-main .overflow-x-auto { max-width: 100%; }
+}
+
+@media (max-width: 520px) {
+  .mbpos-global-main h1 { font-size: 1.55rem; }
+  .mbpos-global-main h2 { font-size: 1.15rem; }
+  .mbpos-global-main input:not([type="checkbox"]):not([type="radio"]),
+  .mbpos-global-main select,
+  .mbpos-global-main textarea { font-size: .82rem; }
+}

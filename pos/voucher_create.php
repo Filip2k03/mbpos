@@ -125,14 +125,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if(!mysqli_stmt_execute($stmt_breakdown)) throw new Exception("Database Error [Breakdown]: " . mysqli_stmt_error($stmt_breakdown));
         }
         mysqli_stmt_close($stmt_breakdown);
-        
-        // 4. Update the sequence number for the DESTINATION region
+
+        // 4. Put every new voucher into the operational stock queue.
+        $stmt_stock = mysqli_prepare($connection, "INSERT INTO stock (voucher_id) VALUES (?)");
+        mysqli_stmt_bind_param($stmt_stock, 'i', $new_voucher_id);
+        if (!mysqli_stmt_execute($stmt_stock)) throw new Exception("Database Error [Stock]: " . mysqli_stmt_error($stmt_stock));
+        mysqli_stmt_close($stmt_stock);
+
+        // 5. Update the sequence number for the DESTINATION region
         $stmt_update_seq = mysqli_prepare($connection, "UPDATE regions SET current_sequence = ? WHERE id = ?");
         mysqli_stmt_bind_param($stmt_update_seq, 'ii', $new_sequence, $destination_region_id);
         if(!mysqli_stmt_execute($stmt_update_seq)) throw new Exception("Database Error [Sequence]: " . mysqli_stmt_error($stmt_update_seq));
         mysqli_stmt_close($stmt_update_seq);
 
-        // 5. Create user-specific notifications for all other users
+        // 6. Create user-specific notifications for all other users
         $notification_message = "New voucher #{$voucher_code} created by " . htmlspecialchars($_SESSION['username']) . ".";
         $users_to_notify = [];
         $user_result = mysqli_query($connection, "SELECT id FROM users WHERE id != $user_id AND user_type != 'Customer'");

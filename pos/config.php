@@ -25,6 +25,8 @@ if (!$connection) {
 
 // Application Configuration
 define('APP_NAME', 'MBLOGISTICS POS');
+define('APP_VERSION', '5.0.0');
+define('APP_URL', 'https://mbpos.online');
 
 // Voucher Code Configuration
 define('VOUCHER_CODE_LENGTH', 7); // e.g., 0000001

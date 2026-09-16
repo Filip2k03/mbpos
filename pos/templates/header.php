@@ -1,5 +1,5 @@
 <?php
-// templates/header.php - Premium V3 Liquid Glass UI Header
+// templates/header.php - Premium V5 Liquid Glass UI Header
 
 // Ensure session is started
 if (session_status() == PHP_SESSION_NONE) {
@@ -17,7 +17,7 @@ $is_user_developer = is_developer();
 $is_user_staff = is_staff();
 
 // Page title
-$page_title = $page_title ?? (APP_NAME ?? 'MBLOGISTICS POS');
+$page_title = $page_title ?? ((APP_NAME ?? 'MBLOGISTICS POS') . ' V5');
 $current_page = $_GET['page'] ?? 'dashboard';
 
 // Fetch unread notification count & POS diagnostics for the logged-in user
@@ -322,6 +322,7 @@ if (is_logged_in()) {
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                 </div>
                 <span class="text-2xl font-extrabold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent tracking-tight">MBLOGISTICS</span>
+                <span class="hidden sm:inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-indigo-600 border border-indigo-100">V5</span>
             </a>
 
             <!-- Desktop Links -->
@@ -459,17 +460,19 @@ if (is_logged_in()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    let lastId = 0; 
+    let lastId = 0;
+    let notificationPollInitialized = false;
     
     // Notification Fetcher Logic
     function fetchNotifications() {
         <?php if (is_logged_in()): ?>
-        fetch(`fetch_notifications.php?last_id=${lastId}`)
+        fetch(`index.php?page=fetch_notifications&last_id=${lastId}`)
             .then(response => response.json())
             .then(data => {
-                if (data.notifications && data.notifications.length > 0) {
-                    data.notifications.forEach(notif => {
-                        // Premium V3 Toast Notification
+                const incomingNotifications = Array.isArray(data.notifications) ? data.notifications : [];
+                if (notificationPollInitialized && incomingNotifications.length > 0) {
+                    incomingNotifications.forEach(notif => {
+                        // Premium V5 Toast Notification
                         Toastify({
                             text: notif.message,
                             duration: 8000,
@@ -488,11 +491,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                 padding: "16px 20px"
                             },
                         }).showToast();
-                        if (parseInt(notif.id) > lastId) {
-                            lastId = parseInt(notif.id);
-                        }
                     });
                 }
+                if (incomingNotifications.length > 0) {
+                    lastId = Math.max(...incomingNotifications.map(notif => parseInt(notif.id, 10) || 0), lastId);
+                }
+                notificationPollInitialized = true;
                 
                 // Update both desktop and mobile badges dynamically
                 const badges = [document.getElementById('notification-badge'), document.getElementById('mobile-notification-badge')];
@@ -553,4 +557,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 150);
 });
 </script>
-<script src="assets/js/main.js"></script>
+<script src="assets/js/main.js"></script>

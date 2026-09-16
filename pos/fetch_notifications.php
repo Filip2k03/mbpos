@@ -19,15 +19,16 @@ global $connection;
 
 // Get the ID of the last notification the user has seen
 $last_id = intval($_GET['last_id'] ?? 0);
+$user_id = intval($_SESSION['user_id']);
 
 $notifications = [];
 
 // Prepare a query to fetch notifications newer than the last one seen
-$query = "SELECT id, message, created_at FROM notifications WHERE id > ? ORDER BY id ASC";
+$query = "SELECT id, message, created_at FROM notifications WHERE user_id = ? AND id > ? ORDER BY id ASC";
 $stmt = mysqli_prepare($connection, $query);
 
 if ($stmt) {
-    mysqli_stmt_bind_param($stmt, 'i', $last_id);
+    mysqli_stmt_bind_param($stmt, 'ii', $user_id, $last_id);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
 
@@ -39,6 +40,19 @@ if ($stmt) {
     mysqli_stmt_close($stmt);
 }
 
+$unread_count = 0;
+$count_stmt = mysqli_prepare($connection, "SELECT COUNT(id) FROM notifications WHERE user_id = ? AND is_read = 0");
+if ($count_stmt) {
+    mysqli_stmt_bind_param($count_stmt, 'i', $user_id);
+    mysqli_stmt_execute($count_stmt);
+    $count_result = mysqli_stmt_get_result($count_stmt);
+    $unread_count = intval(mysqli_fetch_row($count_result)[0] ?? 0);
+    mysqli_stmt_close($count_stmt);
+}
+
 // Set the content type header to JSON and output the data
 header('Content-Type: application/json');
-echo json_encode($notifications);
+echo json_encode([
+    'notifications' => $notifications,
+    'unread_count' => $unread_count,
+]);

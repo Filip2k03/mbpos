@@ -83,6 +83,20 @@ function is_staff() {
 }
 
 /**
+ * Checks if the logged-in user belongs to the Myanmar operations team.
+ */
+function is_myanmar_user() {
+    return isset($_SESSION['user_type']) && $_SESSION['user_type'] === 'Myanmar';
+}
+
+/**
+ * Checks if the logged-in user belongs to the Malay operations team.
+ */
+function is_malay_user() {
+    return isset($_SESSION['user_type']) && $_SESSION['user_type'] === 'Malay';
+}
+
+/**
  * Gets the branch ID of the currently logged-in user.
  * @return int|null The branch ID or null if not set.
  */

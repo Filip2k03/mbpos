@@ -33,63 +33,49 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function toggleRegionField() {
         if (!userTypeSelect || !regionField || !regionSelect) return;
-
         const userType = userTypeSelect.value;
-        regionSelect.disabled = false; // Reset disabled state
-
-        // Show region field for Admin, Developer, and General users, allowing them to choose
+        regionSelect.disabled = false;
         if (userType === 'ADMIN' || userType === 'Developer' || userType === 'General') {
             regionField.classList.remove('hidden');
         } else if (userType === 'Myanmar' || userType === 'Malay') {
-            // Hide the field for Myanmar/Malay users as it's set automatically on the backend
             regionField.classList.add('hidden');
         } else {
-            // Hide for the default empty option
             regionField.classList.add('hidden');
         }
     }
 
     if (userTypeSelect) {
         userTypeSelect.addEventListener('change', toggleRegionField);
-        toggleRegionField(); // Run once on page load to set the initial state
+        toggleRegionField();
     }
 });
 
 // =========================================================================
-// Maintenance, High-Load Advisory & Voucher Breakdown Modal Controllers
+// Maintenance, High-Load Advisory & Shift Checkpoint Modal Controllers
 // =========================================================================
 
-/**
- * Opens the Maintenance & High Load Diagnostic Modal
- */
 window.openMaintenanceModal = function() {
     const modal = document.getElementById('pos-maintenance-modal');
     if (modal) {
         modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        document.body.style.overflow = 'hidden';
     }
 };
 
-/**
- * Closes the Maintenance Modal and records user acknowledgement
- * @param {boolean} isContinueWorking - Whether user clicked 'Continue to Working'
- */
 window.closeMaintenanceModal = function(isContinueWorking = false) {
     const modal = document.getElementById('pos-maintenance-modal');
     if (modal) {
         modal.classList.add('hidden');
-        document.body.style.overflow = ''; // Restore scrolling
+        document.body.style.overflow = '';
         
         if (isContinueWorking) {
             const shiftKey = modal.getAttribute('data-shift-key') || 'mbpos_shift_default';
-            // Save acknowledgement for this specific GMT+6:30 shift window
             try {
                 sessionStorage.setItem('mbpos_maintenance_dismissed', 'true');
                 sessionStorage.setItem(shiftKey, 'true');
                 localStorage.setItem(shiftKey, 'true');
             } catch(e) {}
 
-            // Display a sleek Toast notification acknowledging continuous work
             if (typeof Toastify === 'function') {
                 Toastify({
                     text: "✅ Shift Checkpoint Acknowledged: You can continue issuing vouchers and managing logistics smoothly.",
@@ -112,9 +98,6 @@ window.closeMaintenanceModal = function(isContinueWorking = false) {
     }
 };
 
-/**
- * Dismisses the sticky top alert banner
- */
 window.dismissMaintenanceBanner = function() {
     const banner = document.getElementById('pos-maintenance-banner');
     if (banner) {
@@ -130,9 +113,6 @@ window.dismissMaintenanceBanner = function() {
     }
 };
 
-/**
- * Toggles the Technical Support & Contact drawer within the modal
- */
 window.toggleTechSupportCard = function() {
     const card = document.getElementById('tech-support-card');
     if (card) {
@@ -143,13 +123,8 @@ window.toggleTechSupportCard = function() {
     }
 };
 
-/**
- * Copies diagnostic token and system statistics to clipboard
- * @param {string} token - Diagnostic Token ID
- */
 window.copyDiagnosticToken = function(token) {
     const infoText = `[MBPOS Diagnostic Token: ${token}] - Timezone: GMT+6:30 - Date: ${new Date().toISOString()} - Node: High Load & Maintenance Active`;
-    
     if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(infoText).then(() => {
             handleCopiedState();
@@ -199,16 +174,7 @@ window.copyDiagnosticToken = function(token) {
     }
 };
 
-// Check if modal or banner should be auto-restored or auto-shown for the current shift checkpoint
-document.addEventListener('DOMContentLoaded', function() {
-    // Check banner dismissed state
-    try {
-        if (sessionStorage.getItem('mbpos_banner_dismissed') === 'true') {
-            const banner = document.getElementById('pos-maintenance-banner');
-            if (banner) banner.style.display = 'none';
-        }
-    } catch(e) {}
-});
+
 
 // =========================================================================
 // MBPOS V5 application shell: language, installability, and honest offline UX
@@ -363,4 +329,3 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 }());
-

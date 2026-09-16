@@ -86,57 +86,53 @@
   }
 }
 
-
-
-
-        /* Ship Loader Styles */
-        .ship-loader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            transition: opacity 0.7s ease-out, visibility 0.7s ease-out; /* Slower transition */
-        }
-        .mb-logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: var(--color-burgundy); /* Use Burgundy for logo */
-            margin-top: 15px;
-        }
-        .progress-bar {
-            width: 200px;
-            height: 4px;
-            background: #ecf0f1;
-            border-radius: 2px;
-            margin-top: 20px;
-            overflow: hidden;
-        }
-        .progress {
-            height: 100%;
-            background: var(--color-burgundy); /* Use Burgundy for progress bar */
-            width: 0%;
-            transition: width 0.4s ease-out; /* Smooth progress transition */
-        }
-        .ship-loader.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none; /* Disable interaction when hidden */
-        }
-        /* Optional: animate the ship */
-        .ship-svg {
-            animation: float 3s ease-in-out infinite;
-        }
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
+/* Ship Loader Styles */
+.ship-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.7s ease-out, visibility 0.7s ease-out;
+}
+.mb-logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--color-burgundy);
+    margin-top: 15px;
+}
+.progress-bar {
+    width: 200px;
+    height: 4px;
+    background: #ecf0f1;
+    border-radius: 2px;
+    margin-top: 20px;
+    overflow: hidden;
+}
+.progress {
+    height: 100%;
+    background: var(--color-burgundy);
+    width: 0%;
+    transition: width 0.4s ease-out;
+}
+.ship-loader.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+.ship-svg {
+    animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
 
 /* --- Maintenance & High Load Modal Styles --- */
 .custom-scrollbar::-webkit-scrollbar {
@@ -160,6 +156,25 @@
         opacity: 0;
         transform: translateY(-15px);
     }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.animate-fadeInDown {
+    animation: fadeInDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUpMobile {
+    from {
+        opacity: 0;
+        transform: translateY(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 
 @media (max-width: 640px) {
     #pos-maintenance-modal .animate-fadeInDown {
@@ -167,54 +182,51 @@
     }
 }
 
-/* MBPOS V5 visual system: blue logistics controls, accessible touch targets, and mobile-safe layout. */
+/* =========================================================================
+   MBLOGISTICS POS V5 DESIGN SYSTEM & COMPONENT ENHANCEMENTS
+   ========================================================================= */
+
 :root {
   --mbpos-blue: #0b6ff5;
+  --mbpos-blue-dark: #0056cb;
   --mbpos-cyan: #13b7e8;
   --mbpos-ink: #10233f;
-  --mbpos-muted: #6b7c93;
-  --mbpos-surface: rgba(255, 255, 255, 0.88);
+  --mbpos-slate: #1e293b;
+  --mbpos-muted: #64748b;
+  --mbpos-border: #e2e8f0;
+  --mbpos-bg: #eef2f6;
+  --mbpos-card: #ffffff;
+  --v5-primary-gradient: linear-gradient(135deg, #0b6ff5 0%, #2563eb 100%);
 }
 
-html { background: #f4f8fd; }
+html { background: var(--mbpos-bg); }
 body.mbpos-v5-shell {
   min-width: 320px;
   overflow-x: hidden;
-  background:
-    radial-gradient(circle at 8% 6%, rgba(19, 183, 232, .12), transparent 28rem),
-    radial-gradient(circle at 92% 18%, rgba(11, 111, 245, .10), transparent 30rem),
-    #f4f8fd;
+  background-color: var(--mbpos-bg);
   color: var(--mbpos-ink);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .mbpos-v5-shell .glass-nav {
-  background: rgba(255, 255, 255, .82);
-  border-bottom: 1px solid rgba(126, 162, 204, .22);
-  box-shadow: 0 8px 28px rgba(35, 84, 135, .07);
-}
-
-.mbpos-v5-shell header .max-w-7xl { max-width: 1440px; }
-.mbpos-v5-shell header a:focus-visible,
-.mbpos-v5-shell header button:focus-visible,
-.mbpos-v5-shell input:focus-visible,
-.mbpos-v5-shell select:focus-visible,
-.mbpos-v5-shell textarea:focus-visible {
-  outline: 3px solid rgba(11, 111, 245, .28);
-  outline-offset: 2px;
+  background: rgba(255, 255, 255, .95);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--mbpos-border);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
 }
 
 .v5-global-search {
   align-items: center;
   gap: .55rem;
   width: min(27rem, 28vw);
-  padding: .55rem .75rem;
+  padding: .55rem .85rem;
   border: 1px solid #d8e5f3;
   border-radius: 1rem;
-  background: rgba(248, 251, 255, .92);
+  background: rgba(248, 251, 255, .95);
   color: #8ca0b8;
   box-shadow: inset 0 1px 2px rgba(39, 82, 127, .03);
 }
-.v5-global-search svg { width: 1rem; height: 1rem; flex: 0 0 auto; }
+.v5-global-search svg { width: 1.1rem; height: 1.1rem; flex: 0 0 auto; color: #94a3b8; }
 .v5-global-search input {
   min-width: 0;
   width: 100%;
@@ -222,11 +234,11 @@ body.mbpos-v5-shell {
   outline: 0;
   background: transparent;
   color: var(--mbpos-ink);
-  font-size: .76rem;
+  font-size: .8rem;
   font-weight: 600;
 }
 .v5-global-search kbd {
-  padding: .2rem .35rem;
+  padding: .2rem .4rem;
   border: 1px solid #d8e5f3;
   border-radius: .4rem;
   background: #fff;
@@ -250,6 +262,7 @@ body.mbpos-v5-shell {
 }
 .language-option { padding: .35rem .48rem; border-radius: 999px; transition: .2s ease; }
 .language-option.is-selected { background: #fff; color: var(--mbpos-blue); box-shadow: 0 2px 7px rgba(11, 111, 245, .15); }
+
 .pwa-install-button {
   padding: .55rem .75rem;
   border-radius: .8rem;
@@ -282,28 +295,158 @@ body.mbpos-v5-shell {
 }
 .offline-status-dot { width: .5rem; height: .5rem; flex: 0 0 auto; border-radius: 50%; background: #e59b18; }
 
-.mbpos-v5-shell .mobile-nav-item { min-height: 2.9rem; }
-.mbpos-v5-shell .mobile-fab { background: linear-gradient(135deg, var(--mbpos-blue), var(--mbpos-cyan)); }
+/* V5 Sidebar Links */
+.v5-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  margin: 0.25rem 0.5rem;
+  border-radius: 0.85rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.v5-nav-item:hover {
+  color: var(--mbpos-blue);
+  background-color: #f0f7ff;
+  transform: translateX(2px);
+}
+.v5-nav-item.active {
+  background: linear-gradient(135deg, #0b6ff5 0%, #2563eb 100%);
+  color: #ffffff !important;
+  box-shadow: 0 8px 20px -4px rgba(11, 111, 245, 0.4);
+}
+.v5-nav-item.active svg {
+  color: #ffffff !important;
+}
+
+/* V5 Card & Container Styles */
+.v5-card {
+  background: #ffffff;
+  border-radius: 1.25rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+  transition: all 0.25s ease;
+}
+.v5-card:hover {
+  box-shadow: 0 8px 30px -4px rgba(15, 23, 42, 0.06);
+}
+
+/* V5 Stepper Circles */
+.v5-step-num {
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  transition: all 0.2s ease;
+}
+.v5-step-num.active {
+  background: var(--mbpos-blue);
+  color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(11, 111, 245, 0.2);
+}
+.v5-step-num.inactive {
+  background: #f1f5f9;
+  color: #94a3b8;
+  border: 1px solid #e2e8f0;
+}
+
+/* V5 Segmented Toggle */
+.v5-segmented-toggle {
+  display: inline-flex;
+  background: #f1f5f9;
+  padding: 0.2rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+.v5-segmented-btn {
+  padding: 0.35rem 1.1rem;
+  border-radius: 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #64748b;
+}
+.v5-segmented-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+/* V5 Quick Category Tags */
+.v5-category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.65rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.v5-category-chip:hover {
+  background: #f0f7ff;
+  border-color: #93c5fd;
+  color: var(--mbpos-blue);
+  transform: translateY(-1px);
+}
+.v5-category-chip.active {
+  background: #0284c7;
+  border-color: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.28);
+}
+
+/* V5 Delivery Voucher Live Preview Sheet */
+.v5-voucher-sheet {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 1.25rem;
+  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+.v5-voucher-header-bar {
+  background: linear-gradient(135deg, #0284c7, #1d4ed8);
+  color: #ffffff;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 0.35rem;
+}
+
+/* Barcode Simulation */
+.v5-barcode-bar {
+  display: inline-block;
+  height: 42px;
+  background: #0f172a;
+  margin: 0 1px;
+}
 
 @media (max-width: 1023px) {
   .mbpos-v5-shell .glass-nav nav > div { min-height: 4.3rem; }
   .mbpos-v5-shell .glass-nav nav > div > a span { font-size: 1.15rem; }
-  .mbpos-v5-shell .glass-nav nav > div > a:first-child div { width: 2.55rem; height: 2.55rem; }
 }
 
 @media (max-width: 640px) {
   .mbpos-v5-shell .glass-nav nav { padding-left: .75rem; padding-right: .75rem; }
   .mbpos-v5-shell .glass-nav nav > div { height: 4.1rem; }
-  .mbpos-v5-shell .glass-nav nav > div > a { min-width: 0; }
-  .mbpos-v5-shell .glass-nav nav > div > a span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mbpos-v5-shell main { padding-top: 1.25rem; padding-left: .75rem; padding-right: .75rem; }
   .mbpos-v5-shell footer { margin-bottom: 5rem; }
-  .offline-status { top: .5rem; font-size: .68rem; }
-  .mbpos-v5-shell .mobile-nav-item span { font-size: .62rem; }
-  .mbpos-v5-shell .mobile-fab { width: 3.25rem; height: 3.25rem; }
-  /* Prevent the create-voucher grid from becoming a cramped desktop table on phones. */
-  .mbpos-v5-shell #item-breakdown-container .item-row { padding: .8rem; gap: .65rem; }
-  .mbpos-v5-shell #item-breakdown-container .item-row .remove-item-btn { height: 2.75rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mbpos-v5-shell-2026-09-16';
+const CACHE_NAME = 'mbpos-v5-shell-2026-09-16-r2';
 const APP_SHELL = [
   './offline.html',
   './assets/css/style.css',

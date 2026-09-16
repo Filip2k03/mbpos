@@ -129,9 +129,8 @@ switch ($page) {
         include 'maintenance.php';
         break;
     case 'ajax_search_customers':
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode([]);
-        exit();
+        include 'ajax_search_customers.php';
+        break;
     default:
         // Optional: A 404 page
         // header("HTTP/1.0 404 Not Found");

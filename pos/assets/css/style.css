@@ -160,28 +160,157 @@
         opacity: 0;
         transform: translateY(-15px);
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-.animate-fadeInDown {
-    animation: fadeInDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes slideUpMobile {
-    from {
-        opacity: 0;
-        transform: translateY(100%);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
 
 @media (max-width: 640px) {
     #pos-maintenance-modal .animate-fadeInDown {
         animation: slideUpMobile 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
-}
+}
+
+/* MBPOS V5 visual system: blue logistics controls, accessible touch targets, and mobile-safe layout. */
+:root {
+  --mbpos-blue: #0b6ff5;
+  --mbpos-cyan: #13b7e8;
+  --mbpos-ink: #10233f;
+  --mbpos-muted: #6b7c93;
+  --mbpos-surface: rgba(255, 255, 255, 0.88);
+}
+
+html { background: #f4f8fd; }
+body.mbpos-v5-shell {
+  min-width: 320px;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 8% 6%, rgba(19, 183, 232, .12), transparent 28rem),
+    radial-gradient(circle at 92% 18%, rgba(11, 111, 245, .10), transparent 30rem),
+    #f4f8fd;
+  color: var(--mbpos-ink);
+}
+
+.mbpos-v5-shell .glass-nav {
+  background: rgba(255, 255, 255, .82);
+  border-bottom: 1px solid rgba(126, 162, 204, .22);
+  box-shadow: 0 8px 28px rgba(35, 84, 135, .07);
+}
+
+.mbpos-v5-shell header .max-w-7xl { max-width: 1440px; }
+.mbpos-v5-shell header a:focus-visible,
+.mbpos-v5-shell header button:focus-visible,
+.mbpos-v5-shell input:focus-visible,
+.mbpos-v5-shell select:focus-visible,
+.mbpos-v5-shell textarea:focus-visible {
+  outline: 3px solid rgba(11, 111, 245, .28);
+  outline-offset: 2px;
+}
+
+.v5-global-search {
+  align-items: center;
+  gap: .55rem;
+  width: min(27rem, 28vw);
+  padding: .55rem .75rem;
+  border: 1px solid #d8e5f3;
+  border-radius: 1rem;
+  background: rgba(248, 251, 255, .92);
+  color: #8ca0b8;
+  box-shadow: inset 0 1px 2px rgba(39, 82, 127, .03);
+}
+.v5-global-search svg { width: 1rem; height: 1rem; flex: 0 0 auto; }
+.v5-global-search input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--mbpos-ink);
+  font-size: .76rem;
+  font-weight: 600;
+}
+.v5-global-search kbd {
+  padding: .2rem .35rem;
+  border: 1px solid #d8e5f3;
+  border-radius: .4rem;
+  background: #fff;
+  color: #8295ad;
+  font-size: .65rem;
+  white-space: nowrap;
+}
+
+.language-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: .1rem;
+  padding: .2rem;
+  border: 1px solid #d8e5f3;
+  border-radius: 999px;
+  background: #f6faff;
+  color: #7690ad;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+.language-option { padding: .35rem .48rem; border-radius: 999px; transition: .2s ease; }
+.language-option.is-selected { background: #fff; color: var(--mbpos-blue); box-shadow: 0 2px 7px rgba(11, 111, 245, .15); }
+.pwa-install-button {
+  padding: .55rem .75rem;
+  border-radius: .8rem;
+  background: var(--mbpos-blue);
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 800;
+  box-shadow: 0 5px 15px rgba(11, 111, 245, .22);
+}
+
+.offline-status {
+  position: fixed;
+  top: .75rem;
+  left: 50%;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  max-width: calc(100% - 1.5rem);
+  padding: .65rem .85rem;
+  transform: translateX(-50%);
+  border: 1px solid #f4c66d;
+  border-radius: .9rem;
+  background: #fff8e7;
+  color: #855b13;
+  box-shadow: 0 10px 30px rgba(93, 70, 14, .14);
+  font-size: .75rem;
+  font-weight: 700;
+  text-align: center;
+}
+.offline-status-dot { width: .5rem; height: .5rem; flex: 0 0 auto; border-radius: 50%; background: #e59b18; }
+
+.mbpos-v5-shell .mobile-nav-item { min-height: 2.9rem; }
+.mbpos-v5-shell .mobile-fab { background: linear-gradient(135deg, var(--mbpos-blue), var(--mbpos-cyan)); }
+
+@media (max-width: 1023px) {
+  .mbpos-v5-shell .glass-nav nav > div { min-height: 4.3rem; }
+  .mbpos-v5-shell .glass-nav nav > div > a span { font-size: 1.15rem; }
+  .mbpos-v5-shell .glass-nav nav > div > a:first-child div { width: 2.55rem; height: 2.55rem; }
+}
+
+@media (max-width: 640px) {
+  .mbpos-v5-shell .glass-nav nav { padding-left: .75rem; padding-right: .75rem; }
+  .mbpos-v5-shell .glass-nav nav > div { height: 4.1rem; }
+  .mbpos-v5-shell .glass-nav nav > div > a { min-width: 0; }
+  .mbpos-v5-shell .glass-nav nav > div > a span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mbpos-v5-shell main { padding-top: 1.25rem; padding-left: .75rem; padding-right: .75rem; }
+  .mbpos-v5-shell footer { margin-bottom: 5rem; }
+  .offline-status { top: .5rem; font-size: .68rem; }
+  .mbpos-v5-shell .mobile-nav-item span { font-size: .62rem; }
+  .mbpos-v5-shell .mobile-fab { width: 3.25rem; height: 3.25rem; }
+  /* Prevent the create-voucher grid from becoming a cramped desktop table on phones. */
+  .mbpos-v5-shell #item-breakdown-container .item-row { padding: .8rem; gap: .65rem; }
+  .mbpos-v5-shell #item-breakdown-container .item-row .remove-item-btn { height: 2.75rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mbpos-v5-shell *, .mbpos-v5-shell *::before, .mbpos-v5-shell *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}

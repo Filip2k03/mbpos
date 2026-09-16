@@ -176,7 +176,7 @@ include_template('header', ['page' => 'voucher_create']);
 <!-- Include Select2 CSS -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <style>
-    /* V3 Glassmorphism Select2 Overrides */
+    /* V5 Glassmorphism Select2 Overrides */
     .select2-container .select2-selection--single {
         height: 48px !important;
         border: 1px solid #e5e7eb !important;
@@ -224,7 +224,7 @@ include_template('header', ['page' => 'voucher_create']);
     }
 </style>
 
-<!-- V3 Liquid UI Wrapper -->
+<!-- V5 delivery workspace -->
 <div class="relative min-h-[85vh] bg-gray-50/30 p-4 sm:p-8 overflow-hidden font-sans">
     
     <!-- Ambient Background Glows -->
@@ -238,8 +238,8 @@ include_template('header', ['page' => 'voucher_create']);
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             </div>
             <div>
-                <h1 class="text-3xl font-extrabold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent tracking-tight">Issue New Voucher</h1>
-                <p class="text-sm font-medium text-gray-500">Record a new shipment into the ledger</p>
+                <h1 data-i18n="Create Delivery Voucher" class="text-3xl font-extrabold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent tracking-tight">Create Delivery Voucher</h1>
+                <p data-i18n="Record a new shipment into the ledger" class="text-sm font-medium text-gray-500">Record a new shipment into the ledger</p>
             </div>
         </div>
 

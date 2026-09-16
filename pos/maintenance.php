@@ -106,7 +106,7 @@ include_template('header', ['page' => 'maintenance']);
                         <label for="maintenance-name">Category name</label>
                         <input id="maintenance-name" type="text" name="name" maxlength="120" placeholder="e.g. Exchange rate synchronization" value="<?= htmlspecialchars($edit_category['name'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
                     </div>
-                    <div class="v5-field">
+                    <div class="v5-field v5-field--action">
                         <button type="submit" class="btn w-full"><?= $edit_category ? 'Save Changes' : 'Add Category' ?></button>
                     </div>
                 </div>

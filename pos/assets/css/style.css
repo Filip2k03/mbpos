@@ -900,6 +900,7 @@ textarea:focus {
 .v5-filter-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:.85rem;align-items:end}
 .v5-field{grid-column:span 2;min-width:0}
 .v5-field--wide{grid-column:span 4}
+.v5-field--action{grid-column:span 3}
 .v5-field label{display:block;margin:0 0 .35rem}
 .v5-search-group{display:grid;grid-template-columns:minmax(9rem,.65fr) minmax(11rem,1.35fr)}
 .v5-search-group select{border-radius:.8rem 0 0 .8rem!important}
@@ -920,5 +921,5 @@ textarea:focus {
 .v5-status-dot::before{content:"";width:.42rem;height:.42rem;border-radius:50%;background:currentColor}
 .v5-status-dot--on{background:#fff1f2;color:#e11d48}.v5-status-dot--off{background:#ecfdf5;color:#059669}
 
-@media(max-width:1024px){.v5-field{grid-column:span 4}.v5-field--wide{grid-column:span 8}}
+@media(max-width:1024px){.v5-field{grid-column:span 4}.v5-field--wide{grid-column:span 8}.v5-field--action{grid-column:span 4}}
 @media(max-width:700px){.v5-page-head{align-items:flex-start;flex-direction:column}.v5-filter-grid{display:grid;grid-template-columns:1fr}.v5-field,.v5-field--wide{grid-column:1}.v5-search-group{grid-template-columns:1fr}.v5-search-group select,.v5-search-group input{border:1px solid #d7e3ef!important;border-radius:.8rem!important}.v5-record-row{align-items:flex-start;flex-direction:column}.v5-record-row__actions{width:100%;justify-content:flex-start}}

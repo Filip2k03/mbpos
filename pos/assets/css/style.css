@@ -85,7 +85,6 @@
     }
   }
 }
-
 /* Ship Loader Styles */
 .ship-loader {
     position: fixed;
@@ -561,4 +560,118 @@ body.mbpos-v5-shell {
   .mbpos-header-brand { display: inline-flex; }
   .mbpos-header-actions { gap: .3rem; }
   .mbpos-global-main { padding-bottom: 4.5rem; }
+}
+
+/* =========================================================================
+   V5 Luxury Enterprise Tokens & Universal Component Styling
+   ========================================================================= */
+:root {
+  --v5-blue: #0b6ff5;
+  --v5-blue-light: #20b8f5;
+  --v5-surface: rgba(255, 255, 255, 0.9);
+  --v5-border: #dce7f3;
+  --v5-text: #10233f;
+  --v5-muted: #64748b;
+  --v5-radius: 18px;
+  --v5-shadow: 0 16px 45px rgba(31, 83, 135, 0.08);
+}
+
+/* Glass Cards across all legacy and new screens */
+.v5-glass-card, .bg-white.shadow-md.rounded-lg, .bg-white.shadow-lg.rounded-2xl, .bg-white.rounded-xl.shadow-sm {
+  background: var(--v5-surface) !important;
+  border: 1px solid var(--v5-border) !important;
+  border-radius: var(--v5-radius) !important;
+  box-shadow: var(--v5-shadow) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Modern V5 Tables */
+.v5-table, table.min-w-full {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  width: 100% !important;
+}
+
+table.min-w-full thead th {
+  background: #f1f6fb !important;
+  color: #475569 !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  padding: 0.85rem 1rem !important;
+  border-bottom: 2px solid #dce7f3 !important;
+}
+
+table.min-w-full tbody td {
+  padding: 0.9rem 1rem !important;
+  border-bottom: 1px solid #edf2f7 !important;
+  font-size: 0.82rem !important;
+  color: #1e293b !important;
+}
+
+table.min-w-full tbody tr:hover td {
+  background: #f8fbff !important;
+}
+
+/* Universal Button Enhancements */
+button.btn-primary, a.btn-primary, .v5-btn-primary {
+  background: linear-gradient(135deg, #0b6ff5, #20b8f5) !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 20px rgba(11, 111, 245, 0.22) !important;
+  transition: all 0.2s ease !important;
+  border: none !important;
+}
+
+button.btn-primary:hover, a.btn-primary:hover, .v5-btn-primary:hover {
+  opacity: 0.95 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 10px 24px rgba(11, 111, 245, 0.3) !important;
+}
+
+/* Status Badges */
+.v5-badge, .status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+/* Form Input Rings */
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="date"]:focus,
+select:focus,
+textarea:focus {
+  border-color: #65b8ff !important;
+  box-shadow: 0 0 0 3px #e7f5ff !important;
+  outline: 0 !important;
+}
+
+/* Print Cleanliness: Strictly protect print vouchers and thermal slips */
+@media print {
+  body {
+    background: #fff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .mbpos-global-shell, .mbpos-sidebar, .mbpos-global-header, .glass-nav, .glass-mobile-nav,
+  .offline-status, #language-toggle, #install-pwa, .v5-global-search, .no-print, button:not(.print-keep), .btn:not(.print-keep) {
+    display: none !important;
+  }
+  .mbpos-global-main, .container {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
 }

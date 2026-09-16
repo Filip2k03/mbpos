@@ -44,7 +44,6 @@ function mbpos_redis_connection() {
 
     return $redis;
 }
-
 function mbpos_cache_key($namespace, $value) {
     return 'mbpos:v5:' . preg_replace('/[^a-z0-9:_-]/i', '_', $namespace) . ':' . hash('sha256', (string)$value);
 }
@@ -70,4 +69,28 @@ function mbpos_cache_set($key, $value, $ttl = 60) {
         error_log('MBPOS Redis write failed: ' . $exception->getMessage());
         return false;
     }
+}
+
+function mbpos_cache_del($key) {
+    $redis = mbpos_redis_connection();
+    if (!$redis) return false;
+    try {
+        return (bool)$redis->del($key);
+    } catch (Throwable $exception) {
+        error_log('MBPOS Redis del failed: ' . $exception->getMessage());
+        return false;
+    }
+}
+
+function mbpos_cache_remember($namespace, $key_value, $ttl, callable $callback) {
+    $key = mbpos_cache_key($namespace, $key_value);
+    $cached = mbpos_cache_get($key);
+    if ($cached !== null) {
+        return $cached;
+    }
+    $fresh = $callback();
+    if ($fresh !== null) {
+        mbpos_cache_set($key, $fresh, $ttl);
+    }
+    return $fresh;
 }

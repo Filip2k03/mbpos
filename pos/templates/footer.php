@@ -4,9 +4,11 @@
 // The $page variable is passed to include_template function
 $page = $_GET['page'] ?? ($page ?? 'home'); // fallback page name
 ?>
-</main> <!-- Closes the <main> tag opened in header.php -->
-
 <?php if ($page !== 'voucher_create'): ?>
+</main> <!-- Closes the shared <main> tag opened in header.php -->
+    </div> <!-- .mbpos-global-content -->
+</div> <!-- .mbpos-global-shell -->
+
 <!-- Spacer to ensure mobile nav doesn't overlap footer content on small screens -->
 <div class="h-20 md:hidden"></div>
 

@@ -26,8 +26,8 @@ $user_id = $_SESSION['user_id'];
 
 // --- Fetch User Info and Data for Dropdowns ---
 $user_info = null;
-$stmt_user = mysqli_prepare($connection, "SELECT u.region_id, u.branch_id, r.region_name, b.branch_name 
-                                        FROM users u 
+$stmt_user = mysqli_prepare($connection, "SELECT u.region_id, u.branch_id, r.region_name, b.branch_name
+                                        FROM users u
                                         LEFT JOIN regions r ON u.region_id = r.id
                                         LEFT JOIN branches b ON u.branch_id = b.id
                                         WHERE u.id = ?");
@@ -126,12 +126,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sender_customer_id = null;
     $sender_name = trim($_POST['sender_name']);
     $sender_phone = trim($_POST['sender_phone']);
-    
+
     $receiver_customer_id = null;
     $receiver_name = trim($_POST['receiver_name']);
     $receiver_phone = trim($_POST['receiver_phone']);
     $receiver_address = trim($_POST['receiver_address']);
-    
+
     $origin_region_id = $user_info['region_id'] ?? 1;
     $origin_branch_id = $user_info['branch_id'] ?? 1;
     $destination_region_id = intval($_POST['destination_region_id']);
@@ -158,7 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     $total_amount += $delivery_charge;
-    
+
     // Main Validation
     if (empty($sender_name) || empty($receiver_name) || empty($validated_breakdowns) || empty($destination_region_id) || empty($destination_branch_id)) {
         flash_message('error', 'Please fill all required fields, select destination branch, and add at least one valid item.');
@@ -177,14 +177,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $prefix = !empty($region_data['prefix']) ? $region_data['prefix'] : 'MBV';
         $voucher_code = generate_voucher_code($prefix, $new_sequence);
         mysqli_stmt_close($stmt_seq);
-        
+
         // 2. Insert the main voucher record
         $voucher_sql = "INSERT INTO vouchers (voucher_code, sender_customer_id, receiver_customer_id, sender_name, sender_phone, receiver_name, receiver_phone, receiver_address, region_id, origin_branch_id, destination_region_id, destination_branch_id, weight_kg, price_per_kg_at_voucher, delivery_charge, total_amount, currency, delivery_type, notes, created_by_user_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         $stmt_voucher = mysqli_prepare($connection, $voucher_sql);
         $dummy_price_per_kg = $total_weight > 0 ? ($total_amount - $delivery_charge) / $total_weight : 0;
-        
+
         mysqli_stmt_bind_param($stmt_voucher, 'siisssssiiiiddddsssi', $voucher_code, $sender_customer_id, $receiver_customer_id, $sender_name, $sender_phone, $receiver_name, $receiver_phone, $receiver_address, $origin_region_id, $origin_branch_id, $destination_region_id, $destination_branch_id, $total_weight, $dummy_price_per_kg, $delivery_charge, $total_amount, $currency, $delivery_type, $notes, $user_id);
-        
+
         if(!mysqli_stmt_execute($stmt_voucher)) throw new Exception("Database Error [Voucher]: " . mysqli_stmt_error($stmt_voucher));
         $new_voucher_id = mysqli_insert_id($connection);
         mysqli_stmt_close($stmt_voucher);
@@ -216,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $users_to_notify = [];
         $user_result = mysqli_query($connection, "SELECT id FROM users WHERE id != $user_id AND user_type != 'Customer'");
         if ($user_result) while ($row = mysqli_fetch_assoc($user_result)) $users_to_notify[] = $row['id'];
-        
+
         if (!empty($users_to_notify)) {
             $stmt_notif = mysqli_prepare($connection, "INSERT INTO notifications (user_id, message) VALUES (?, ?)");
             foreach ($users_to_notify as $notify_user_id) {
@@ -226,9 +226,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             mysqli_stmt_close($stmt_notif);
         }
-        
+
         mysqli_commit($connection);
-        
+
         $_SESSION['show_success_modal'] = true;
         $_SESSION['success_modal_title'] = "Voucher Created!";
         $_SESSION['success_modal_message'] = "Voucher #" . htmlspecialchars($voucher_code) . " has been created successfully.";
@@ -239,7 +239,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     } catch (Exception $e) {
         mysqli_rollback($connection);
-        error_log($e->getMessage()); 
+        error_log($e->getMessage());
         flash_message('error', "An unexpected error occurred: " . $e->getMessage());
         redirect('index.php?page=voucher_create');
     }
@@ -250,257 +250,1200 @@ include_template('header', ['page' => 'voucher_create']);
 ?>
 
 <style>
-.voucher-create-page{
-  --vc-bg:#f4f7fb;--vc-surface:#fff;--vc-text:#14243a;--vc-muted:#64748b;--vc-line:#dce5f0;
-  --vc-primary:#1769e0;--vc-primary-strong:#0b4fb7;--vc-soft:#edf5ff;--vc-success:#087f5b;
-  --vc-danger:#c92a2a;--vc-shadow:0 12px 34px rgba(30,64,110,.09);--vc-radius:18px;
-  min-height:100vh;display:grid;grid-template-columns:244px minmax(0,1fr);color:var(--vc-text);
-  background:linear-gradient(180deg,#f8fbff 0,#f3f7fc 55%,#eef4fa 100%);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+:root {
+  --vc-bg: #f4f7fc;
+  --vc-surface: rgba(255, 255, 255, 0.92);
+  --vc-surface-solid: #ffffff;
+  --vc-text: #0f2238;
+  --vc-text-muted: #62758d;
+  --vc-line: #dbe4ef;
+  --vc-line-subtle: #edf2f7;
+  --vc-blue: #0b6ff5;
+  --vc-blue-hover: #0858c7;
+  --vc-blue-soft: #eff6ff;
+  --vc-cyan: #20b8f5;
+  --vc-green: #10b981;
+  --vc-green-soft: #ecfdf5;
+  --vc-amber: #f59e0b;
+  --vc-red: #ef4444;
+  --vc-red-soft: #fef2f2;
+  --vc-shadow: 0 16px 45px rgba(20, 48, 85, 0.08);
+  --vc-shadow-sm: 0 4px 16px rgba(20, 48, 85, 0.04);
+  --vc-radius: 18px;
+  --vc-radius-sm: 12px;
 }
-.voucher-create-page *{box-sizing:border-box}
-.voucher-create-page button,.voucher-create-page input,.voucher-create-page select,.voucher-create-page textarea{font:inherit}
-.voucher-create-page button{cursor:pointer}
-.voucher-create-page svg{width:20px;height:20px;display:block}
-.voucher-create-page .sidebar{position:sticky;top:0;height:100vh;padding:20px 14px;background:rgba(255,255,255,.94);border-right:1px solid var(--vc-line);z-index:40}
-.voucher-create-page .brand{display:flex;gap:11px;align-items:center;padding:4px 9px 24px}
-.voucher-create-page .mark{width:38px;height:32px;position:relative;flex:0 0 auto}
-.voucher-create-page .mark:before,.voucher-create-page .mark:after{content:"";position:absolute;transform:skew(-24deg);border-radius:4px}
-.voucher-create-page .mark:before{left:3px;top:2px;width:14px;height:28px;background:linear-gradient(160deg,#0967df,#5ed1ff)}
-.voucher-create-page .mark:after{left:20px;top:7px;width:14px;height:23px;background:linear-gradient(160deg,#124ead,#b7ebff)}
-.voucher-create-page .brand b{font-size:15px;line-height:1.2;color:var(--vc-text);display:block}
-.voucher-create-page .brand small{display:block;color:var(--vc-primary);font-size:9px;font-weight:800;letter-spacing:.06em}
-.voucher-create-page .nav{display:grid;gap:5px}
-.voucher-create-page .nav a{min-height:44px;color:#52657d;padding:10px 12px;border-radius:12px;font-size:12px;font-weight:700;display:flex;gap:11px;align-items:center;text-decoration:none;transition:background-color .18s,color .18s}
-.voucher-create-page .nav a:hover{background:var(--vc-soft);color:var(--vc-primary)}
-.voucher-create-page .nav a.active{color:#fff;background:linear-gradient(135deg,var(--vc-primary),#169fe9);box-shadow:0 8px 20px rgba(23,105,224,.22)}
-.voucher-create-page .side-health{position:absolute;bottom:18px;left:14px;right:14px;padding:13px;border:1px solid var(--vc-line);border-radius:15px;background:#f8fbff}
-.voucher-create-page .system-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#12a879;box-shadow:0 0 0 4px #dcf8ef;margin-right:7px}
-.voucher-create-page .main{min-width:0}
-.voucher-create-page .top{min-height:70px;display:flex;align-items:center;gap:12px;padding:12px 24px;position:sticky;top:0;z-index:30;background:rgba(248,251,255,.94);border-bottom:1px solid var(--vc-line);backdrop-filter:blur(16px)}
-.voucher-create-page .menu-toggle{display:none;width:44px;height:44px;border:1px solid var(--vc-line);border-radius:12px;background:#fff;color:var(--vc-text);align-items:center;justify-content:center}
-.voucher-create-page .search-wrap{position:relative;flex:1;max-width:560px}
-.voucher-create-page .search-wrap svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:17px;height:17px;color:#8190a4;pointer-events:none}
-.voucher-create-page .search{width:100%;height:44px;border:1px solid var(--vc-line);border-radius:12px;background:#fff;padding:0 14px 0 40px;outline:0;font-size:13px;color:var(--vc-text)}
-.voucher-create-page .search:focus{border-color:#75aef5;box-shadow:0 0 0 3px rgba(23,105,224,.12)}
-.voucher-create-page .operator{margin-left:auto;display:flex;align-items:center;gap:9px;min-width:0}
-.voucher-create-page .avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:800;background:linear-gradient(135deg,#173a67,#5386bd);flex:0 0 auto}
-.voucher-create-page .content{max-width:1580px;margin:auto;padding:24px;width:100%}
-.voucher-create-page .head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:16px}
-.voucher-create-page .head h1{margin:0;font-size:clamp(22px,2.1vw,30px);font-weight:850;letter-spacing:-.03em}
-.voucher-create-page .head p{margin:6px 0 0;color:var(--vc-muted);font-size:13px}
-.voucher-create-page .chip{display:inline-flex;padding:3px 8px;border-radius:7px;background:var(--vc-soft);color:var(--vc-primary);font-size:10px;font-weight:800;vertical-align:middle;margin-left:5px}
-.voucher-create-page .glass{background:var(--vc-surface);border:1px solid var(--vc-line);border-radius:var(--vc-radius);box-shadow:var(--vc-shadow)}
-.voucher-create-page .steps{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:8px;margin-bottom:18px}
-.voucher-create-page .step{text-align:center;padding:8px;color:#7d8ca1;font-size:11px;border-radius:11px;user-select:none}
-.voucher-create-page .step b{display:grid;place-items:center;width:26px;height:26px;margin:0 auto 5px;border-radius:50%;background:#edf1f6;color:#617187;font-size:11px}
-.voucher-create-page .step.active{background:var(--vc-soft);color:var(--vc-primary);font-weight:800}
-.voucher-create-page .step.active b{color:#fff;background:var(--vc-primary)}
-.voucher-create-page .workspace{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px;align-items:start}
-.voucher-create-page .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.voucher-create-page .card{padding:19px}
-.voucher-create-page .card h3,.voucher-create-page .summary h3,.voucher-create-page .tracking h3{margin:0 0 16px;font-size:15px;font-weight:800;display:flex;justify-content:space-between;align-items:center;gap:12px}
-.voucher-create-page .card h3 small{font-weight:500;color:var(--vc-muted);font-size:11px;text-align:right}
-.voucher-create-page .section-title{display:flex;align-items:center;gap:9px}
-.voucher-create-page .section-number{display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:var(--vc-soft);color:var(--vc-primary);font-size:12px;flex:0 0 auto}
-.voucher-create-page .field{margin-bottom:13px}
-.voucher-create-page .field label{display:block;margin-bottom:6px;font-size:11px;font-weight:750;color:#4c6078}
-.voucher-create-page .field input,.voucher-create-page .field select,.voucher-create-page .field textarea{width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--vc-line);border-radius:11px;background:#fff;color:var(--vc-text);outline:0;font-size:16px;transition:border-color .18s,box-shadow .18s}
-.voucher-create-page .field input:focus,.voucher-create-page .field select:focus,.voucher-create-page .field textarea:focus{border-color:#75aef5;box-shadow:0 0 0 3px rgba(23,105,224,.12)}
-.voucher-create-page .field textarea{min-height:92px;resize:vertical}
-.voucher-create-page .required{color:var(--vc-danger)}
-.voucher-create-page .secure-hint{display:flex;gap:7px;align-items:flex-start;color:var(--vc-muted);font-size:10px;line-height:1.45;margin-top:3px}
-.voucher-create-page .secure-hint svg{width:14px;height:14px;color:var(--vc-success);flex:0 0 auto}
-.voucher-create-page .route{grid-column:1/-1}
-.voucher-create-page .routegrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
-.voucher-create-page .full{grid-column:1/-1}
-.voucher-create-page .delivery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
-.voucher-create-page .radio{display:flex;gap:8px;align-items:center;min-height:44px;border:1px solid var(--vc-line);padding:9px 10px;border-radius:10px;background:#fff;font-size:12px;cursor:pointer}
-.voucher-create-page .radio:has(input:checked){border-color:#75aef5;background:var(--vc-soft);color:var(--vc-primary);font-weight:700}
-.voucher-create-page .radio input{accent-color:var(--vc-primary);width:16px;height:16px}
-.voucher-create-page .currencies{display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));gap:6px}
-.voucher-create-page .currencies button{min-height:44px;border:1px solid var(--vc-line);background:#fff;border-radius:9px;padding:8px;font-size:12px;font-weight:750;color:#52657d}
-.voucher-create-page .currencies button.active{background:var(--vc-soft);border-color:#75aef5;color:var(--vc-primary);box-shadow:inset 0 0 0 1px #75aef5}
-.voucher-create-page .items{margin-top:18px}
-.voucher-create-page .tablewrap{overflow:auto;border:1px solid var(--vc-line);border-radius:12px}
-.voucher-create-page .table{width:100%;border-collapse:collapse;min-width:650px;font-size:12px}
-.voucher-create-page .table th{color:#617187;text-align:left;padding:10px;background:#f7f9fc;font-size:10px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--vc-line)}
-.voucher-create-page .table td{padding:8px 10px;background:#fff;border-bottom:1px solid #edf1f6}
-.voucher-create-page .table tr:last-child td{border-bottom:0}
-.voucher-create-page .table input,.voucher-create-page .table select{width:100%;min-height:40px;border:1px solid transparent;border-radius:8px;padding:8px;background:#f8fafc;font-size:14px;color:var(--vc-text);outline:0}
-.voucher-create-page .table input:focus,.voucher-create-page .table select:focus{border-color:#75aef5;background:#fff;box-shadow:0 0 0 3px rgba(23,105,224,.1)}
-.voucher-create-page .remove{width:44px;height:44px;display:grid;place-items:center;border:1px solid #ffd3d3;background:#fff7f7;color:var(--vc-danger);border-radius:9px}
-.voucher-create-page .remove svg{width:18px;height:18px}
-.voucher-create-page .add{min-height:44px;margin-top:12px;border:1px dashed #75aef5;color:var(--vc-primary);background:#f5f9ff;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:8px}
-.voucher-create-page .add svg{width:17px;height:17px}
-.voucher-create-page .totals{display:flex;justify-content:flex-end;gap:30px;margin-top:14px;font-size:11px;color:var(--vc-muted);text-align:right}
-.voucher-create-page .totals strong{display:block;color:var(--vc-primary-strong);font-size:18px;margin-top:2px}
-.voucher-create-page .right{display:grid;gap:18px;align-content:start}
-.voucher-create-page .summary,.voucher-create-page .tracking{padding:19px}
-.voucher-create-page .summary{position:sticky;top:88px}
-.voucher-create-page .status{background:#e3f8f0;color:var(--vc-success);border-radius:999px;padding:5px 9px;font-size:10px;font-weight:800}
-.voucher-create-page .sum{display:flex;justify-content:space-between;gap:18px;padding:9px 0;color:#617187;font-size:12px;border-bottom:1px solid #edf1f6}
-.voucher-create-page .grand{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:13px 0 8px;padding:14px;border-radius:12px;background:var(--vc-soft);font-weight:800;border:1px solid #d4e7ff}
-.voucher-create-page .grand strong{color:var(--vc-primary-strong);font-size:20px;text-align:right}
-.voucher-create-page .actions{display:grid;gap:8px;margin-top:14px}
-.voucher-create-page .primary,.voucher-create-page .secondary{width:100%;min-height:46px;padding:10px 12px;border-radius:11px;font-size:12px;font-weight:800;display:flex;justify-content:center;align-items:center;gap:8px}
-.voucher-create-page .primary svg,.voucher-create-page .secondary svg{width:17px;height:17px}
-.voucher-create-page .primary{border:0;color:#fff;background:linear-gradient(135deg,var(--vc-primary),#1598e6);box-shadow:0 9px 20px rgba(23,105,224,.2)}
-.voucher-create-page .primary:disabled{opacity:.65;cursor:wait}
-.voucher-create-page .secondary{border:1px solid var(--vc-line);background:#fff;color:#465b74}
-.voucher-create-page .request-status{margin-top:10px;font-size:10px;color:var(--vc-muted);min-height:15px}
-.voucher-create-page .request-status.ok{color:var(--vc-success);font-weight:700}
-.voucher-create-page .tracking .line{font-size:10px;color:var(--vc-muted);margin-top:9px}
-.voucher-create-page .tracking b{font-size:12px;color:#1e293b;overflow-wrap:anywhere}
-.voucher-create-page .barcode{height:48px;margin:12px 0;background:repeating-linear-gradient(90deg,#182a43 0 2px,transparent 2px 4px,#182a43 4px 5px,transparent 5px 8px);border-radius:3px}
-.voucher-create-page .track-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.voucher-create-page .status-list{display:grid;gap:6px;margin-top:9px;font-size:10px;color:#8090a4}
-.voucher-create-page .status-item{display:flex;align-items:center;gap:7px}
-.voucher-create-page .status-item:before{content:"";width:7px;height:7px;border-radius:50%;background:#cbd5e1;flex:0 0 auto}
-.voucher-create-page .status-item.current{color:var(--vc-success);font-weight:700}
-.voucher-create-page .status-item.current:before{background:#12a879;box-shadow:0 0 0 3px #dcf8ef}
-.voucher-create-page .qr{width:64px;height:64px;border:7px solid #fff;box-shadow:0 0 0 1px var(--vc-line);background:repeating-conic-gradient(#15253b 0 8%,#fff 0 16%);flex:0 0 auto}
-.voucher-create-page .preview{padding:14px}
-.voucher-create-page .previewbar{display:flex;justify-content:space-between;align-items:center;padding:2px 5px 12px}
-.voucher-create-page .previewbar .secondary{width:auto;min-height:38px;padding:7px 11px}
-.voucher-create-page .paper{background:#fff;border:1px solid #d8e2ed;box-shadow:0 12px 30px rgba(35,65,100,.12);padding:18px;min-height:600px;border-radius:8px}
-.voucher-create-page .phead{display:flex;justify-content:space-between;border-bottom:2px solid #1595ef;padding-bottom:10px}
-.voucher-create-page .pbrand{display:flex;align-items:center;gap:9px}
-.voucher-create-page .pbrand-logo{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid #dce5ef;background:#fff}
-.voucher-create-page .phead strong{color:#126bd3;font-size:17px;display:block;font-weight:900}
-.voucher-create-page .phead small{font-size:8px;font-weight:700;color:#64748b;text-align:right}
-.voucher-create-page .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.voucher-create-page .pbox{border:1px solid #dce5ef;border-radius:6px;padding:8px;font-size:8px;min-height:48px;background:#fafcff}
-.voucher-create-page .pbox b{display:block;font-size:9px;margin-bottom:4px;color:#2b415e;font-weight:800}
-.voucher-create-page .pbox.full{grid-column:1/-1}
-.voucher-create-page .paper h4{font-size:9px;color:#126bd3;margin:13px 0 6px;font-weight:800;text-transform:uppercase;letter-spacing:.3px}
-.voucher-create-page .paper table{width:100%;border-collapse:collapse;font-size:8px}
-.voucher-create-page .paper th,.voucher-create-page .paper td{border:1px solid #dce5ef;padding:5px 6px;text-align:left}
-.voucher-create-page .paper th{background:#f1f5f9;color:#475569;font-weight:800}
-.voucher-create-page .paper-total{display:flex;justify-content:space-between;padding:10px 0;font-size:9px;font-weight:900}
-.voucher-create-page .paper-total strong{font-size:14px;color:#126bd3}
-.voucher-create-page .legacy-print-notes{margin-top:10px;padding:9px 11px;border:1px solid #ffe1e1;border-radius:6px;background:#fff8f8;color:#7f1d1d;font-size:7px;line-height:1.45}
-.voucher-create-page .legacy-print-notes b{display:block;margin-bottom:4px;color:#dc2626;font-size:8px}
-.voucher-create-page .legacy-print-notes ol{margin:0;padding-left:15px}
-.voucher-create-page .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:vc-spin .7s linear infinite}
-@keyframes vc-spin{to{transform:rotate(360deg)}}
-.voucher-create-page .toast{position:fixed;right:20px;bottom:20px;max-width:min(360px,calc(100vw - 32px));padding:12px 16px;background:#14243a;color:#fff;border-radius:12px;box-shadow:var(--vc-shadow);font-size:12px;font-weight:650;opacity:0;transform:translateY(10px);transition:.2s ease;z-index:100;pointer-events:none}
-.voucher-create-page .toast.show{opacity:1;transform:none}
-.voucher-create-page .nav-scrim{display:none}
-@media(max-width:1260px){
-  .voucher-create-page .workspace{grid-template-columns:1fr}
-  .voucher-create-page .right{grid-template-columns:1fr 1fr}
-  .voucher-create-page .summary{position:static}
-  .voucher-create-page .preview{grid-column:1/-1}
+.voucher-create-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  color: var(--vc-text);
+  background: radial-gradient(circle at 85% -5%, #dcf1ff 0, transparent 28%), radial-gradient(circle at -4% 50%, #e5efff 0, transparent 32%), var(--vc-bg);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
-@media(max-width:900px){
-  .voucher-create-page{display:block;padding-bottom:env(safe-area-inset-bottom)}
-  .voucher-create-page .sidebar{position:fixed;inset:0 auto 0 0;width:min(290px,86vw);height:100dvh;transform:translateX(-105%);transition:transform .2s ease;box-shadow:20px 0 45px rgba(15,35,65,.18)}
-  .voucher-create-page.nav-open .sidebar{transform:translateX(0)}
-  .voucher-create-page .nav-scrim{display:block;position:fixed;inset:0;background:rgba(15,35,65,.4);z-index:35;opacity:0;pointer-events:none;transition:opacity .2s}
-  .voucher-create-page.nav-open .nav-scrim{opacity:1;pointer-events:auto}
-  .voucher-create-page .menu-toggle{display:flex}
-  .voucher-create-page .top{padding:10px 14px;padding-top:max(10px,env(safe-area-inset-top))}
-  .voucher-create-page .operator-details{display:none}
-  .voucher-create-page .content{padding:18px 14px 24px}
-  .voucher-create-page .grid,.voucher-create-page .routegrid,.voucher-create-page .right{grid-template-columns:1fr}
-  .voucher-create-page .preview{grid-column:auto}
-  .voucher-create-page .route,.voucher-create-page .full{grid-column:auto}
-  .voucher-create-page .head{align-items:flex-start}
+.voucher-create-page * { box-sizing: border-box; }
+.voucher-create-page button, .voucher-create-page input, .voucher-create-page select, .voucher-create-page textarea { font: inherit; }
+.voucher-create-page button { cursor: pointer; }
+
+/* Sidebar */
+.voucher-create-page .sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 22px 16px;
+  background: rgba(255, 255, 255, 0.94);
+  border-right: 1px solid var(--vc-line);
+  backdrop-filter: blur(20px);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
 }
-@media(max-width:600px){
-  .voucher-create-page .top{gap:8px}
-  .voucher-create-page .search-wrap{display:none}
-  .voucher-create-page .head{display:block}
-  .voucher-create-page .voucher-code{margin-top:12px;text-align:left!important;padding:10px 12px;background:#fff;border:1px solid var(--vc-line);border-radius:11px}
-  .voucher-create-page .steps{display:flex;overflow-x:auto;scroll-snap-type:x proximity;padding:7px;-webkit-overflow-scrolling:touch}
-  .voucher-create-page .step{min-width:98px;scroll-snap-align:start}
-  .voucher-create-page .card,.voucher-create-page .summary,.voucher-create-page .tracking{padding:15px}
-  .voucher-create-page .card h3{align-items:flex-start}
-  .voucher-create-page .delivery{grid-template-columns:1fr}
-  .voucher-create-page .tablewrap{overflow:visible;border:0}
-  .voucher-create-page .table{display:block;min-width:0}
-  .voucher-create-page .table thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-  .voucher-create-page .table tbody{display:grid;gap:10px}
-  .voucher-create-page .table tr{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px;border:1px solid var(--vc-line);border-radius:12px;background:#fff}
-  .voucher-create-page .table td{display:block;padding:0;border:0;background:transparent;min-width:0}
-  .voucher-create-page .table td:before{content:attr(data-label);display:block;margin-bottom:5px;color:#617187;font-size:10px;font-weight:750;text-transform:uppercase;letter-spacing:.04em}
-  .voucher-create-page .table td:first-child{grid-column:1/-1;font-weight:800;color:var(--vc-primary)}
-  .voucher-create-page .table td:nth-child(2){grid-column:1/-1}
-  .voucher-create-page .table td:nth-child(5){display:flex;flex-direction:column;justify-content:flex-end;font-size:15px}
-  .voucher-create-page .table td:last-child{display:flex;justify-content:flex-end;align-items:flex-end}
-  .voucher-create-page .totals{justify-content:space-between;gap:12px;text-align:left}
-  .voucher-create-page .totals strong{font-size:16px}
-  .voucher-create-page .preview{overflow:auto}
-  .voucher-create-page .paper{min-width:330px}
-  .voucher-create-page .toast{right:16px;bottom:calc(16px + env(safe-area-inset-bottom))}
+.voucher-create-page .brand {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 4px 8px 24px;
 }
-@media(max-width:360px){
-  .voucher-create-page .content{padding-left:10px;padding-right:10px}
-  .voucher-create-page .card,.voucher-create-page .summary,.voucher-create-page .tracking{padding:13px}
-  .voucher-create-page .currencies{grid-template-columns:repeat(2,1fr)}
-  .voucher-create-page .totals{display:grid;grid-template-columns:1fr 1fr}
+.voucher-create-page .brand-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #0b6ff5, #20b8f5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 900;
+  font-size: 16px;
+  box-shadow: 0 8px 20px rgba(11, 111, 245, 0.28);
+  flex-shrink: 0;
 }
-@media(prefers-reduced-motion:reduce){.voucher-create-page *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
-@media print{
-  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-  body{background:#fff!important;padding:0!important;margin:0!important}
-  .voucher-create-page .sidebar,.voucher-create-page .top,.voucher-create-page .head,.voucher-create-page .steps,.voucher-create-page .workspace>section,.voucher-create-page .summary,.voucher-create-page .tracking,.voucher-create-page .previewbar,.voucher-create-page .toast,.voucher-create-page .nav-scrim{display:none!important}
-  .voucher-create-page,.voucher-create-page .main,.voucher-create-page .content,.voucher-create-page #voucher-form,.voucher-create-page .workspace,.voucher-create-page .right,.voucher-create-page .preview{display:block!important;padding:0!important;margin:0!important;width:100%!important;max-width:none!important;background:#fff!important}
-  .voucher-create-page .paper{border:0!important;box-shadow:none!important;min-height:auto!important;padding:0!important;display:block!important}
+.voucher-create-page .brand b {
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--vc-text);
+  display: block;
+}
+.voucher-create-page .brand small {
+  display: block;
+  color: var(--vc-blue);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.voucher-create-page .nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+.voucher-create-page .nav a {
+  min-height: 44px;
+  color: #55687d;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  text-decoration: none;
+  transition: all 0.18s ease;
+}
+.voucher-create-page .nav a:hover {
+  background: var(--vc-blue-soft);
+  color: var(--vc-blue);
+}
+.voucher-create-page .nav a.active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--vc-blue), #189ff0);
+  box-shadow: 0 8px 22px rgba(11, 111, 245, 0.25);
+}
+.voucher-create-page .side-health {
+  margin-top: auto;
+  padding: 14px;
+  border: 1px solid var(--vc-line);
+  border-radius: 14px;
+  background: #f8fbff;
+}
+.voucher-create-page .system-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--vc-green);
+  box-shadow: 0 0 0 4px #dcfce7;
+  margin-right: 7px;
+}
+
+/* Topbar */
+.voucher-create-page .main { min-width: 0; }
+.voucher-create-page .top {
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 28px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: rgba(248, 251, 255, 0.88);
+  border-bottom: 1px solid var(--vc-line);
+  backdrop-filter: blur(18px);
+}
+.voucher-create-page .menu-toggle {
+  display: none;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--vc-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--vc-text);
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--vc-shadow-sm);
+}
+.voucher-create-page .search-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 520px;
+}
+.voucher-create-page .search-wrap svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 17px;
+  height: 17px;
+  color: #8494a7;
+  pointer-events: none;
+}
+.voucher-create-page .search {
+  width: 100%;
+  height: 44px;
+  border: 1px solid var(--vc-line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0 14px 0 42px;
+  outline: 0;
+  font-size: 13px;
+  color: var(--vc-text);
+  transition: all 0.2s ease;
+}
+.voucher-create-page .search:focus {
+  border-color: var(--vc-blue);
+  box-shadow: 0 0 0 3px rgba(11, 111, 245, 0.14);
+}
+.voucher-create-page .operator {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.voucher-create-page .avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #102a45, #36618e);
+  box-shadow: 0 4px 12px rgba(16, 42, 69, 0.2);
+  flex-shrink: 0;
+}
+.voucher-create-page .logout-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--vc-line);
+  background: #fff;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+  text-decoration: none;
+}
+.voucher-create-page .logout-btn:hover {
+  background: var(--vc-red-soft);
+  color: var(--vc-red);
+  border-color: #fca5a5;
+}
+
+/* Content & Workspace */
+.voucher-create-page .content {
+  max-width: 1600px;
+  margin: auto;
+  padding: 26px 28px 40px;
+  width: 100%;
+}
+.voucher-create-page .head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.voucher-create-page .head h1 {
+  margin: 0;
+  font-size: clamp(24px, 2.2vw, 32px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--vc-text);
+}
+.voucher-create-page .head p {
+  margin: 6px 0 0;
+  color: var(--vc-text-muted);
+  font-size: 13.5px;
+}
+.voucher-create-page .chip {
+  display: inline-flex;
+  padding: 3px 9px;
+  border-radius: 8px;
+  background: var(--vc-blue-soft);
+  color: var(--vc-blue);
+  font-size: 11px;
+  font-weight: 800;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+.voucher-create-page .glass {
+  background: var(--vc-surface);
+  border: 1px solid var(--vc-line);
+  border-radius: var(--vc-radius);
+  box-shadow: var(--vc-shadow);
+  backdrop-filter: blur(14px);
+}
+
+/* Steps */
+.voucher-create-page .steps {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  padding: 10px;
+  margin-bottom: 22px;
+}
+.voucher-create-page .step {
+  text-align: center;
+  padding: 10px 8px;
+  color: #79899d;
+  font-size: 12px;
+  font-weight: 650;
+  border-radius: 12px;
+  user-select: none;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.voucher-create-page .step b {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #edf2f7;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  transition: all 0.2s ease;
+}
+.voucher-create-page .step.active {
+  background: var(--vc-blue-soft);
+  color: var(--vc-blue);
+  font-weight: 800;
+}
+.voucher-create-page .step.active b {
+  color: #fff;
+  background: var(--vc-blue);
+  box-shadow: 0 4px 12px rgba(11, 111, 245, 0.35);
+}
+
+/* Workspace Layout */
+.voucher-create-page .workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 22px;
+  align-items: start;
+}
+.voucher-create-page .grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.voucher-create-page .card { padding: 22px; }
+.voucher-create-page .card h3 {
+  margin: 0 0 18px;
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.voucher-create-page .card h3 small {
+  font-weight: 600;
+  color: var(--vc-text-muted);
+  font-size: 11px;
+}
+.voucher-create-page .section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.voucher-create-page .section-number {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--vc-blue-soft);
+  color: var(--vc-blue);
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.voucher-create-page .field { margin-bottom: 15px; }
+.voucher-create-page .field:last-child { margin-bottom: 0; }
+.voucher-create-page .field label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #3b4e64;
+}
+.voucher-create-page .field input,
+.voucher-create-page .field select,
+.voucher-create-page .field textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--vc-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--vc-text);
+  outline: 0;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+.voucher-create-page .field input:focus,
+.voucher-create-page .field select:focus,
+.voucher-create-page .field textarea:focus {
+  border-color: var(--vc-blue);
+  box-shadow: 0 0 0 3px rgba(11, 111, 245, 0.14);
+}
+.voucher-create-page .field textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+.voucher-create-page .required { color: var(--vc-red); }
+.voucher-create-page .secure-hint {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  color: var(--vc-text-muted);
+  font-size: 11px;
+  margin-top: 6px;
+}
+.voucher-create-page .secure-hint svg {
+  width: 14px;
+  height: 14px;
+  color: var(--vc-green);
+  flex-shrink: 0;
+}
+.voucher-create-page .route { grid-column: 1 / -1; }
+.voucher-create-page .routegrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.voucher-create-page .full { grid-column: 1 / -1; }
+
+/* Delivery Type Radio Cards */
+.voucher-create-page .delivery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.voucher-create-page .radio {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  min-height: 44px;
+  border: 1px solid var(--vc-line);
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: #fff;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.voucher-create-page .radio:hover {
+  border-color: #bcd5f5;
+}
+.voucher-create-page .radio:has(input:checked) {
+  border-color: var(--vc-blue);
+  background: var(--vc-blue-soft);
+  color: var(--vc-blue);
+  font-weight: 750;
+  box-shadow: 0 2px 8px rgba(11, 111, 245, 0.1);
+}
+.voucher-create-page .radio input {
+  accent-color: var(--vc-blue);
+  width: 16px;
+  height: 16px;
+}
+
+/* Currency Pills */
+.voucher-create-page .currencies {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(62px, 1fr));
+  gap: 8px;
+}
+.voucher-create-page .currencies button {
+  min-height: 44px;
+  border: 1px solid var(--vc-line);
+  background: #fff;
+  border-radius: 10px;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #55687d;
+  transition: all 0.18s ease;
+}
+.voucher-create-page .currencies button:hover {
+  border-color: #bcd5f5;
+}
+.voucher-create-page .currencies button.active {
+  background: var(--vc-blue-soft);
+  border-color: var(--vc-blue);
+  color: var(--vc-blue);
+  box-shadow: inset 0 0 0 1px var(--vc-blue);
+}
+
+/* Item Breakdown Table */
+.voucher-create-page .items { margin-top: 20px; }
+.voucher-create-page .tablewrap {
+  overflow-x: auto;
+  border: 1px solid var(--vc-line);
+  border-radius: 14px;
+  background: #fff;
+}
+.voucher-create-page .table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+  font-size: 13px;
+}
+.voucher-create-page .table th {
+  color: #55687d;
+  text-align: left;
+  padding: 12px 14px;
+  background: #f8fafc;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--vc-line);
+}
+.voucher-create-page .table td {
+  padding: 10px 14px;
+  background: #fff;
+  border-bottom: 1px solid var(--vc-line-subtle);
+  vertical-align: middle;
+}
+.voucher-create-page .table tr:last-child td { border-bottom: 0; }
+.voucher-create-page .table input,
+.voucher-create-page .table select {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--vc-line);
+  border-radius: 9px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  font-size: 14px;
+  color: var(--vc-text);
+  outline: 0;
+  transition: all 0.18s ease;
+}
+.voucher-create-page .table input:focus,
+.voucher-create-page .table select:focus {
+  border-color: var(--vc-blue);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(11, 111, 245, 0.12);
+}
+.voucher-create-page .remove {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #fecaca;
+  background: #fff5f5;
+  color: var(--vc-red);
+  border-radius: 10px;
+  transition: all 0.18s ease;
+}
+.voucher-create-page .remove:hover {
+  background: #fee2e2;
+  transform: scale(1.05);
+}
+.voucher-create-page .add {
+  min-height: 44px;
+  margin-top: 14px;
+  border: 1.5px dashed #93c5fd;
+  color: var(--vc-blue);
+  background: #f0f7ff;
+  border-radius: 11px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  transition: all 0.18s ease;
+}
+.voucher-create-page .add:hover {
+  background: #e0effe;
+  border-color: var(--vc-blue);
+}
+.voucher-create-page .totals {
+  display: flex;
+  justify-content: flex-end;
+  gap: 32px;
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--vc-text-muted);
+  text-align: right;
+}
+.voucher-create-page .totals strong {
+  display: block;
+  color: #0b4594;
+  font-size: 20px;
+  font-weight: 900;
+  margin-top: 2px;
+}
+
+/* Right Column Sidebar Cards */
+.voucher-create-page .right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.voucher-create-page .summary,
+.voucher-create-page .tracking {
+  padding: 22px;
+}
+.voucher-create-page .summary {
+  position: sticky;
+  top: 90px;
+  z-index: 20;
+}
+.voucher-create-page .status {
+  background: var(--vc-green-soft);
+  color: var(--vc-green);
+  border: 1px solid #a7f3d0;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 10.5px;
+  font-weight: 800;
+}
+.voucher-create-page .sum {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 10px 0;
+  color: #55687d;
+  font-size: 13px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--vc-line-subtle);
+}
+.voucher-create-page .grand {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin: 14px 0 10px;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--vc-blue-soft);
+  font-weight: 800;
+  border: 1px solid #bfdbfe;
+}
+.voucher-create-page .grand strong {
+  color: #0b4594;
+  font-size: 22px;
+  font-weight: 900;
+  text-align: right;
+}
+.voucher-create-page .actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+.voucher-create-page .primary,
+.voucher-create-page .secondary {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  transition: all 0.2s ease;
+}
+.voucher-create-page .primary {
+  border: 0;
+  color: #fff;
+  background: linear-gradient(135deg, var(--vc-blue), #189ff0);
+  box-shadow: 0 10px 24px rgba(11, 111, 245, 0.28);
+}
+.voucher-create-page .primary:hover {
+  opacity: 0.96;
+  transform: translateY(-1px);
+}
+.voucher-create-page .primary:disabled {
+  opacity: 0.65;
+  cursor: wait;
+  transform: none;
+}
+.voucher-create-page .secondary {
+  border: 1px solid var(--vc-line);
+  background: #fff;
+  color: #3b4e64;
+  box-shadow: var(--vc-shadow-sm);
+}
+.voucher-create-page .secondary:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+.voucher-create-page .request-status {
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--vc-text-muted);
+  min-height: 16px;
+  text-align: center;
+}
+.voucher-create-page .request-status.ok {
+  color: var(--vc-green);
+  font-weight: 700;
+}
+
+/* Tracking Card */
+.voucher-create-page .tracking .line {
+  font-size: 11px;
+  color: var(--vc-text-muted);
+  font-weight: 600;
+  margin-top: 10px;
+}
+.voucher-create-page .tracking b {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--vc-text);
+  word-break: break-all;
+}
+.voucher-create-page .barcode {
+  height: 52px;
+  margin: 14px 0;
+  background: repeating-linear-gradient(90deg, #0f2238 0 2px, transparent 2px 4px, #0f2238 4px 5px, transparent 5px 8px, #0f2238 8px 11px, transparent 11px 13px);
+  border-radius: 4px;
+}
+.voucher-create-page .track-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.voucher-create-page .status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 10px;
+  font-size: 11px;
+  color: #79899d;
+}
+.voucher-create-page .status-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.voucher-create-page .status-item:before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  flex-shrink: 0;
+}
+.voucher-create-page .status-item.current {
+  color: var(--vc-green);
+  font-weight: 750;
+}
+.voucher-create-page .status-item.current:before {
+  background: var(--vc-green);
+  box-shadow: 0 0 0 3px #dcfce7;
+}
+
+/* Paper Preview */
+.voucher-create-page .preview { padding: 18px; }
+.voucher-create-page .previewbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 4px 14px;
+}
+.voucher-create-page .paper {
+  background: #fff;
+  border: 1px solid #d4e0ee;
+  box-shadow: 0 14px 36px rgba(25, 55, 95, 0.12);
+  padding: 20px;
+  min-height: 600px;
+  border-radius: 10px;
+}
+.voucher-create-page .phead {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #0b6ff5;
+  padding-bottom: 12px;
+}
+.voucher-create-page .pbrand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.voucher-create-page .pbrand-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #dce5ef;
+  background: #fff;
+}
+.voucher-create-page .phead strong {
+  color: #0b6ff5;
+  font-size: 18px;
+  display: block;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+.voucher-create-page .phead small {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #64748b;
+  text-align: right;
+}
+.voucher-create-page .pgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.voucher-create-page .pbox {
+  border: 1px solid #dce5ef;
+  border-radius: 8px;
+  padding: 9px;
+  font-size: 8.5px;
+  min-height: 52px;
+  background: #fbfdff;
+}
+.voucher-create-page .pbox b {
+  display: block;
+  font-size: 9.5px;
+  margin-bottom: 4px;
+  color: #1e3350;
+  font-weight: 800;
+}
+.voucher-create-page .pbox.full { grid-column: 1 / -1; }
+.voucher-create-page .paper h4 {
+  font-size: 9.5px;
+  color: #0b6ff5;
+  margin: 14px 0 7px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.voucher-create-page .paper table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8.5px;
+}
+.voucher-create-page .paper th,
+.voucher-create-page .paper td {
+  border: 1px solid #dce5ef;
+  padding: 6px 8px;
+  text-align: left;
+}
+.voucher-create-page .paper th {
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 800;
+}
+.voucher-create-page .paper-total {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0 8px;
+  font-size: 10px;
+  font-weight: 900;
+}
+.voucher-create-page .paper-total strong {
+  font-size: 15px;
+  color: #0b6ff5;
+}
+.voucher-create-page .legacy-print-notes {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  background: #fffbeb;
+  color: #9a3412;
+  font-size: 7.5px;
+  line-height: 1.5;
+}
+.voucher-create-page .legacy-print-notes b {
+  display: block;
+  margin-bottom: 4px;
+  color: #c2410c;
+  font-size: 8.5px;
+  font-weight: 800;
+}
+.voucher-create-page .legacy-print-notes ol {
+  margin: 0;
+  padding-left: 15px;
+}
+
+/* Spinner and Toast */
+.voucher-create-page .spinner {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: vc-spin 0.7s linear infinite;
+}
+@keyframes vc-spin { to { transform: rotate(360deg); } }
+
+.voucher-create-page .toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  max-width: min(380px, calc(100vw - 32px));
+  padding: 14px 18px;
+  background: #0f2238;
+  color: #fff;
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(15, 34, 56, 0.25);
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: all 0.22s ease;
+  z-index: 100;
+  pointer-events: none;
+}
+.voucher-create-page .toast.show {
+  opacity: 1;
+  transform: none;
+}
+
+/* Mobile & Tablet Responsive Media Queries */
+.voucher-create-page .nav-scrim { display: none; }
+
+@media (max-width: 1280px) {
+  .voucher-create-page .workspace { grid-template-columns: 1fr; }
+  .voucher-create-page .right {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .voucher-create-page .summary { position: static; }
+  .voucher-create-page .preview { grid-column: 1 / -1; }
+}
+
+@media (max-width: 900px) {
+  .voucher-create-page {
+    display: block;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .voucher-create-page .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(300px, 86vw);
+    height: 100dvh;
+    transform: translateX(-105%);
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 20px 0 50px rgba(15, 35, 65, 0.25);
+  }
+  .voucher-create-page.nav-open .sidebar { transform: translateX(0); }
+  .voucher-create-page .nav-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 35, 65, 0.45);
+    z-index: 35;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+    backdrop-filter: blur(4px);
+  }
+  .voucher-create-page.nav-open .nav-scrim {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .voucher-create-page .menu-toggle { display: flex; }
+  .voucher-create-page .top {
+    padding: 10px 16px;
+    padding-top: max(10px, env(safe-area-inset-top));
+  }
+  .voucher-create-page .operator-details { display: none; }
+  .voucher-create-page .content { padding: 20px 16px 30px; }
+  .voucher-create-page .grid,
+  .voucher-create-page .routegrid,
+  .voucher-create-page .right { grid-template-columns: 1fr; }
+  .voucher-create-page .preview { grid-column: auto; }
+  .voucher-create-page .route,
+  .voucher-create-page .full { grid-column: auto; }
+  .voucher-create-page .head { align-items: flex-start; }
+}
+
+@media (max-width: 640px) {
+  .voucher-create-page .top { gap: 10px; }
+  .voucher-create-page .search-wrap { display: none; }
+  .voucher-create-page .head { display: block; }
+  .voucher-create-page .voucher-code {
+    margin-top: 14px;
+    text-align: left !important;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid var(--vc-line);
+    border-radius: 12px;
+  }
+  .voucher-create-page .steps {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .voucher-create-page .step {
+    min-width: 105px;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+  .voucher-create-page .card,
+  .voucher-create-page .summary,
+  .voucher-create-page .tracking { padding: 16px; }
+  .voucher-create-page .card h3 { align-items: flex-start; }
+  .voucher-create-page .delivery { grid-template-columns: 1fr; }
+
+  /* Mobile item card transformation: clean touch cards instead of squished table */
+  .voucher-create-page .tablewrap {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+  .voucher-create-page .table {
+    display: block;
+    min-width: 0;
+  }
+  .voucher-create-page .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .voucher-create-page .table tbody {
+    display: grid;
+    gap: 12px;
+  }
+  .voucher-create-page .table tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--vc-line);
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: var(--vc-shadow-sm);
+  }
+  .voucher-create-page .table td {
+    display: block;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    min-width: 0;
+  }
+  .voucher-create-page .table td:before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 6px;
+    color: #55687d;
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .voucher-create-page .table td:first-child {
+    grid-column: 1 / -1;
+    font-weight: 800;
+    color: var(--vc-blue);
+  }
+  .voucher-create-page .table td:nth-child(2) { grid-column: 1 / -1; }
+  .voucher-create-page .table td:nth-child(5) {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    font-size: 15px;
+  }
+  .voucher-create-page .table td:last-child {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+  }
+  .voucher-create-page .totals {
+    justify-content: space-between;
+    gap: 14px;
+    text-align: left;
+  }
+  .voucher-create-page .totals strong { font-size: 17px; }
+  .voucher-create-page .preview { overflow: auto; }
+  .voucher-create-page .paper { min-width: 320px; }
+  .voucher-create-page .toast {
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 375px) {
+  .voucher-create-page .content { padding-left: 12px; padding-right: 12px; }
+  .voucher-create-page .card,
+  .voucher-create-page .summary,
+  .voucher-create-page .tracking { padding: 14px; }
+  .voucher-create-page .currencies { grid-template-columns: repeat(2, 1fr); }
+  .voucher-create-page .totals { grid-template-columns: 1fr 1fr; display: grid; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voucher-create-page * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Clean Print isolation */
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body { background: #fff !important; padding: 0 !important; margin: 0 !important; }
+  .voucher-create-page .sidebar,
+  .voucher-create-page .top,
+  .voucher-create-page .head,
+  .voucher-create-page .steps,
+  .voucher-create-page .workspace > section,
+  .voucher-create-page .summary,
+  .voucher-create-page .tracking,
+  .voucher-create-page .previewbar,
+  .voucher-create-page .toast,
+  .voucher-create-page .nav-scrim { display: none !important; }
+  .voucher-create-page,
+  .voucher-create-page .main,
+  .voucher-create-page .content,
+  .voucher-create-page #voucher-form,
+  .voucher-create-page .workspace,
+  .voucher-create-page .right,
+  .voucher-create-page .preview {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    background: #fff !important;
+  }
+  .voucher-create-page .paper {
+    border: 0 !important;
+    box-shadow: none !important;
+    min-height: auto !important;
+    padding: 0 !important;
+    display: block !important;
+  }
 }
 </style>
 
 <div class="app voucher-create-page" id="voucher-page">
+  <!-- Accessibility Skip Link -->
+  <a href="#voucher-main-content" class="sr-only focus:not-sr-only" style="position:fixed;top:10px;left:10px;z-index:999;background:#0b6ff5;color:#fff;padding:8px 14px;border-radius:8px;font-weight:700;text-decoration:none;">Skip to content</a>
+
   <!-- Sidebar (Desktop Enterprise Nav) -->
-  <aside class="sidebar" id="voucher-sidebar">
+  <aside class="sidebar" id="voucher-sidebar" aria-label="Primary navigation">
     <div class="brand">
-      <div class="mark"></div>
+      <div class="brand-mark" aria-hidden="true">M</div>
       <div>
         <b>MBLOGISTICS</b>
         <small>POS V5 · FAST · SAFE · GLOBAL</small>
       </div>
     </div>
-    
-    <nav class="nav" aria-label="Primary navigation">
-      <a href="index.php?page=dashboard"><?= mbpos_icon('dashboard') ?><span data-i18n="Dashboard">Dashboard</span></a>
-      <a href="index.php?page=voucher_create" class="active" aria-current="page"><?= mbpos_icon('voucher_create') ?><span data-i18n="Create Voucher">Create Voucher</span></a>
-      <a href="index.php?page=stock_list"><?= mbpos_icon('stock_list') ?><span data-i18n="Shipments">Shipments</span></a>
-      <a href="index.php?page=voucher_list"><?= mbpos_icon('voucher_list') ?><span data-i18n="Voucher Ledger">Voucher Ledger</span></a>
+
+    <nav class="nav">
+      <a href="index.php?page=dashboard"><?= mbpos_icon('dashboard', 'w-4 h-4') ?><span data-i18n="Dashboard">Dashboard</span></a>
+      <a href="index.php?page=voucher_create" class="active" aria-current="page"><?= mbpos_icon('voucher_create', 'w-4 h-4') ?><span data-i18n="Create Voucher">Create Voucher</span></a>
+      <a href="index.php?page=stock_list"><?= mbpos_icon('stock_list', 'w-4 h-4') ?><span data-i18n="Shipments">Shipments</span></a>
+      <a href="index.php?page=voucher_list"><?= mbpos_icon('voucher_list', 'w-4 h-4') ?><span data-i18n="Voucher Ledger">Voucher Ledger</span></a>
       <?php if (is_admin() || is_developer()): ?>
-        <a href="index.php?page=profit_loss"><?= mbpos_icon('profit_loss') ?><span data-i18n="Profit & Loss">Profit &amp; Loss</span></a>
-        <a href="index.php?page=branches"><?= mbpos_icon('branches') ?><span data-i18n="Branches">Branches</span></a>
-        <a href="index.php?page=admin_dashboard"><?= mbpos_icon('admin_dashboard') ?><span data-i18n="Administration">Administration</span></a>
+        <a href="index.php?page=profit_loss"><?= mbpos_icon('profit_loss', 'w-4 h-4') ?><span data-i18n="Profit & Loss">Profit &amp; Loss</span></a>
+        <a href="index.php?page=branches"><?= mbpos_icon('branches', 'w-4 h-4') ?><span data-i18n="Branches">Branches</span></a>
+        <a href="index.php?page=admin_dashboard"><?= mbpos_icon('admin_dashboard', 'w-4 h-4') ?><span data-i18n="Administration">Administration</span></a>
       <?php endif; ?>
     </nav>
-    
+
     <div class="side-health" aria-label="System Online">
       <span class="system-dot"></span>
-      <b style="font-size:10px" data-i18n="Online">Online</b>
-      <div style="font-size:9px;color:var(--vc-muted);margin-top:5px" data-i18n="Live records available">Live records available</div>
+      <b style="font-size:11px" data-i18n="System Online">System Online</b>
+      <div style="font-size:10px;color:var(--vc-text-muted);margin-top:4px" data-i18n="Live records available">Live records available</div>
     </div>
   </aside>
   <button type="button" class="nav-scrim" id="nav-scrim" aria-label="Close menu"></button>
 
   <!-- Main Viewport -->
-  <main class="main">
+  <main class="main" id="voucher-main-content">
     <!-- Topbar Header -->
     <header class="top">
-      <button type="button" class="menu-toggle" id="nav-toggle" aria-controls="voucher-sidebar" aria-expanded="false" aria-label="Open menu"><?= mbpos_icon('menu') ?></button>
+      <button type="button" class="menu-toggle" id="nav-toggle" aria-controls="voucher-sidebar" aria-expanded="false" aria-label="Open menu"><?= mbpos_icon('menu', 'w-5 h-5') ?></button>
+
       <div class="search-wrap">
         <?= mbpos_icon('search') ?>
         <input id="global-search" class="search" placeholder="Search tracking number or voucher" data-i18n-placeholder="Search tracking number or voucher" aria-label="Global search">
       </div>
-      <button type="button" id="language-toggle" class="language-toggle" aria-label="Switch language" title="Switch language">
-        <span class="language-option language-option-en">EN</span>
-        <span class="language-option language-option-mm">မြန်မာ</span>
-      </button>
-      <button type="button" id="install-pwa" class="pwa-install-button" hidden data-i18n="Install app">Install app</button>
+
       <div class="operator">
-        <div class="avatar"><?= htmlspecialchars(strtoupper(substr($_SESSION['username'] ?? 'OP', 0, 2)), ENT_QUOTES, 'UTF-8') ?></div>
-        <div class="operator-details">
-          <b style="font-size:11px"><?= htmlspecialchars($_SESSION['username'] ?? 'Operator', ENT_QUOTES, 'UTF-8') ?></b>
-          <small style="display:block;color:var(--vc-muted);font-size:9px"><?= htmlspecialchars(ucfirst($_SESSION['role'] ?? 'Operator'), ENT_QUOTES, 'UTF-8') ?><?php if (!empty($user_info['branch_name'])): ?> · <?= htmlspecialchars($user_info['branch_name'], ENT_QUOTES, 'UTF-8') ?><?php endif; ?></small>
+        <button type="button" id="language-toggle" class="language-toggle" aria-label="Switch language" title="Switch language">
+          <span class="language-option language-option-en">EN</span>
+          <span class="language-option language-option-mm">မြန်မာ</span>
+        </button>
+
+        <button type="button" id="install-pwa" class="pwa-install-button" hidden data-i18n="Install app">Install app</button>
+
+        <div class="avatar" title="<?= htmlspecialchars($_SESSION['username'] ?? 'Operator', ENT_QUOTES, 'UTF-8') ?>">
+          <?= htmlspecialchars(strtoupper(substr($_SESSION['username'] ?? 'OP', 0, 2)), ENT_QUOTES, 'UTF-8') ?>
         </div>
+
+        <div class="operator-details">
+          <b style="font-size:12px"><?= htmlspecialchars($_SESSION['username'] ?? 'Operator', ENT_QUOTES, 'UTF-8') ?></b>
+          <small style="display:block;color:var(--vc-text-muted);font-size:10px"><?= htmlspecialchars(ucfirst($_SESSION['role'] ?? 'Operator'), ENT_QUOTES, 'UTF-8') ?><?php if (!empty($user_info['branch_name'])): ?> · <?= htmlspecialchars($user_info['branch_name'], ENT_QUOTES, 'UTF-8') ?><?php endif; ?></small>
+        </div>
+
+        <a href="index.php?page=logout" class="logout-btn" title="Logout" aria-label="Logout">
+          <?= mbpos_icon('logout', 'w-4 h-4') ?>
+        </a>
       </div>
     </header>
 
@@ -508,46 +1451,49 @@ include_template('header', ['page' => 'voucher_create']);
       <!-- Page Head -->
       <div class="head">
         <div>
-          <h1><span data-i18n="Create Delivery Voucher">Create Delivery Voucher</span> <span class="chip">V5</span></h1>
+          <h1><span data-i18n="Create Delivery Voucher">Create Delivery Voucher</span> <span class="chip">V5 Workspace</span></h1>
           <p data-i18n="Enter shipment details and review totals before creating the voucher.">Enter shipment details and review totals before creating the voucher.</p>
         </div>
-        <div class="voucher-code" style="font-size:10px;color:var(--vc-muted);text-align:right">
+        <div class="voucher-code" style="font-size:11px;color:var(--vc-text-muted);text-align:right">
           <span data-i18n="Voucher Code">Voucher Code</span><br>
-          <b id="voucherNo" style="font-size:13px;color:var(--vc-text)"><?= htmlspecialchars($preview_voucher_code) ?></b>
+          <b id="voucherNo" style="font-size:14px;color:var(--vc-text)"><?= htmlspecialchars($preview_voucher_code) ?></b>
         </div>
       </div>
 
-      <!-- Step Wizard -->
-      <div class="steps glass">
-        <div class="step active" id="st-1"><b>1</b>Sender & Receiver</div>
-        <div class="step" id="st-2"><b>2</b>Routing</div>
-        <div class="step" id="st-3"><b>3</b>Items</div>
-        <div class="step" id="st-4"><b>4</b>Review</div>
-        <div class="step" id="st-5"><b>5</b>Create</div>
+      <!-- Step Wizard Progress Indicator -->
+      <div class="steps glass" role="progressbar" aria-label="Voucher creation progress">
+        <div class="step active" id="st-1"><b>1</b><span data-i18n="Sender & Receiver">Sender &amp; Receiver</span></div>
+        <div class="step" id="st-2"><b>2</b><span data-i18n="Routing & Logistics">Routing &amp; Service</span></div>
+        <div class="step" id="st-3"><b>3</b><span data-i18n="Item Breakdown">Package Items</span></div>
+        <div class="step" id="st-4"><b>4</b><span data-i18n="Order Summary">Order Review</span></div>
+        <div class="step" id="st-5"><b>5</b><span data-i18n="Create">Issue Voucher</span></div>
       </div>
 
       <!-- V5 Form & Workspace -->
       <form id="voucher-form" method="POST" action="index.php?page=voucher_create" data-protect-unsaved="true">
         <?= csrf_input() ?>
         <div class="workspace">
-          
+
           <!-- LEFT COLUMN: Input Fields -->
           <section>
             <div class="grid">
-              
+
               <!-- Card 1: Sender Details -->
               <div class="card glass">
                 <h3><span class="section-title"><span class="section-number">1</span><span data-i18n="New Sender Details">New Sender Details</span></span><small data-i18n="Manual entry">Manual entry</small></h3>
 
                 <div class="field">
-                  <label>Full Name <span class="required">*</span></label>
-                  <input id="sender" name="sender_name" maxlength="120" autocomplete="name" placeholder="Sender full name" value="<?= htmlspecialchars($duplicate_voucher['sender_name'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
+                  <label><span data-i18n="Full Name">Full Name</span> <span class="required">*</span></label>
+                  <input id="sender" name="sender_name" maxlength="120" autocomplete="name" placeholder="Sender full name" data-i18n-placeholder="Sender full name" value="<?= htmlspecialchars($duplicate_voucher['sender_name'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
                 </div>
                 <div class="field">
-                  <label>Phone Number <span class="required">*</span></label>
-                  <input id="senderPhone" name="sender_phone" maxlength="32" autocomplete="tel" inputmode="tel" placeholder="Phone number" value="<?= htmlspecialchars($duplicate_voucher['sender_phone'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
+                  <label><span data-i18n="Phone Number">Phone Number</span> <span class="required">*</span></label>
+                  <input id="senderPhone" name="sender_phone" maxlength="32" autocomplete="tel" inputmode="tel" placeholder="Phone number" data-i18n-placeholder="Phone number" value="<?= htmlspecialchars($duplicate_voucher['sender_phone'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
                 </div>
-                <div class="secure-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span data-i18n="Validated securely when submitted">Validated securely when submitted</span></div>
+                <div class="secure-hint">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  <span data-i18n="Validated securely when submitted">Validated securely when submitted</span>
+                </div>
               </div>
 
               <!-- Card 2: Receiver Details -->
@@ -555,16 +1501,16 @@ include_template('header', ['page' => 'voucher_create']);
                 <h3><span class="section-title"><span class="section-number">2</span><span data-i18n="New Receiver Details">New Receiver Details</span></span><small data-i18n="Manual entry">Manual entry</small></h3>
 
                 <div class="field">
-                  <label>Full Name <span class="required">*</span></label>
-                  <input id="receiver" name="receiver_name" maxlength="120" autocomplete="name" placeholder="Receiver full name" value="<?= htmlspecialchars($duplicate_voucher['receiver_name'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
+                  <label><span data-i18n="Full Name">Full Name</span> <span class="required">*</span></label>
+                  <input id="receiver" name="receiver_name" maxlength="120" autocomplete="name" placeholder="Receiver full name" data-i18n-placeholder="Receiver full name" value="<?= htmlspecialchars($duplicate_voucher['receiver_name'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
                 </div>
                 <div class="field">
-                  <label>Phone Number <span class="required">*</span></label>
-                  <input id="receiverPhone" name="receiver_phone" maxlength="32" autocomplete="tel" inputmode="tel" placeholder="Phone number" value="<?= htmlspecialchars($duplicate_voucher['receiver_phone'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
+                  <label><span data-i18n="Phone Number">Phone Number</span> <span class="required">*</span></label>
+                  <input id="receiverPhone" name="receiver_phone" maxlength="32" autocomplete="tel" inputmode="tel" placeholder="Phone number" data-i18n-placeholder="Phone number" value="<?= htmlspecialchars($duplicate_voucher['receiver_phone'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
                 </div>
                 <div class="field">
-                  <label>Delivery Address <span class="required">*</span></label>
-                  <textarea id="address" name="receiver_address" maxlength="500" autocomplete="street-address" placeholder="Delivery address" required><?= htmlspecialchars($duplicate_voucher['receiver_address'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+                  <label><span data-i18n="Delivery Address">Delivery Address</span> <span class="required">*</span></label>
+                  <textarea id="address" name="receiver_address" maxlength="500" autocomplete="street-address" placeholder="Delivery address" data-i18n-placeholder="Delivery address" required><?= htmlspecialchars($duplicate_voucher['receiver_address'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
                 </div>
               </div>
 
@@ -572,11 +1518,11 @@ include_template('header', ['page' => 'voucher_create']);
               <div class="card glass route">
                 <h3><span class="section-title"><span class="section-number">3</span><span data-i18n="Routing & Logistics">Routing &amp; Logistics</span></span><small data-i18n="Destination and service">Destination and service</small></h3>
                 <div class="routegrid">
-                  
+
                   <div class="field">
-                    <label>Origin Point</label>
+                    <label data-i18n="Origin Point">Origin Point</label>
                     <select id="origin" name="origin_point">
-                      <option value="">Select origin branch</option>
+                      <option value="" data-i18n="Select origin branch">Select origin branch</option>
                       <?php if (!empty($all_branches)): ?>
                         <?php foreach ($all_branches as $b): ?>
                           <option value="<?= htmlspecialchars($b['branch_name']) ?>" <?= ($b['id'] == ($user_info['branch_id'] ?? 0)) ? 'selected' : '' ?>>Myanmar → <?= htmlspecialchars($b['branch_name']) ?></option>
@@ -586,9 +1532,9 @@ include_template('header', ['page' => 'voucher_create']);
                   </div>
 
                   <div class="field">
-                    <label>Destination Region <span class="required">*</span></label>
+                    <label><span data-i18n="Destination Region">Destination Region</span> <span class="required">*</span></label>
                     <select id="region" name="destination_region_id" required>
-                      <option value="">Select destination</option>
+                      <option value="" data-i18n="Select destination">Select destination</option>
                       <?php foreach ($all_regions as $reg): ?>
                         <option value="<?= $reg['id'] ?>" data-prefix="<?= htmlspecialchars($reg['prefix'] ?? 'MBV') ?>" data-seq="<?= $reg['current_sequence'] ?? 0 ?>" data-name="<?= htmlspecialchars($reg['region_name']) ?>" <?= ($duplicate_voucher && ($duplicate_voucher['destination_region_id'] ?? 0) == $reg['id']) ? 'selected' : '' ?>>
                           <?= htmlspecialchars($reg['region_name']) ?>
@@ -598,27 +1544,27 @@ include_template('header', ['page' => 'voucher_create']);
                   </div>
 
                   <div class="field">
-                    <label>Destination Branch <span class="required">*</span></label>
+                    <label><span data-i18n="Destination Branch">Destination Branch</span> <span class="required">*</span></label>
                     <select id="branch" name="destination_branch_id" required>
-                      <option value="">Select region first</option>
+                      <option value="" data-i18n="Select region first">Select region first</option>
                     </select>
                   </div>
 
                   <div class="field">
-                    <label>Delivery Type <span class="required">*</span></label>
+                    <label><span data-i18n="Delivery Type">Delivery Type</span> <span class="required">*</span></label>
                     <div class="delivery">
                       <?php foreach ($delivery_types as $idx => $dt): ?>
                         <label class="radio">
                           <input type="radio" name="delivery_type" value="<?= htmlspecialchars($dt) ?>" <?= ($duplicate_voucher && ($duplicate_voucher['delivery_type'] ?? '') === $dt) ? 'checked' : '' ?> required>
-                          <?= htmlspecialchars($dt) ?>
+                          <span><?= htmlspecialchars($dt) ?></span>
                         </label>
                       <?php endforeach; ?>
                     </div>
                   </div>
 
                   <div class="field">
-                    <label>Currency <span class="required">*</span></label>
-                    <div class="currencies">
+                    <label><span data-i18n="Currency">Currency</span> <span class="required">*</span></label>
+                    <div class="currencies" role="radiogroup" aria-label="Currency selection">
                       <?php foreach ($currencies as $idx => $curr): ?>
                         <button type="button" class="<?= ($duplicate_voucher && ($duplicate_voucher['currency'] ?? '') === $curr) ? 'active' : '' ?>" data-currency="<?= htmlspecialchars($curr) ?>" aria-pressed="<?= ($duplicate_voucher && ($duplicate_voucher['currency'] ?? '') === $curr) ? 'true' : 'false' ?>">
                           <?= htmlspecialchars($curr) ?>
@@ -629,13 +1575,13 @@ include_template('header', ['page' => 'voucher_create']);
                   </div>
 
                   <div class="field">
-                    <label>Additional Delivery Charge</label>
-                    <input id="extra" name="delivery_charge" type="number" min="0" max="999999999" step=".01" value="<?= isset($duplicate_voucher['delivery_charge']) ? htmlspecialchars($duplicate_voucher['delivery_charge']) : '' ?>" placeholder="0.00" inputmode="decimal">
+                    <label data-i18n="Additional Delivery Charge">Additional Delivery Charge</label>
+                    <input id="extra" name="delivery_charge" type="number" min="0" max="999999999" step="0.01" value="<?= isset($duplicate_voucher['delivery_charge']) ? htmlspecialchars($duplicate_voucher['delivery_charge']) : '' ?>" placeholder="0.00" inputmode="decimal">
                   </div>
 
                   <div class="field full">
-                    <label>Operational Notes</label>
-                    <textarea id="notes" name="notes" maxlength="500" placeholder="Operational notes (optional)..."><?= htmlspecialchars($duplicate_voucher['notes'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+                    <label data-i18n="Operational Notes">Operational Notes</label>
+                    <textarea id="notes" name="notes" maxlength="500" placeholder="Operational notes (optional)..." data-i18n-placeholder="Operational notes (optional)..."><?= htmlspecialchars($duplicate_voucher['notes'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
                   </div>
 
                 </div>
@@ -650,21 +1596,24 @@ include_template('header', ['page' => 'voucher_create']);
                 <table class="table">
                   <thead>
                     <tr>
-                      <th>#</th>
-                      <th>Item Category</th>
-                      <th>Weight (kg)</th>
-                      <th>Price / Kg</th>
-                      <th>Total</th>
-                      <th></th>
+                      <th style="width:50px">#</th>
+                      <th data-i18n="Item Category">Item Category</th>
+                      <th data-i18n="Weight (kg)">Weight (kg)</th>
+                      <th data-i18n="Price / kg">Price / kg</th>
+                      <th data-i18n="Total" style="text-align:right">Total</th>
+                      <th style="width:60px;text-align:center" data-i18n="Action">Action</th>
                     </tr>
                   </thead>
                   <tbody id="rows"></tbody>
                 </table>
               </div>
-              <button type="button" class="add" id="addRow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="Add Item">Add Item</span></button>
+              <button type="button" class="add" id="addRow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:16px;height:16px"><path d="M12 5v14M5 12h14"/></svg>
+                <span data-i18n="Add Item">Add Item</span>
+              </button>
               <div class="totals">
-                <span>Total Weight <strong id="weightTotal">0.00 kg</strong></span>
-                <span>Grand Total <strong id="grandTotal">0 MMK</strong></span>
+                <span><span data-i18n="Total Weight">Total Weight</span> <strong id="weightTotal">0.00 kg</strong></span>
+                <span><span data-i18n="Grand Total">Grand Total</span> <strong id="grandTotal">0 MMK</strong></span>
               </div>
             </div>
 
@@ -672,30 +1621,39 @@ include_template('header', ['page' => 'voucher_create']);
 
           <!-- RIGHT COLUMN: Order Summary, Live Tracking & Voucher Preview Paper -->
           <aside class="right">
-            
+
             <!-- Summary Card -->
             <div class="summary glass">
-              <h3>Order Summary <span class="status">Pending</span></h3>
-              <div class="sum"><span>Subtotal</span><b id="subtotal">0 MMK</b></div>
+              <h3><span data-i18n="Order Summary">Order Summary</span> <span class="status" data-i18n="Pending">Pending</span></h3>
+              <div class="sum"><span data-i18n="Subtotal">Subtotal</span><b id="subtotal">0 MMK</b></div>
               <div class="sum"><span data-i18n="Delivery Charge">Delivery Charge</span><b id="extraSum">0</b></div>
               <div class="grand">
-                <span>Grand Total</span>
+                <span data-i18n="Grand Total">Grand Total</span>
                 <strong id="grand2">0 MMK</strong>
               </div>
               <div class="actions">
-                <button type="submit" class="primary" id="create"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="Create Ledger Entry">Create Ledger Entry</span></button>
-                <button type="button" class="secondary" id="print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg><span data-i18n="Preview and Print Voucher">Preview / Print Voucher</span></button>
+                <button type="submit" class="primary" id="create">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:16px;height:16px"><path d="M20 6 9 17l-5-5"/></svg>
+                  <span data-i18n="Create Ledger Entry">Create Ledger Entry</span>
+                </button>
+                <button type="button" class="secondary" id="print">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:16px;height:16px"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                  <span data-i18n="Preview and Print Voucher">Preview / Print Voucher</span>
+                </button>
               </div>
-              <div id="requestStatus" class="request-status"></div>
+              <div id="requestStatus" class="request-status" role="status" aria-live="polite"></div>
             </div>
 
             <!-- Tracking Card -->
             <div class="tracking glass">
-              <h3>Tracking & Voucher Info</h3>
-              <div class="line">Voucher ID</div>
+              <h3 data-i18n="Tracking & Voucher Info">Tracking &amp; Voucher Info</h3>
+              <div class="line" data-i18n="Voucher Code">Voucher Code</div>
               <b id="pvoucher"><?= htmlspecialchars($preview_voucher_code) ?></b>
-              <div class="line">Tracking Number</div>
+              <div class="line" data-i18n="Tracking Number">Tracking Number</div>
               <b id="tracking"><?= htmlspecialchars($preview_tracking_no) ?></b>
+
+              <div class="barcode" aria-hidden="true"></div>
+
               <div class="track-bottom">
                 <div>
                   <b data-i18n="Shipment Status">Shipment Status</b>
@@ -710,8 +1668,8 @@ include_template('header', ['page' => 'voucher_create']);
             <!-- Live Printable Voucher Paper Preview -->
             <div class="preview glass">
               <div class="previewbar">
-                <b style="font-size:12px">Voucher Preview</b>
-                <button type="button" class="secondary" id="print2" style="width:auto;padding:6px 12px;font-size:10px">Print</button>
+                <b style="font-size:13px;font-weight:800" data-i18n="Voucher Preview">Voucher Preview</b>
+                <button type="button" class="secondary" id="print2" style="width:auto;padding:6px 14px;font-size:11px" data-i18n="Print">Print</button>
               </div>
               <div class="paper" id="paper">
                 <div class="phead">
@@ -719,68 +1677,68 @@ include_template('header', ['page' => 'voucher_create']);
                     <img class="pbrand-logo" src="bg.jpg" alt="MB Logistics logo">
                     <div>
                       <strong>MBLOGISTICS</strong>
-                      <div style="font-size:7px;color:#64748b;font-weight:700">FAST · SAFE · GLOBAL</div>
+                      <div style="font-size:7.5px;color:#64748b;font-weight:700">FAST · SAFE · GLOBAL</div>
                     </div>
                   </div>
-                  <small>SHIPMENT VOUCHER<br><b style="color:var(--blue)">V5 · ORIGINAL PRINT STYLE</b></small>
+                  <small>SHIPMENT VOUCHER<br><b style="color:#0b6ff5">V5 · ORIGINAL PRINT STYLE</b></small>
                 </div>
-                <div style="display:flex;justify-content:space-between;font-size:7px;margin-top:9px;color:#64748b">
+                <div style="display:flex;justify-content:space-between;font-size:8px;margin-top:10px;color:#64748b">
                   <span>Voucher: <b id="pno" style="color:#0f172a"><?= htmlspecialchars($preview_voucher_code) ?></b></span>
                   <span>Tracking: <b id="ptracking" style="color:#0f172a"><?= htmlspecialchars($preview_tracking_no) ?></b></span>
                 </div>
-                
-                <h4>Sender & Receiver</h4>
+
+                <h4 data-i18n="Sender & Receiver">Sender &amp; Receiver</h4>
                 <div class="pgrid">
                   <div class="pbox">
-                    <b>Sender</b>
+                    <b data-i18n="Sender">Sender</b>
                     <span id="psender">Not entered</span><br>
                     <span id="psphone" style="color:#64748b">Not entered</span>
                   </div>
                   <div class="pbox">
-                    <b>Receiver</b>
+                    <b data-i18n="Receiver">Receiver</b>
                     <span id="preceiver">Not entered</span><br>
                     <span id="prphone" style="color:#64748b">Not entered</span>
                   </div>
                   <div class="pbox full">
-                    <b>Delivery Address</b>
+                    <b data-i18n="Delivery Address">Delivery Address</b>
                     <span id="paddress">Not entered</span>
                   </div>
                 </div>
 
-                <h4>Routing & Logistics</h4>
+                <h4 data-i18n="Routing & Logistics">Routing &amp; Logistics</h4>
                 <div class="pbox full">
                   <span id="porigin">Select origin</span> · <span id="pregion">Select destination</span> · <span id="pbranch">Select branch</span><br>
-                  <span id="pdelivery" style="font-weight:700;color:#126bd3">Select delivery type</span> · <span id="pcurrency" style="font-weight:700">Select currency</span>
+                  <span id="pdelivery" style="font-weight:700;color:#0b6ff5">Select delivery type</span> · <span id="pcurrency" style="font-weight:700">Select currency</span>
                 </div>
 
-                <h4>Item Breakdown</h4>
+                <h4 data-i18n="Item Breakdown">Item Breakdown</h4>
                 <table>
                   <thead>
                     <tr>
-                      <th>Category</th>
-                      <th>Weight</th>
-                      <th>Price/Kg</th>
-                      <th>Total</th>
+                      <th data-i18n="Category">Category</th>
+                      <th data-i18n="Weight">Weight</th>
+                      <th data-i18n="Price/Kg">Price/Kg</th>
+                      <th data-i18n="Total">Total</th>
                     </tr>
                   </thead>
                   <tbody id="prows"></tbody>
                 </table>
 
                 <div class="paper-total">
-                  <span>Total Weight: <span id="pweight">0.00 kg</span></span>
-                  <span>Grand Total: <strong id="ptotal">0 MMK</strong></span>
+                  <span><span data-i18n="Total Weight">Total Weight</span>: <span id="pweight">0.00 kg</span></span>
+                  <span><span data-i18n="Grand Total">Grand Total</span>: <strong id="ptotal">0 MMK</strong></span>
                 </div>
 
                 <div class="legacy-print-notes">
-                  <b>Important Notes</b>
+                  <b data-i18n="Important Notes">Important Notes</b>
                   <ol>
                     <li>ဥပဒေနှင့်မလွတ်ကင်းသောပစ္စည်းများ လုံးဝ လက်မခံပါ။</li>
                     <li>ပစ္စည်းအမျိုးအစားကို မှန်ကန်စွာကြေညာပြီး လုံခြုံရေးစစ်ဆေးမှုကို လက်ခံရပါမည်။</li>
                     <li>အစားအသောက်နှင့် ပျက်စီးလွယ်သောပစ္စည်းများကို သတ်မှတ်ချက်အတိုင်း ထုပ်ပိုးရပါမည်။</li>
                   </ol>
                 </div>
-                
-                <div style="border-top:1px solid #dce5ef;padding-top:8px;font-size:7px;color:#64748b;line-height:1.4">
+
+                <div style="border-top:1px solid #dce5ef;padding-top:10px;margin-top:10px;font-size:7.5px;color:#64748b;line-height:1.45">
                   Keep this voucher for tracking and enquiry support. Delivery timing may vary by destination. Operational notes are visible to authorized logistics personnel only.
                 </div>
               </div>
@@ -796,7 +1754,7 @@ include_template('header', ['page' => 'voucher_create']);
 </div>
 
 <!-- Floating Toast Container -->
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 // Data injected from backend database
@@ -817,11 +1775,13 @@ const escapeHtml = s => String(s ?? "").replace(/[&<>"']/g, character => ({
   '"': "&quot;",
   "'": "&#039;"
 })[character]);
+
 const toast = t => {
   const x = byId("toast");
+  if (!x) return;
   x.textContent = t;
   x.classList.add("show");
-  setTimeout(() => x.classList.remove("show"), 2500);
+  setTimeout(() => x.classList.remove("show"), 2800);
 };
 
 // Add Item Row Function
@@ -832,7 +1792,7 @@ function addRow(data = {}) {
   const weightVal = (data.weight !== undefined && data.weight !== null && data.weight !== "") ? data.weight : "";
   const priceVal = (data.price !== undefined && data.price !== null && data.price !== "") ? data.price : "";
   tr.innerHTML = `
-    <td class="num" data-label="Item"></td>
+    <td class="num" data-label="Item" style="font-weight:800;color:var(--vc-blue)"></td>
     <td data-label="Item Category">
       <select class="category" name="item_type[]" required aria-label="Item category">
         <option value="">Select category</option>
@@ -845,11 +1805,11 @@ function addRow(data = {}) {
     <td data-label="Price / kg">
       <input class="price" name="item_price_per_kg[]" type="number" min="0" max="999999999" step="0.01" value="${priceVal}" placeholder="0.00" required inputmode="decimal" aria-label="Price per kilogram">
     </td>
-    <td class="lineTotal" data-label="Total" style="font-weight:700;color:#1e293b;text-align:right">0</td>
-    <td data-label="Action"><button type="button" class="remove" title="Remove item" aria-label="Remove item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15M10 10v7m4-7v7"/></svg></button></td>
+    <td class="lineTotal" data-label="Total" style="font-weight:800;color:#0f2238;text-align:right">0</td>
+    <td data-label="Action" style="text-align:center"><button type="button" class="remove" title="Remove item" aria-label="Remove item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:17px;height:17px"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15M10 10v7m4-7v7"/></svg></button></td>
   `;
   byId("rows").appendChild(tr);
-  
+
   tr.querySelectorAll("input,select").forEach(el => el.addEventListener("input", update));
   tr.querySelector(".remove").onclick = () => {
     if (document.querySelectorAll("#rows tr").length <= 1) {
@@ -866,7 +1826,7 @@ function addRow(data = {}) {
 function update() {
   let subtotal = 0, totalWeight = 0;
   const prows = [];
-  
+
   document.querySelectorAll("#rows tr").forEach((tr, i) => {
     tr.querySelector(".num").textContent = i + 1;
     const w = Math.max(0, +tr.querySelector(".weight").value || 0);
@@ -875,7 +1835,8 @@ function update() {
     subtotal += line;
     totalWeight += w;
     tr.querySelector(".lineTotal").textContent = Number(line).toLocaleString();
-    prows.push(`<tr><td>${escapeHtml(tr.querySelector(".category").value)}</td><td>${w.toFixed(2)} kg</td><td>${Number(p).toLocaleString()}</td><td>${Number(line).toLocaleString()}</td></tr>`);
+    const catVal = tr.querySelector(".category").value;
+    prows.push(`<tr><td>${escapeHtml(catVal || 'Unspecified')}</td><td>${w.toFixed(2)} kg</td><td>${Number(p).toLocaleString()}</td><td>${Number(line).toLocaleString()}</td></tr>`);
   });
 
   const extra = Math.max(0, +byId("extra").value || 0);
@@ -901,11 +1862,11 @@ function update() {
   byId("porigin").textContent = safeText(byId("origin").value) || "Select origin";
 
   const regSel = byId("region");
-  const regText = regSel.selectedIndex >= 0 && regSel.options[regSel.selectedIndex] ? regSel.options[regSel.selectedIndex].text : "Select destination";
+  const regText = regSel.selectedIndex >= 0 && regSel.options[regSel.selectedIndex] && regSel.value ? regSel.options[regSel.selectedIndex].text : "Select destination";
   byId("pregion").textContent = regText;
 
   const branchSel = byId("branch");
-  const branchText = branchSel.selectedIndex >= 0 && branchSel.options[branchSel.selectedIndex] ? branchSel.options[branchSel.selectedIndex].text : "Select branch";
+  const branchText = branchSel.selectedIndex >= 0 && branchSel.options[branchSel.selectedIndex] && branchSel.value ? branchSel.options[branchSel.selectedIndex].text : "Select branch";
   byId("pbranch").textContent = branchText;
 
   byId("pcurrency").textContent = currency || "Select currency";
@@ -918,7 +1879,7 @@ function update() {
 
 function updateSteps() {
   const hasCustomer = (byId("sender").value.trim() && byId("receiver").value.trim() && byId("address").value.trim());
-  const hasRouting = (byId("region").value && byId("branch").value);
+  const hasRouting = (byId("region").value && byId("branch").value && byId("currency_input").value);
   const hasItems = [...document.querySelectorAll("#rows tr")].some(tr =>
     tr.querySelector(".category").value && Number(tr.querySelector(".weight").value) > 0
   );
@@ -956,8 +1917,10 @@ function loadBranches(regionId) {
 function bindCurrencies() {
   document.querySelectorAll("[data-currency]").forEach(b => {
     b.onclick = () => {
-      document.querySelectorAll("[data-currency]").forEach(x => x.classList.remove("active"));
-      document.querySelectorAll("[data-currency]").forEach(x => x.setAttribute("aria-pressed", "false"));
+      document.querySelectorAll("[data-currency]").forEach(x => {
+        x.classList.remove("active");
+        x.setAttribute("aria-pressed", "false");
+      });
       b.classList.add("active");
       b.setAttribute("aria-pressed", "true");
       currency = b.dataset.currency;
@@ -1091,6 +2054,7 @@ if (duplicateCurrency) {
   byId("currency_input").value = currency;
   document.querySelectorAll("[data-currency]").forEach(b => {
     b.classList.toggle("active", b.dataset.currency === currency);
+    b.setAttribute("aria-pressed", b.dataset.currency === currency ? "true" : "false");
   });
 }
 

@@ -1,5 +1,5 @@
 <?php
-// pos/item_types.php - CRUD management for Item Types (V3 Premium UI).
+// pos/item_types.php - CRUD management for Item Types (V5 Modern Enterprise).
 require_once 'config.php';
 require_once 'includes/functions.php';
 require_once 'includes/cache.php';
@@ -11,28 +11,30 @@ if (!is_logged_in() || (!is_admin() && !is_developer())) {
 }
 
 global $connection;
-
-// --- CRITICAL FIX FOR MYANMAR FONTS ---
-// Forces the database connection to use full UTF-8, preventing mojibake/garbled text
 mysqli_set_charset($connection, "utf8mb4");
 
 $edit_item = null;
 
 // --- Handle POST Request (Add or Update) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    require_csrf_request();
     $item_id = intval($_POST['delete_id']);
     $stmt = mysqli_prepare($connection, "DELETE FROM item_types WHERE id = ?");
     mysqli_stmt_bind_param($stmt, 'i', $item_id);
     if (mysqli_stmt_execute($stmt)) {
+        mbpos_cache_forget_namespace('lookup-items');
         mbpos_cache_del(mbpos_cache_key('lookup-items', 'all'));
-        flash_message('success', 'Item category deleted.');
+        flash_message('success', 'Item category deleted successfully.');
+    } else {
+        flash_message('error', 'Cannot delete this item category because active vouchers may reference it.');
     }
     mysqli_stmt_close($stmt);
     redirect('index.php?page=item_types');
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = trim($_POST['name']);
+    require_csrf_request();
+    $name = trim($_POST['name'] ?? '');
     $item_id = intval($_POST['item_id'] ?? 0);
 
     if (empty($name)) {
@@ -42,172 +44,146 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = mysqli_prepare($connection, "UPDATE item_types SET name = ? WHERE id = ?");
             mysqli_stmt_bind_param($stmt, 'si', $name, $item_id);
             if(mysqli_stmt_execute($stmt)) {
+                mbpos_cache_forget_namespace('lookup-items');
                 mbpos_cache_del(mbpos_cache_key('lookup-items', 'all'));
                 flash_message('success', 'Item category updated successfully.');
+            } else {
+                flash_message('error', 'Failed to update item category.');
             }
+            mysqli_stmt_close($stmt);
         } else { // Add
             $stmt = mysqli_prepare($connection, "INSERT INTO item_types (name) VALUES (?)");
             mysqli_stmt_bind_param($stmt, 's', $name);
             if(mysqli_stmt_execute($stmt)) {
+                mbpos_cache_forget_namespace('lookup-items');
                 mbpos_cache_del(mbpos_cache_key('lookup-items', 'all'));
                 flash_message('success', 'Item category added successfully.');
+            } else {
+                flash_message('error', 'Failed to add item category.');
             }
+            mysqli_stmt_close($stmt);
         }
     }
     redirect('index.php?page=item_types');
 }
 
-// --- Handle GET Request (Delete or Edit) ---
+// --- Handle GET Request (Edit) ---
 if (isset($_GET['action'])) {
     $id = intval($_GET['id'] ?? 0);
-    if ($_GET['action'] === 'delete' && $id > 0 && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        $stmt = mysqli_prepare($connection, "DELETE FROM item_types WHERE id = ?");
-        mysqli_stmt_bind_param($stmt, 'i', $id);
-        if(mysqli_stmt_execute($stmt)) {
-            mbpos_cache_del(mbpos_cache_key('lookup-items', 'all'));
-            flash_message('success', 'Item category deleted.');
-        }
-        redirect('index.php?page=item_types');
-    } elseif ($_GET['action'] === 'delete' && $id > 0) {
-        flash_message('warning', 'Please confirm deletion using the form button.');
-        redirect('index.php?page=item_types');
-    }
     if ($_GET['action'] === 'edit' && $id > 0) {
         $stmt = mysqli_prepare($connection, "SELECT * FROM item_types WHERE id = ?");
         mysqli_stmt_bind_param($stmt, 'i', $id);
         mysqli_stmt_execute($stmt);
-        $edit_item = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+        $result = mysqli_stmt_get_result($stmt);
+        $edit_item = mysqli_fetch_assoc($result);
+        mysqli_stmt_close($stmt);
     }
 }
 
-// --- Fetch all item types ---
-$item_types = [];
-$result = mysqli_query($connection, "SELECT * FROM item_types ORDER BY name ASC");
-if($result) while($row = mysqli_fetch_assoc($result)) $item_types[] = $row;
-
+// --- Fetch all item types with cache ---
+$item_types = mbpos_cache_remember('lookup-items', 'all', 120, function () use ($connection) {
+    $rows = [];
+    $result = mysqli_query($connection, "SELECT * FROM item_types ORDER BY name ASC");
+    if($result) {
+        while($row = mysqli_fetch_assoc($result)) $rows[] = $row;
+    }
+    return $rows;
+});
 
 include_template('header', ['page' => 'item_types']);
 ?>
 
-<!-- V3 Liquid UI Wrapper -->
-<div class="relative min-h-[85vh] bg-gray-50/30 p-4 sm:p-8 overflow-hidden font-sans">
-    
-    <!-- Ambient Background Glows -->
-    <div class="absolute top-[10%] left-[-10%] w-[500px] h-[500px] bg-rose-400/10 rounded-full blur-[120px] pointer-events-none"></div>
-    <div class="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-fuchsia-400/10 rounded-full blur-[120px] pointer-events-none"></div>
-
-    <div class="max-w-7xl mx-auto relative z-10">
-        
-        <!-- Header -->
-        <div class="flex items-center gap-4 mb-8">
-            <div class="w-14 h-14 bg-gradient-to-br from-rose-500 to-fuchsia-600 rounded-2xl flex items-center justify-center shadow-lg shadow-fuchsia-500/30 text-white transform -rotate-3 hover:rotate-0 transition-transform duration-300">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-            </div>
-            <div>
-                <h1 class="text-3xl font-extrabold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent tracking-tight">Item Categories</h1>
-                <p class="text-sm font-medium text-gray-500">Configure logistics parcel and cargo classifications</p>
-            </div>
+<div class="v5-page">
+    <div class="v5-page-head">
+        <div class="v5-page-head__copy">
+            <span class="v5-kicker" data-i18n="Configuration">Configuration</span>
+            <h1 data-i18n="Item Categories">Item Categories</h1>
+            <p data-i18n="Configure logistics parcel and cargo classifications.">Configure logistics parcel and cargo classifications.</p>
         </div>
+        <div class="v5-page-actions">
+            <span class="v5-count"><?= count($item_types) ?> <span data-i18n="Categories">Categories</span></span>
+        </div>
+    </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
-            <!-- LEFT COLUMN: CRUD FORM -->
-            <div class="lg:col-span-4">
-                <div class="bg-white/80 backdrop-blur-2xl p-6 sm:p-8 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60 sticky top-28">
-                    
-                    <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                            <svg class="w-5 h-5 <?= $edit_item ? 'text-amber-500' : 'text-fuchsia-500' ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <?php if($edit_item): ?>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                <?php else: ?>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                <?php endif; ?>
-                            </svg>
-                            <?= $edit_item ? 'Edit Category' : 'Add Category' ?>
-                        </h2>
-                        <?php if($edit_item): ?>
-                            <a href="index.php?page=item_types" class="text-xs font-bold text-gray-400 hover:text-red-500 transition-colors uppercase tracking-wider">Cancel</a>
-                        <?php endif; ?>
-                    </div>
-                    
-                    <!-- Enforce UTF-8 form submission for Myanmar language -->
-                    <form action="index.php?page=item_types" method="POST" accept-charset="UTF-8" class="space-y-5">
-                        <input type="hidden" name="item_id" value="<?= $edit_item['id'] ?? '' ?>">
-                        
-                        <div class="space-y-1.5 group">
-                            <label for="name" class="block text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Category Name</label>
-                            <input type="text" id="name" name="name" class="w-full rounded-2xl border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 transition-all py-3 px-4 font-medium text-gray-800 shadow-sm placeholder-gray-300" placeholder="e.g. Document / စာရွက်စာတမ်း" value="<?= htmlspecialchars($edit_item['name'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
-                            <p class="text-[10px] font-medium text-gray-400 ml-1 mt-1">Supports English and Myanmar (Unicode)</p>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- Form Column -->
+        <div class="lg:col-span-4">
+            <section class="v5-panel">
+                <div class="v5-panel__head">
+                    <h2 data-i18n="<?= $edit_item ? 'Edit Category' : 'Add Category' ?>"><?= $edit_item ? 'Edit Category' : 'Add Category' ?></h2>
+                    <?php if($edit_item): ?>
+                        <a href="index.php?page=item_types" class="btn-ghost btn-sm" data-i18n="Cancel">Cancel</a>
+                    <?php endif; ?>
+                </div>
+                <div class="v5-panel__body">
+                    <form action="index.php?page=item_types" method="POST" accept-charset="UTF-8" class="space-y-4">
+                        <?= csrf_input() ?>
+                        <input type="hidden" name="item_id" value="<?= (int)($edit_item['id'] ?? 0) ?>">
+
+                        <div class="v5-field">
+                            <label for="name" class="v5-field-label" data-i18n="Category Name">Category Name</label>
+                            <input type="text" id="name" name="name" class="v5-input" placeholder="e.g. Document / စာရွက်စာတမ်း" value="<?= e($edit_item['name'] ?? '') ?>" required autofocus>
+                            <p class="v5-field-hint" data-i18n="Supports English and Myanmar (Unicode)">Supports English and Myanmar (Unicode)</p>
                         </div>
 
-                        <div class="pt-4">
-                            <?php if ($edit_item): ?>
-                                <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white py-3.5 px-4 rounded-2xl font-bold text-md hover:from-amber-600 hover:to-orange-600 focus:outline-none focus:ring-4 focus:ring-amber-500/30 shadow-[0_8px_20px_rgb(245,158,11,0.3)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M7 7l13 13M20 20v-5h-5"/></svg>
-                                    Update Category
-                                </button>
-                            <?php else: ?>
-                                <button type="submit" class="w-full bg-gradient-to-r from-rose-500 to-fuchsia-600 text-white py-3.5 px-4 rounded-2xl font-bold text-md hover:from-rose-600 hover:to-fuchsia-700 focus:outline-none focus:ring-4 focus:ring-fuchsia-500/30 shadow-[0_8px_20px_rgb(217,70,239,0.3)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                                    Register Category
-                                </button>
-                            <?php endif; ?>
+                        <div class="pt-2">
+                            <button type="submit" class="btn-primary w-full" data-i18n="<?= $edit_item ? 'Update Category' : 'Register Category' ?>">
+                                <?= $edit_item ? 'Update Category' : 'Register Category' ?>
+                            </button>
                         </div>
                     </form>
                 </div>
-            </div>
+            </section>
+        </div>
 
-            <!-- RIGHT COLUMN: DATA TABLE -->
-            <div class="lg:col-span-8">
-                <div class="bg-white/70 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60 overflow-hidden h-full flex flex-col">
-                    
-                    <div class="p-6 sm:p-8 border-b border-gray-100 flex items-center justify-between bg-white/50">
-                        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-                            Active Categories
-                        </h2>
-                        <span class="bg-fuchsia-50 text-fuchsia-600 py-1 px-3 rounded-full text-xs font-bold border border-fuchsia-100 shadow-sm">
-                            <?= count($item_types) ?> Types
-                        </span>
-                    </div>
-
-                    <div class="overflow-x-auto w-full custom-scrollbar flex-1 p-2">
-                        <table class="w-full text-left border-collapse whitespace-nowrap">
+        <!-- Table Column -->
+        <div class="lg:col-span-8">
+            <section class="v5-panel">
+                <div class="v5-panel__head">
+                    <h2 data-i18n="Active Categories">Active Categories</h2>
+                    <span class="v5-badge v5-badge-info"><?= count($item_types) ?> <span data-i18n="configured">configured</span></span>
+                </div>
+                <div class="v5-panel__body p-0">
+                    <div class="overflow-x-auto">
+                        <table class="v5-table w-full">
                             <thead>
                                 <tr>
-                                    <th class="py-4 px-6 text-xs font-extrabold text-gray-400 uppercase tracking-widest border-b border-gray-100 w-16">ID</th>
-                                    <th class="py-4 px-6 text-xs font-extrabold text-gray-400 uppercase tracking-widest border-b border-gray-100">Category Name</th>
-                                    <th class="py-4 px-6 text-xs font-extrabold text-gray-400 uppercase tracking-widest border-b border-gray-100 text-right">Actions</th>
+                                    <th style="width:70px;">ID</th>
+                                    <th data-i18n="Category Name">Category Name</th>
+                                    <th class="text-right" data-i18n="Actions">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100/60">
+                            <tbody>
                                 <?php if (empty($item_types)): ?>
                                     <tr>
-                                        <td colspan="3" class="py-12 text-center text-gray-400 font-medium">No item categories configured.</td>
+                                        <td colspan="3">
+                                            <div class="v5-empty">
+                                                <span class="v5-empty__icon">◇</span>
+                                                <strong data-i18n="No item categories configured.">No item categories configured.</strong>
+                                                <p data-i18n="Use the form on the left to add a new category.">Use the form on the left to add a new category.</p>
+                                            </div>
+                                        </td>
                                     </tr>
                                 <?php else: ?>
                                     <?php foreach ($item_types as $item): ?>
-                                        <tr class="hover:bg-white/90 transition-colors duration-200 group">
-                                            <td class="py-4 px-6">
-                                                <span class="text-sm font-bold text-gray-400">
-                                                    #<?= $item['id'] ?>
-                                                </span>
+                                        <tr>
+                                            <td><span class="font-mono text-muted text-xs">#<?= (int)$item['id'] ?></span></td>
+                                            <td>
+                                                <strong class="font-semibold text-main"><?= e($item['name']) ?></strong>
                                             </td>
-                                            <td class="py-4 px-6">
-                                                <!-- ENT_QUOTES | UTF-8 prevents corruption of Myanmar encoding -->
-                                                <span class="font-bold text-gray-800"><?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?></span>
-                                            </td>
-                                            <td class="py-4 px-6 text-right space-x-2">
-                                                <a href="index.php?page=item_types&action=edit&id=<?= $item['id'] ?>" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gray-50 text-gray-500 hover:text-amber-500 hover:bg-amber-50 hover:shadow-sm border border-transparent hover:border-amber-100 transition-all" title="Edit">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                                </a>
-                                                <form method="POST" action="index.php?page=item_types&action=delete&id=<?= (int)$item['id'] ?>" class="inline" onsubmit="return confirm('Delete this category?');">
-                                                    <?= csrf_input() ?><input type="hidden" name="delete_id" value="<?= (int)$item['id'] ?>">
-                                                    <button type="submit" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gray-50 text-gray-500 hover:text-red-500 hover:bg-red-50 hover:shadow-sm border border-transparent hover:border-red-100 transition-all" title="Delete">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                                    </button>
-                                                </form>
+                                            <td class="text-right">
+                                                <div class="flex items-center justify-end gap-2">
+                                                    <a href="index.php?page=item_types&action=edit&id=<?= (int)$item['id'] ?>" class="btn-ghost btn-sm" title="Edit" data-i18n="Edit">
+                                                        Edit
+                                                    </a>
+                                                    <form method="POST" action="index.php?page=item_types" class="inline" onsubmit="return confirm('Delete this category?');">
+                                                        <?= csrf_input() ?>
+                                                        <input type="hidden" name="delete_id" value="<?= (int)$item['id'] ?>">
+                                                        <button type="submit" class="btn-ghost btn-sm text-danger hover:bg-red-50" title="Delete" data-i18n="Delete">
+                                                            Delete
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -216,29 +192,9 @@ include_template('header', ['page' => 'item_types']);
                         </table>
                     </div>
                 </div>
-            </div>
-
+            </section>
         </div>
     </div>
 </div>
-
-<style>
-    /* Custom scrollbar to keep horizontal scrolling elegant on desktop */
-    .custom-scrollbar::-webkit-scrollbar {
-        height: 6px;
-        width: 6px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: rgba(243, 244, 246, 0.5); 
-        border-radius: 4px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(156, 163, 175, 0.5); 
-        border-radius: 4px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(107, 114, 128, 0.8); 
-    }
-</style>
 
 <?php include_template('footer'); ?>

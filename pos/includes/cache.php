@@ -139,6 +139,28 @@ function mbpos_cache_remember($namespace, $key_value, $ttl, callable $callback) 
     return $fresh;
 }
 
+function mbpos_cache_forget($namespace, $value) {
+    return mbpos_cache_del(mbpos_cache_key($namespace, $value));
+}
+
+function mbpos_cache_forget_namespace($namespace) {
+    $redis = mbpos_redis_connection();
+    if (!$redis) return false;
+    try {
+        $prefix = getenv('MBPOS_CACHE_PREFIX') ?: 'mbpos:v5';
+        $safe_prefix = preg_replace('/[^a-z0-9:_-]/i', '_', $prefix);
+        $pattern = $safe_prefix . ':' . preg_replace('/[^a-z0-9:_-]/i', '_', $namespace) . ':*';
+        $keys = $redis->keys($pattern);
+        if (!empty($keys)) {
+            $redis->del($keys);
+        }
+        return true;
+    } catch (Throwable $exception) {
+        error_log('MBPOS Redis forget namespace failed: ' . $exception->getMessage());
+        return false;
+    }
+}
+
 function mbpos_cache_status() {
     $redis = mbpos_redis_connection();
     if (!$redis) return ['enabled' => false, 'latency_ms' => null];

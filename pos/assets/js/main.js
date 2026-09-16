@@ -230,6 +230,14 @@ document.addEventListener('DOMContentLoaded', function () {
         "Apply Changes": "ပြောင်းလဲချက်များ အတည်ပြုရန်",
         "Apply Bulk Updates": "အစုလိုက် မွမ်းမံမှု အတည်ပြုရန်",
         "Reset Filters": "စစ်ထုတ်မှုများ ပြန်လည်သတ်မှတ်ရန်",
+        "Duplicate as New": "အသစ်အဖြစ် ကူးယူရန်",
+        "Keyboard Shortcuts": "ကီးဘုတ် ဖြတ်လမ်းများ",
+        "Command Palette / Global Search": "အမြန်ညွှန်ကြားချက် / အထွေထွေရှာဖွေမှု",
+        "Create New Voucher": "ဘောက်ချာအသစ် ဖန်တီးရန်",
+        "Shipments Queue": "ပို့ဆောင်ရေး စာရင်း",
+        "Shortcuts Cheat Sheet": "ဖြတ်လမ်း လမ်းညွှန်",
+        "Close Dialog / Menu": "ပိတ်ရန်",
+        "Back to Ledger": "စာရင်းသို့ ပြန်သွားရန်",
 
         // Data Fields
         "Voucher Code": "ဘောက်ချာကုဒ်",
@@ -432,16 +440,68 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        const shortcutsModal = document.getElementById('mbpos-shortcuts-modal');
+        const shortcutsClose = document.getElementById('mbpos-shortcuts-close');
+        const shortcutsBackdrop = shortcutsModal ? shortcutsModal.querySelector('.mbpos-cmd-backdrop') : null;
+
+        function openShortcutsModal() {
+            if (!shortcutsModal) return;
+            shortcutsModal.hidden = false;
+        }
+
+        function closeShortcutsModal() {
+            if (!shortcutsModal) return;
+            shortcutsModal.hidden = true;
+        }
+
+        if (shortcutsClose) shortcutsClose.addEventListener('click', closeShortcutsModal);
+        if (shortcutsBackdrop) shortcutsBackdrop.addEventListener('click', closeShortcutsModal);
+
+        function isTypingInField(el) {
+            if (!el) return false;
+            const tag = (el.tagName || '').toLowerCase();
+            return tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable;
+        }
+
         document.addEventListener('keydown', function (event) {
             if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
                 event.preventDefault();
                 if (cmdModal && !cmdModal.hidden) {
                     closeCommandPalette();
                 } else {
+                    if (shortcutsModal && !shortcutsModal.hidden) closeShortcutsModal();
                     openCommandPalette();
                 }
-            } else if (event.key === 'Escape' && cmdModal && !cmdModal.hidden) {
-                closeCommandPalette();
+                return;
+            }
+
+            if (event.key === 'Escape') {
+                if (cmdModal && !cmdModal.hidden) closeCommandPalette();
+                if (shortcutsModal && !shortcutsModal.hidden) closeShortcutsModal();
+                if (sidebar && sidebar.classList.contains('drawer-open')) toggleMobileDrawer(false);
+                return;
+            }
+
+            // Keyboard shortcuts helper (?) and quick single-key jumps (N, L, S) when not typing in an input
+            if (!event.metaKey && !event.ctrlKey && !event.altKey && !isTypingInField(document.activeElement)) {
+                if (event.key === '?') {
+                    event.preventDefault();
+                    if (shortcutsModal && !shortcutsModal.hidden) {
+                        closeShortcutsModal();
+                    } else {
+                        if (cmdModal && !cmdModal.hidden) closeCommandPalette();
+                        openShortcutsModal();
+                    }
+                } else if (event.key === 'n' || event.key === 'N') {
+                    event.preventDefault();
+                    window.location.href = 'index.php?page=voucher_create';
+                } else if (event.key === 'l' || event.key === 'L') {
+                    event.preventDefault();
+                    window.location.href = 'index.php?page=voucher_list';
+                } else if (event.key === 's' || event.key === 'S') {
+                    event.preventDefault();
+                    window.location.href = 'index.php?page=stock_list';
+                }
             }
         });
 
@@ -516,6 +576,40 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (sidebarClose) {
             sidebarClose.addEventListener('click', () => toggleMobileDrawer(false));
+        }
+    });
+
+    // -------------------------------------------------------------------------
+    // Unsaved Work Guard (beforeunload protection)
+    // -------------------------------------------------------------------------
+    let isFormDirty = false;
+    let isFormSubmitting = false;
+
+    document.addEventListener('input', function (e) {
+        const form = e.target.closest('form[data-protect-unsaved], #voucherForm, #voucher-form');
+        if (form) {
+            isFormDirty = true;
+        }
+    });
+
+    document.addEventListener('change', function (e) {
+        const form = e.target.closest('form[data-protect-unsaved], #voucherForm, #voucher-form');
+        if (form) {
+            isFormDirty = true;
+        }
+    });
+
+    document.addEventListener('submit', function (e) {
+        const form = e.target.closest('form');
+        if (form) {
+            isFormSubmitting = true;
+        }
+    });
+
+    window.addEventListener('beforeunload', function (e) {
+        if (isFormDirty && !isFormSubmitting) {
+            e.preventDefault();
+            e.returnValue = '';
         }
     });
 

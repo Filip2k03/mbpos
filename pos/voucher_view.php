@@ -155,12 +155,18 @@ include_template('header', ['page' => 'voucher_view']);
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-5">
             <a href="index.php?page=voucher_list" class="group flex items-center gap-2 text-gray-500 hover:text-indigo-600 transition-colors font-medium text-sm bg-white/50 px-4 py-2 rounded-xl backdrop-blur-sm border border-white shadow-sm hover:shadow-md">
                 <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                Back to Ledger
+                <span data-i18n="Back to Ledger">Back to Ledger</span>
             </a>
-            <a href="voucher_print.php?id=<?= $voucher['id'] ?>" target="_blank" class="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-[0_8px_20px_rgb(16,185,129,0.25)] hover:shadow-[0_12px_25px_rgb(16,185,129,0.4)] transition-all transform hover:-translate-y-0.5">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                Print Waybill
-            </a>
+            <div class="flex items-center gap-3">
+                <a href="index.php?page=voucher_create&duplicate_id=<?= $voucher['id'] ?>" class="flex items-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 px-4 py-2.5 rounded-xl font-semibold border border-blue-200 transition-all">
+                    <?= mbpos_icon('voucher_create', 'w-4 h-4') ?>
+                    <span data-i18n="Duplicate as New">Duplicate as New</span>
+                </a>
+                <a href="voucher_print.php?id=<?= $voucher['id'] ?>" target="_blank" class="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-[0_8px_20px_rgb(16,185,129,0.25)] hover:shadow-[0_12px_25px_rgb(16,185,129,0.4)] transition-all transform hover:-translate-y-0.5">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    <span data-i18n="Print Waybill">Print Waybill</span>
+                </a>
+            </div>
         </div>
 
         <div class="bg-white/70 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-white/80 p-6 sm:p-10">

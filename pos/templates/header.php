@@ -174,6 +174,13 @@ $nav_groups = [
 <html lang="en" data-app-version="5.1.0">
 <head>
     <meta charset="UTF-8" />
+    <script>
+    try {
+        var l = localStorage.getItem('mbpos_language') || 'en';
+        document.documentElement.lang = (l === 'mm' ? 'my' : 'en');
+        document.documentElement.dataset.language = l;
+    } catch (e) {}
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title><?= htmlspecialchars($page_title, ENT_QUOTES, 'UTF-8') ?></title>
     <link rel="icon" type="image/png" href="https://img.icons8.com/ios-filled/50/000000/shipping-container.png">
@@ -187,7 +194,9 @@ $nav_groups = [
     <!-- Shared Assets -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="assets/css/style.css?v=<?= $asset_version ?>">
+    <?php if (in_array($current_page, ['dashboard', 'admin_dashboard', 'developer_dashboard', 'profit_loss'], true)): ?>
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <?php endif; ?>
     <script src="https://cdn.tailwindcss.com"></script>
     <?php if (function_exists('load_assets')) load_assets($current_page); ?>
 </head>
@@ -222,7 +231,7 @@ $nav_groups = [
                         $is_active = in_array($current_page, $item['aliases'] ?? [$item['key']], true);
                     ?>
                     <a href="<?= e($item['route']) ?>" class="<?= $is_active ? 'is-active' : '' ?>" data-nav-key="<?= e($item['key']) ?>">
-                        <span aria-hidden="true"><?= $item['icon'] ?></span>
+                        <span class="mbpos-nav-icon" aria-hidden="true"><?= mbpos_icon($item['key'], 'w-4 h-4') ?></span>
                         <span data-i18n="<?= e($item['label']) ?>"><?= e($item['label']) ?></span>
                     </a>
                     <?php endforeach; ?>
@@ -242,7 +251,7 @@ $nav_groups = [
     <div class="mbpos-global-content">
         <header class="mbpos-global-header">
             <?php if (is_logged_in()): ?>
-            <button type="button" id="mobile-drawer-toggle" class="mbpos-icon-button md:hidden" aria-label="Open menu" title="Open navigation menu">☰</button>
+            <button type="button" id="mobile-drawer-toggle" class="mbpos-icon-button md:hidden" aria-label="Open menu" title="Open navigation menu"><?= mbpos_icon('menu', 'w-5 h-5') ?></button>
             <?php endif; ?>
 
             <a href="index.php?page=dashboard" class="mbpos-header-brand">
@@ -268,7 +277,7 @@ $nav_groups = [
 
                 <?php if (is_logged_in()): ?>
                 <a href="index.php?page=notifications" class="mbpos-icon-button" aria-label="Notifications" title="Notifications">
-                    🔔<span id="notification-badge" class="v3-badge" style="<?= $unread_notifications > 0 ? '' : 'display: none;' ?>"><?= $unread_notifications ?></span>
+                    <?= mbpos_icon('bell', 'w-4 h-4') ?><span id="notification-badge" class="v3-badge" style="<?= $unread_notifications > 0 ? '' : 'display: none;' ?>"><?= $unread_notifications ?></span>
                 </a>
                 <div class="mbpos-user-chip">
                     <span class="mbpos-user-avatar"><?= strtoupper(substr($_SESSION['username'] ?? 'U', 0, 1)) ?></span>
@@ -277,7 +286,7 @@ $nav_groups = [
                         <small><?= htmlspecialchars(get_user_branch_name() ?? 'Global', ENT_QUOTES, 'UTF-8') ?></small>
                     </span>
                 </div>
-                <a href="index.php?page=logout" class="mbpos-icon-button mbpos-logout" aria-label="Logout" title="Logout">↪</a>
+                <a href="index.php?page=logout" class="mbpos-icon-button mbpos-logout" aria-label="Logout" title="Logout"><?= mbpos_icon('logout', 'w-4 h-4') ?></a>
                 <?php else: ?>
                 <a href="index.php?page=login" class="mbpos-login-link" data-i18n="Login Securely">Login Securely</a>
                 <?php endif; ?>
@@ -297,7 +306,7 @@ $nav_groups = [
                     <!-- Dynamic Search Jump -->
                     <a href="index.php?page=voucher_list" id="mbpos-cmd-search-jump" class="mbpos-cmd-item" style="display:none;">
                         <div class="mbpos-cmd-item-left">
-                            <span class="mbpos-cmd-item-icon">🔎</span>
+                            <span class="mbpos-cmd-item-icon"><?= mbpos_icon('search', 'w-4 h-4') ?></span>
                             <span>Search vouchers for "<strong class="mbpos-cmd-query-text"></strong>"</span>
                         </div>
                         <span class="mbpos-cmd-item-badge">Enter ↵</span>
@@ -306,21 +315,21 @@ $nav_groups = [
                     <div class="mbpos-cmd-section-title" data-i18n="Quick Actions">Quick Actions</div>
                     <a href="index.php?page=voucher_create" class="mbpos-cmd-item" data-jump="create">
                         <div class="mbpos-cmd-item-left">
-                            <span class="mbpos-cmd-item-icon">＋</span>
+                            <span class="mbpos-cmd-item-icon"><?= mbpos_icon('voucher_create', 'w-4 h-4') ?></span>
                             <span data-i18n="Create Voucher">Create Voucher</span>
                         </div>
                         <span class="mbpos-cmd-item-badge">Operations</span>
                     </a>
                     <a href="index.php?page=voucher_list" class="mbpos-cmd-item" data-jump="ledger">
                         <div class="mbpos-cmd-item-left">
-                            <span class="mbpos-cmd-item-icon">▤</span>
+                            <span class="mbpos-cmd-item-icon"><?= mbpos_icon('voucher_list', 'w-4 h-4') ?></span>
                             <span data-i18n="Voucher Ledger">Voucher Ledger</span>
                         </div>
                         <span class="mbpos-cmd-item-badge">Operations</span>
                     </a>
                     <a href="index.php?page=stock_list" class="mbpos-cmd-item" data-jump="shipments">
                         <div class="mbpos-cmd-item-left">
-                            <span class="mbpos-cmd-item-icon">◇</span>
+                            <span class="mbpos-cmd-item-icon"><?= mbpos_icon('stock_list', 'w-4 h-4') ?></span>
                             <span data-i18n="Shipments">Shipments</span>
                         </div>
                         <span class="mbpos-cmd-item-badge">Operations</span>
@@ -328,28 +337,28 @@ $nav_groups = [
                     <?php if ($is_user_admin || $is_user_developer): ?>
                     <a href="index.php?page=profit_loss" class="mbpos-cmd-item" data-jump="profit">
                         <div class="mbpos-cmd-item-left">
-                            <span class="mbpos-cmd-item-icon">▥</span>
+                            <span class="mbpos-cmd-item-icon"><?= mbpos_icon('profit_loss', 'w-4 h-4') ?></span>
                             <span data-i18n="Profit & Loss">Profit & Loss</span>
                         </div>
                         <span class="mbpos-cmd-item-badge">Finance</span>
                     </a>
                     <a href="index.php?page=expenses" class="mbpos-cmd-item" data-jump="expenses">
                         <div class="mbpos-cmd-item-left">
-                            <span class="mbpos-cmd-item-icon">💳</span>
+                            <span class="mbpos-cmd-item-icon"><?= mbpos_icon('expenses', 'w-4 h-4') ?></span>
                             <span data-i18n="Expenses">Expenses</span>
                         </div>
                         <span class="mbpos-cmd-item-badge">Finance</span>
                     </a>
                     <a href="index.php?page=branches" class="mbpos-cmd-item" data-jump="branches">
                         <div class="mbpos-cmd-item-left">
-                            <span class="mbpos-cmd-item-icon">⌘</span>
+                            <span class="mbpos-cmd-item-icon"><?= mbpos_icon('branches', 'w-4 h-4') ?></span>
                             <span data-i18n="Branches">Branches</span>
                         </div>
                         <span class="mbpos-cmd-item-badge">Config</span>
                     </a>
                     <a href="index.php?page=register" class="mbpos-cmd-item" data-jump="users">
                         <div class="mbpos-cmd-item-left">
-                            <span class="mbpos-cmd-item-icon">👥</span>
+                            <span class="mbpos-cmd-item-icon"><?= mbpos_icon('register', 'w-4 h-4') ?></span>
                             <span data-i18n="User Management">User Management</span>
                         </div>
                         <span class="mbpos-cmd-item-badge">Admin</span>
@@ -358,7 +367,7 @@ $nav_groups = [
                     <?php if ($is_user_developer): ?>
                     <a href="index.php?page=developer_dashboard" class="mbpos-cmd-item" data-jump="dev">
                         <div class="mbpos-cmd-item-left">
-                            <span class="mbpos-cmd-item-icon">🛠</span>
+                            <span class="mbpos-cmd-item-icon"><?= mbpos_icon('developer_dashboard', 'w-4 h-4') ?></span>
                             <span data-i18n="Dev Center">Dev Center</span>
                         </div>
                         <span class="mbpos-cmd-item-badge">Developer</span>
@@ -371,31 +380,71 @@ $nav_groups = [
                 </div>
             </div>
         </div>
+
+        <!-- V5 Keyboard Shortcuts Guide Modal (?) -->
+        <div id="mbpos-shortcuts-modal" class="mbpos-cmd-modal" hidden role="dialog" aria-modal="true" aria-label="Keyboard Shortcuts">
+            <div class="mbpos-cmd-backdrop"></div>
+            <div class="mbpos-cmd-dialog">
+                <div class="mbpos-cmd-head" style="justify-content: space-between; padding: 16px 20px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <?= mbpos_icon('dashboard', 'w-5 h-5') ?>
+                        <strong data-i18n="Keyboard Shortcuts">Keyboard Shortcuts</strong>
+                    </div>
+                    <button type="button" id="mbpos-shortcuts-close" class="mbpos-icon-button" aria-label="Close shortcuts" style="font-size: 18px; line-height: 1;">&times;</button>
+                </div>
+                <div class="mbpos-cmd-body" style="padding: 12px 20px 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(220, 231, 243, 0.6);">
+                        <span data-i18n="Command Palette / Global Search">Command Palette / Global Search</span>
+                        <span><kbd>⌘K</kbd> / <kbd>Ctrl+K</kbd></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(220, 231, 243, 0.6);">
+                        <span data-i18n="Create New Voucher">Create New Voucher</span>
+                        <span><kbd>N</kbd></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(220, 231, 243, 0.6);">
+                        <span data-i18n="Voucher Ledger">Voucher Ledger</span>
+                        <span><kbd>L</kbd></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(220, 231, 243, 0.6);">
+                        <span data-i18n="Shipments Queue">Shipments Queue</span>
+                        <span><kbd>S</kbd></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(220, 231, 243, 0.6);">
+                        <span data-i18n="Shortcuts Cheat Sheet">Shortcuts Cheat Sheet</span>
+                        <span><kbd>?</kbd></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+                        <span data-i18n="Close Dialog / Menu">Close Dialog / Menu</span>
+                        <span><kbd>Esc</kbd></span>
+                    </div>
+                </div>
+            </div>
+        </div>
         <?php endif; ?>
 
         <!-- Mobile Bottom Navigation (4 High-Frequency Actions + Off-Canvas Menu) -->
         <?php if (is_logged_in()): ?>
         <nav class="mbpos-mobile-nav" aria-label="Mobile Navigation">
             <a href="index.php?page=dashboard" class="mbpos-mobile-nav-item <?= $current_page === 'dashboard' ? 'is-active' : '' ?>">
-                <span aria-hidden="true">⌂</span>
+                <span class="mbpos-mobile-icon" aria-hidden="true"><?= mbpos_icon('dashboard', 'w-5 h-5') ?></span>
                 <span data-i18n="Dashboard">Dashboard</span>
             </a>
             <?php if ($is_user_staff || $is_user_admin || $is_user_developer): ?>
             <a href="index.php?page=voucher_create" class="mbpos-mobile-nav-item <?= $current_page === 'voucher_create' ? 'is-active' : '' ?>">
-                <span aria-hidden="true">＋</span>
+                <span class="mbpos-mobile-icon" aria-hidden="true"><?= mbpos_icon('voucher_create', 'w-5 h-5') ?></span>
                 <span data-i18n="Create Voucher">Create</span>
             </a>
             <?php endif; ?>
             <a href="index.php?page=stock_list" class="mbpos-mobile-nav-item <?= $current_page === 'stock_list' ? 'is-active' : '' ?>">
-                <span aria-hidden="true">◇</span>
+                <span class="mbpos-mobile-icon" aria-hidden="true"><?= mbpos_icon('stock_list', 'w-5 h-5') ?></span>
                 <span data-i18n="Shipments">Shipments</span>
             </a>
             <a href="index.php?page=voucher_list" class="mbpos-mobile-nav-item <?= in_array($current_page, ['voucher_list', 'voucher_bulk_update', 'voucher_view'], true) ? 'is-active' : '' ?>">
-                <span aria-hidden="true">▤</span>
+                <span class="mbpos-mobile-icon" aria-hidden="true"><?= mbpos_icon('voucher_list', 'w-5 h-5') ?></span>
                 <span data-i18n="Ledger">Ledger</span>
             </a>
             <button type="button" id="mobile-nav-more" class="mbpos-mobile-nav-item" aria-label="Open full menu">
-                <span aria-hidden="true">☰</span>
+                <span class="mbpos-mobile-icon" aria-hidden="true"><?= mbpos_icon('menu', 'w-5 h-5') ?></span>
                 <span data-i18n="Menu">Menu</span>
             </button>
         </nav>

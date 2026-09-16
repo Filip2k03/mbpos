@@ -84,8 +84,44 @@ $preview_voucher_code = 'MBV-' . date('Y') . '-' . str_pad($default_dest_seq, 6,
 $preview_tracking_no = 'MBT-' . date('Y') . '-' . rand(100000, 999999);
 $preview_date_time = date('Y-m-d H:i');
 
+// --- Voucher Duplication Feature ---
+$duplicate_voucher = null;
+$duplicate_items = [];
+$duplicate_id = intval($_GET['duplicate_id'] ?? 0);
+if ($duplicate_id > 0) {
+    $stmt_dup = mysqli_prepare($connection, "SELECT * FROM vouchers WHERE id = ?");
+    if ($stmt_dup) {
+        mysqli_stmt_bind_param($stmt_dup, 'i', $duplicate_id);
+        mysqli_stmt_execute($stmt_dup);
+        $res_dup = mysqli_stmt_get_result($stmt_dup);
+        if ($res_dup) {
+            $duplicate_voucher = mysqli_fetch_assoc($res_dup);
+        }
+        mysqli_stmt_close($stmt_dup);
+    }
+    if ($duplicate_voucher) {
+        $stmt_dup_items = mysqli_prepare($connection, "SELECT * FROM voucher_breakdowns WHERE voucher_id = ?");
+        if ($stmt_dup_items) {
+            mysqli_stmt_bind_param($stmt_dup_items, 'i', $duplicate_id);
+            mysqli_stmt_execute($stmt_dup_items);
+            $res_dup_items = mysqli_stmt_get_result($stmt_dup_items);
+            if ($res_dup_items) {
+                while ($row = mysqli_fetch_assoc($res_dup_items)) {
+                    $duplicate_items[] = [
+                        'category' => $row['item_type'],
+                        'weight' => (float)$row['kg'],
+                        'price' => (float)$row['price_per_kg']
+                    ];
+                }
+            }
+            mysqli_stmt_close($stmt_dup_items);
+        }
+    }
+}
+
 // --- Handle Form Submission ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf_request();
     // V5 vouchers always capture a fresh sender and receiver. Historical
     // customer links remain in the database for old vouchers, but this form
     // never accepts or trusts customer IDs from the browser.
@@ -427,7 +463,8 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
       </div>
 
       <!-- V5 Form & Workspace -->
-      <form id="voucher-form" method="POST" action="index.php?page=voucher_create">
+      <form id="voucher-form" method="POST" action="index.php?page=voucher_create" data-protect-unsaved="true">
+        <?= csrf_input() ?>
         <div class="workspace">
           
           <!-- LEFT COLUMN: Input Fields -->
@@ -440,11 +477,11 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 
                 <div class="field">
                   <label>Full Name <span class="required">*</span></label>
-                  <input id="sender" name="sender_name" maxlength="120" autocomplete="name" placeholder="Enter sender full name" required>
+                  <input id="sender" name="sender_name" maxlength="120" autocomplete="name" placeholder="Enter sender full name" value="<?= htmlspecialchars($duplicate_voucher['sender_name'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
                 </div>
                 <div class="field">
                   <label>Phone Number <span class="required">*</span></label>
-                  <input id="senderPhone" name="sender_phone" maxlength="32" autocomplete="tel" inputmode="tel" placeholder="+95 9 123 456789" required>
+                  <input id="senderPhone" name="sender_phone" maxlength="32" autocomplete="tel" inputmode="tel" placeholder="+95 9 123 456789" value="<?= htmlspecialchars($duplicate_voucher['sender_phone'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
                 </div>
                 <div class="secure-hint"><span class="lock">●</span> Validated before submission · server-side normalization required</div>
               </div>
@@ -455,15 +492,15 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 
                 <div class="field">
                   <label>Full Name <span class="required">*</span></label>
-                  <input id="receiver" name="receiver_name" maxlength="120" autocomplete="name" placeholder="Enter receiver full name" required>
+                  <input id="receiver" name="receiver_name" maxlength="120" autocomplete="name" placeholder="Enter receiver full name" value="<?= htmlspecialchars($duplicate_voucher['receiver_name'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
                 </div>
                 <div class="field">
                   <label>Phone Number <span class="required">*</span></label>
-                  <input id="receiverPhone" name="receiver_phone" maxlength="32" autocomplete="tel" inputmode="tel" placeholder="+61 412 345 678" required>
+                  <input id="receiverPhone" name="receiver_phone" maxlength="32" autocomplete="tel" inputmode="tel" placeholder="+61 412 345 678" value="<?= htmlspecialchars($duplicate_voucher['receiver_phone'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
                 </div>
                 <div class="field">
                   <label>Delivery Address <span class="required">*</span></label>
-                  <textarea id="address" name="receiver_address" maxlength="500" autocomplete="street-address" placeholder="Enter complete delivery address" required></textarea>
+                  <textarea id="address" name="receiver_address" maxlength="500" autocomplete="street-address" placeholder="Enter complete delivery address" required><?= htmlspecialchars($duplicate_voucher['receiver_address'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
                 </div>
               </div>
 
@@ -492,7 +529,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
                     <select id="region" name="destination_region_id" required>
                       <option value="">Select destination</option>
                       <?php foreach ($all_regions as $reg): ?>
-                        <option value="<?= $reg['id'] ?>" data-prefix="<?= htmlspecialchars($reg['prefix'] ?? 'MBV') ?>" data-seq="<?= $reg['current_sequence'] ?? 0 ?>" data-name="<?= htmlspecialchars($reg['region_name']) ?>">
+                        <option value="<?= $reg['id'] ?>" data-prefix="<?= htmlspecialchars($reg['prefix'] ?? 'MBV') ?>" data-seq="<?= $reg['current_sequence'] ?? 0 ?>" data-name="<?= htmlspecialchars($reg['region_name']) ?>" <?= ($duplicate_voucher && ($duplicate_voucher['destination_region_id'] ?? 0) == $reg['id']) ? 'selected' : '' ?>>
                           <?= htmlspecialchars($reg['region_name']) ?>
                         </option>
                       <?php endforeach; ?>
@@ -511,7 +548,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
                     <div class="delivery">
                       <?php foreach ($delivery_types as $idx => $dt): ?>
                         <label class="radio">
-                          <input type="radio" name="delivery_type" value="<?= htmlspecialchars($dt) ?>" <?= $idx === 0 ? 'checked' : '' ?>>
+                          <input type="radio" name="delivery_type" value="<?= htmlspecialchars($dt) ?>" <?= ($duplicate_voucher ? (($duplicate_voucher['delivery_type'] ?? '') === $dt) : ($idx === 0)) ? 'checked' : '' ?>>
                           <?= htmlspecialchars($dt) ?>
                         </label>
                       <?php endforeach; ?>
@@ -522,22 +559,22 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
                     <label>Currency <span class="required">*</span></label>
                     <div class="currencies">
                       <?php foreach ($currencies as $idx => $curr): ?>
-                        <button type="button" class="<?= $idx === 0 ? 'active' : '' ?>" data-currency="<?= htmlspecialchars($curr) ?>">
+                        <button type="button" class="<?= ($duplicate_voucher ? (($duplicate_voucher['currency'] ?? 'MMK') === $curr) : ($idx === 0)) ? 'active' : '' ?>" data-currency="<?= htmlspecialchars($curr) ?>">
                           <?= htmlspecialchars($curr) ?>
                         </button>
                       <?php endforeach; ?>
                     </div>
-                    <input type="hidden" name="currency" id="currency_input" value="<?= htmlspecialchars($currencies[0] ?? 'MMK') ?>">
+                    <input type="hidden" name="currency" id="currency_input" value="<?= htmlspecialchars($duplicate_voucher['currency'] ?? $currencies[0] ?? 'MMK') ?>">
                   </div>
 
                   <div class="field">
                     <label>Additional Delivery Charge</label>
-                    <input id="extra" name="delivery_charge" type="number" min="0" max="999999999" step=".01" value="0" inputmode="decimal">
+                    <input id="extra" name="delivery_charge" type="number" min="0" max="999999999" step=".01" value="<?= htmlspecialchars($duplicate_voucher['delivery_charge'] ?? '0') ?>" inputmode="decimal">
                   </div>
 
                   <div class="field full">
                     <label>Operational Notes</label>
-                    <textarea id="notes" name="notes" maxlength="500" placeholder="Fragile, special handling, internal operational note..."></textarea>
+                    <textarea id="notes" name="notes" maxlength="500" placeholder="Fragile, special handling, internal operational note..."><?= htmlspecialchars($duplicate_voucher['notes'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
                   </div>
 
                 </div>
@@ -978,11 +1015,34 @@ document.addEventListener("change", e => {
 
 // Initialize Defaults
 bindCurrencies();
-if (allRegions.length > 0) {
+const duplicateItems = <?= json_encode($duplicate_items) ?>;
+const duplicateRegion = <?= json_encode($duplicate_voucher['destination_region_id'] ?? null) ?>;
+const duplicateBranch = <?= json_encode($duplicate_voucher['destination_branch_id'] ?? null) ?>;
+const duplicateCurrency = <?= json_encode($duplicate_voucher['currency'] ?? null) ?>;
+
+if (duplicateRegion) {
+  byId("region").value = duplicateRegion;
+  loadBranches(duplicateRegion);
+  if (duplicateBranch) byId("branch").value = duplicateBranch;
+} else if (allRegions.length > 0) {
   byId("region").value = allRegions[0].id;
   loadBranches(allRegions[0].id);
 }
-addRow({category: "Laptop", weight: 2.5, price: 12000});
+
+if (duplicateCurrency) {
+  currency = duplicateCurrency;
+  byId("currency_input").value = currency;
+  document.querySelectorAll("[data-currency]").forEach(b => {
+    b.classList.toggle("active", b.dataset.currency === currency);
+  });
+}
+
+if (duplicateItems && duplicateItems.length > 0) {
+  duplicateItems.forEach(item => addRow(item));
+  toast("Loaded voucher data for duplication. Review and create new entry.");
+} else {
+  addRow({category: "Laptop", weight: 2.5, price: 12000});
+}
 update();
 </script>
 

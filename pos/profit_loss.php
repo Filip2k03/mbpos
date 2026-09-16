@@ -56,7 +56,8 @@ function fetch_financial_data($connection, $table, $amount_column, $date_column 
         }
         mysqli_free_result($result);
     } else {
-        flash_message('error', 'Error fetching data from ' . $table . ': ' . mysqli_error($connection));
+        error_log('MBPOS financial report fetch failed for ' . $table . ': ' . mysqli_error($connection));
+        flash_message('error', 'Unable to load the financial report right now.');
     }
     return $data;
 }
@@ -171,7 +172,8 @@ function process_monthly_query($connection, $query, &$target_array) {
         }
         mysqli_free_result($result);
     } else {
-        flash_message('error', 'Error fetching monthly data: ' . mysqli_error($connection));
+        error_log('MBPOS monthly financial report fetch failed: ' . mysqli_error($connection));
+        flash_message('error', 'Unable to load monthly financial data right now.');
     }
 }
 

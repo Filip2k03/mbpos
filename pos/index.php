@@ -23,6 +23,10 @@ if ($table_check && mysqli_num_rows($table_check) > 0) {
 
 $page = $_GET['page'] ?? 'dashboard'; // Default page
 
+// Protect every routed state-changing action without requiring a database
+// migration or changing the shape of the existing operational tables.
+require_csrf_request();
+
 if ($maintenance_mode === 'on' && !is_admin() && !is_developer()) {
     // Allow access to login, logout, and the maintenance page itself
     if ($page !== 'login' && $page !== 'logout' && $page !== 'maintenance') {

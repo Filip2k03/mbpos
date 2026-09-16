@@ -10,6 +10,7 @@ if (session_status() == PHP_SESSION_NONE) {
 
 // Only allow logged-in users to fetch notifications
 if (!is_logged_in()) {
+    header('Content-Type: application/json; charset=utf-8');
     http_response_code(403); // Forbidden
     echo json_encode(['error' => 'Not authenticated']);
     exit();
@@ -50,8 +51,9 @@ if ($count_stmt) {
     mysqli_stmt_close($count_stmt);
 }
 
-// Set the content type header to JSON and output the data
-header('Content-Type: application/json');
+// Notifications are user-specific and must never be shared by browser/proxy caches.
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store, private');
 echo json_encode([
     'notifications' => $notifications,
     'unread_count' => $unread_count,

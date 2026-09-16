@@ -158,7 +158,8 @@ if ($stmt) {
     }
     mysqli_stmt_close($stmt);
 } else {
-    flash_message('error', 'Error fetching stock items: ' . mysqli_error($connection));
+    error_log('MBPOS stock fetch failed: ' . mysqli_error($connection));
+    flash_message('error', 'Unable to load shipment stock right now. Please try again.');
 }
 
 include_template('header', ['page' => 'stock_list']);

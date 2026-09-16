@@ -115,11 +115,13 @@ if ($stmt) {
             $vouchers[] = $row;
         }
     } else {
-        flash_message('error', 'Failed to fetch vouchers: ' . mysqli_error($connection));
+        error_log('MBPOS voucher list fetch failed: ' . mysqli_error($connection));
+        flash_message('error', 'Unable to load vouchers right now. Please try again.');
     }
     mysqli_stmt_close($stmt);
 } else {
-    flash_message('error', 'Failed to prepare statement for vouchers: ' . mysqli_error($connection));
+    error_log('MBPOS voucher list statement failed: ' . mysqli_error($connection));
+    flash_message('error', 'Unable to load vouchers right now. Please try again.');
 }
 
 // Prepare pagination links with existing filters

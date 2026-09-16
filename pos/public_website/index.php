@@ -83,7 +83,7 @@ if ($result) {
                 <li><a href="#services" class="hover:text-primary">Services</a></li>
                 <li><a href="#rates-routes" class="hover:text-primary">Rates & Routes</a></li>
                 <li><a href="#contact" class="hover:text-primary">Contact Us</a></li>
-                <li><a href="../customer/" target="_blank" class="bg-primary text-white px-4 py-2 rounded-full hover:bg-secondary transition-colors">Customer Portal</a></li>
+                <li><a href="https://mbpos.online/" class="bg-primary text-white px-4 py-2 rounded-full hover:bg-secondary transition-colors">Staff POS</a></li>
             </ul>
             <div class="flex items-center">
                 <button id="theme-toggle" class="p-2 rounded-full"><svg id="sun-icon" class="h-6 w-6 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" style="display: none;"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 00-1.414-1.414L13.5 4.5v.001l.707.707a1 1 0 101.414-1.414zM10 15a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4 0a1 1 0 01-1 1H4a1 1 0 110-2h1a1 1 0 011 1zm-3.536-1.95l-.707-.707a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414zM4.5 4.5l-.707.707a1 1 0 101.414 1.414L5.5 5.5v-.001a1 1 0 00-1.414-1.414z"/></svg><svg id="moon-icon" class="h-6 w-6 text-gray-500" fill="currentColor" viewBox="0 0 20 20" style="display: block;"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg></button>
@@ -96,7 +96,7 @@ if ($result) {
                 <li><a href="#services">Services</a></li>
                 <li><a href="#rates-routes">Rates & Routes</a></li>
                 <li><a href="#contact">Contact Us</a></li>
-                <li><a href="../customer/" target="_blank" class="bg-primary text-white px-4 py-2 rounded-full hover:bg-secondary">Customer Portal</a></li>
+                <li><a href="https://mbpos.online/" class="bg-primary text-white px-4 py-2 rounded-full hover:bg-secondary">Staff POS</a></li>
             </ul>
         </div>
     </nav>

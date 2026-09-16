@@ -144,7 +144,8 @@ if ($stmt) {
     }
     mysqli_stmt_close($stmt);
 } else {
-    flash_message('error', 'Error fetching vouchers: ' . mysqli_error($connection));
+    error_log('MBPOS bulk voucher fetch failed: ' . mysqli_error($connection));
+    flash_message('error', 'Unable to load vouchers right now. Please try again.');
 }
 
 // --- Prepare Export Link ---

@@ -54,6 +54,34 @@ document.addEventListener('DOMContentLoaded', function () {
 // MBPOS V5 application shell: language, installability, and honest offline UX
 // =========================================================================
 (function () {
+    // Small, dependency-free request helper for live UI enhancements. It
+    // aborts stalled requests and retries idempotent GETs once, keeping legacy
+    // PHP screens usable on slower mobile connections.
+    window.mbposFetch = function (url, options) {
+        options = options || {};
+        const method = (options.method || 'GET').toUpperCase();
+        const attempts = method === 'GET' ? 2 : 1;
+        let attempt = 0;
+
+        function request() {
+            attempt += 1;
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), options.timeout || 8000);
+            const requestOptions = Object.assign({}, options, { signal: controller.signal, credentials: 'same-origin' });
+            return fetch(url, requestOptions).then(function (response) {
+                clearTimeout(timeout);
+                if (!response.ok) throw new Error('Request failed: ' + response.status);
+                return response;
+            }).catch(function (error) {
+                clearTimeout(timeout);
+                if (attempt < attempts) return request();
+                throw error;
+            });
+        }
+
+        return request();
+    };
+
     const translations = {
         "Dashboard": "ဒက်ရှ်ဘုတ်",
         "Create Voucher": "ဘောက်ချာဖန်တီးရန်",
@@ -160,6 +188,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        if (csrfMeta && csrfMeta.content) {
+            document.querySelectorAll('form[method="POST"], form[method="post"]').forEach(function (form) {
+                if (form.querySelector('input[name="csrf_token"]')) return;
+                const csrfField = document.createElement('input');
+                csrfField.type = 'hidden';
+                csrfField.name = 'csrf_token';
+                csrfField.value = csrfMeta.content;
+                form.appendChild(csrfField);
+            });
+        }
         applyLanguage(currentLanguage());
         setOfflineState();
 
@@ -177,10 +216,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 search.focus();
             }
         });
-        if (search) search.addEventListener('search', function () {
-            if (!search.value.trim()) return;
-            window.location.href = 'index.php?page=voucher_list';
-        });
+        if (search) {
+            const runSearch = function () {
+                const value = search.value.trim();
+                if (!value) return;
+                window.location.href = 'index.php?page=voucher_list&search=' + encodeURIComponent(value);
+            };
+            search.addEventListener('search', runSearch);
+            search.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    runSearch();
+                }
+            });
+        }
     });
     window.addEventListener('online', setOfflineState);
     window.addEventListener('offline', setOfflineState);

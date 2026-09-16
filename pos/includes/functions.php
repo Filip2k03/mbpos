@@ -10,6 +10,60 @@ function redirect($url) {
     exit();
 }
 
+/** Escape untrusted values for safe HTML output. */
+function e($value) {
+    return htmlspecialchars((string)($value ?? ''), ENT_QUOTES, 'UTF-8');
+}
+
+/** Return the current request's CSRF cookie token for forms/fetch clients. */
+function csrf_token() {
+    if (!empty($_COOKIE['mbpos_csrf'])) {
+        return (string)$_COOKIE['mbpos_csrf'];
+    }
+    return '';
+}
+
+/** Render an optional hidden CSRF field for new forms. */
+function csrf_input() {
+    $token = csrf_token();
+    return $token === '' ? '' : '<input type="hidden" name="csrf_token" value="' . e($token) . '">';
+}
+
+/**
+ * Reject cross-site state-changing requests.
+ * SameSite=Strict is the primary defense; Origin/Referer checks provide a
+ * second layer and the hidden token supports progressively enhanced forms.
+ */
+function require_csrf_request() {
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+        return;
+    }
+
+    $app_origin = defined('APP_URL') ? rtrim(APP_URL, '/') : '';
+    $request_origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+    $request_referer = $_SERVER['HTTP_REFERER'] ?? '';
+    $origin_ok = false;
+
+    if ($request_origin !== '') {
+        $origin_ok = hash_equals($app_origin, rtrim($request_origin, '/'));
+    } elseif ($request_referer !== '') {
+        $referer_origin = parse_url($request_referer, PHP_URL_SCHEME) . '://' . parse_url($request_referer, PHP_URL_HOST);
+        if (parse_url($request_referer, PHP_URL_PORT)) {
+            $referer_origin .= ':' . parse_url($request_referer, PHP_URL_PORT);
+        }
+        $origin_ok = hash_equals($app_origin, rtrim($referer_origin, '/'));
+    }
+
+    $cookie_token = csrf_token();
+    $posted_token = (string)($_POST['csrf_token'] ?? '');
+    $token_ok = $cookie_token !== '' && $posted_token !== '' && hash_equals($cookie_token, $posted_token);
+
+    if (!$origin_ok && !$token_ok) {
+        http_response_code(403);
+        exit('Request rejected by security policy. Refresh the page and try again.');
+    }
+}
+
 /**
  * Sets a flash message in the session.
  * @param string $type Type of message (e.g., 'success', 'error', 'info', 'warning').
@@ -43,7 +97,7 @@ function display_flash_messages() {
                     $class = 'bg-yellow-100 border-yellow-400 text-yellow-700';
                     break;
             }
-            echo "<div class='flash-message {$class} p-4 mb-4 text-sm rounded-lg' id='flash-message-{$key}'>{$msg['message']}</div>";
+            echo "<div class='flash-message {$class} p-4 mb-4 text-sm rounded-lg' id='flash-message-" . e($key) . "'>" . e($msg['message']) . "</div>";
         }
         unset($_SESSION['flash_messages']); // Clear messages after displaying
     }

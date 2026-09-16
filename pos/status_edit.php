@@ -52,7 +52,8 @@ if ($stmt) {
     mysqli_free_result($result);
     mysqli_stmt_close($stmt);
 } else {
-    flash_message('error', 'Database query failed: ' . mysqli_error($connection));
+    error_log('MBPOS status query failed: ' . mysqli_error($connection));
+    flash_message('error', 'Unable to load this shipment status right now.');
     redirect('index.php?page=voucher_list'); // Redirect on query preparation failure
 }
 
@@ -98,7 +99,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             mysqli_stmt_close($stmt_update);
         } else {
-            flash_message('error', 'Failed to prepare update statement: ' . mysqli_error($connection));
+            error_log('MBPOS status update prepare failed: ' . mysqli_error($connection));
+            flash_message('error', 'Unable to update shipment status right now.');
         }
     }
 }

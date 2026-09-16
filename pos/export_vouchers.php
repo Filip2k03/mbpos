@@ -109,7 +109,8 @@ if ($stmt) {
     exit();
 
 } else {
-    flash_message('error', 'Error preparing data for export: ' . mysqli_error($connection));
+    error_log('MBPOS voucher export prepare failed: ' . mysqli_error($connection));
+    flash_message('error', 'Unable to prepare the export right now. Please try again.');
     redirect('index.php?page=voucher_bulk_update');
 }
 ?>

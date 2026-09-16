@@ -2,10 +2,11 @@
 // templates/footer.php - Premium V3 Liquid Glass Footer
 
 // The $page variable is passed to include_template function
-$page = $page ?? 'home'; // fallback page name
+$page = $_GET['page'] ?? ($page ?? 'home'); // fallback page name
 ?>
 </main> <!-- Closes the <main> tag opened in header.php -->
 
+<?php if ($page !== 'voucher_create'): ?>
 <!-- Spacer to ensure mobile nav doesn't overlap footer content on small screens -->
 <div class="h-20 md:hidden"></div>
 
@@ -28,7 +29,7 @@ $page = $page ?? 'home'; // fallback page name
                         <?php echo defined('APP_NAME') ? APP_NAME : 'MBLOGISTICS'; ?>
                     </span>
                 </div>
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">&copy; <?php echo date('Y'); ?> All rights reserved.</p>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">&copy; <?php echo date('Y'); ?> <span data-i18n="All rights reserved.">All rights reserved.</span></p>
             </div>
 
             <!-- Center: Ecosystem Links -->
@@ -46,7 +47,7 @@ $page = $page ?? 'home'; // fallback page name
 
             <!-- Right: Developer Signature -->
             <div class="flex items-center gap-2 mt-2 md:mt-0">
-                <span class="text-xs font-medium text-slate-400">Engineered by</span>
+                <span data-i18n="Engineered by" class="text-xs font-medium text-slate-400">Engineered by</span>
                 <a href="https://techyyfilip.vercel.app" target="_blank" class="group flex items-center gap-2 bg-slate-900 px-3.5 py-2 rounded-xl hover:shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all hover:-translate-y-0.5">
                     <div class="w-2 h-2 rounded-full bg-cyan-400 group-hover:animate-ping shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
                     <span class="text-xs font-bold text-white tracking-wide">TechyyFilip</span>

@@ -46,10 +46,10 @@ if (is_logged_in()) {
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
     <link rel="manifest" href="manifest.webmanifest">
     
     <!-- Tailwind + Custom Assets -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <!-- Toastify CSS for Notifications -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
@@ -380,7 +380,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Notification Fetcher Logic
     function fetchNotifications() {
         <?php if (is_logged_in()): ?>
-        fetch(`index.php?page=fetch_notifications&last_id=${lastId}`)
+        const request = window.mbposFetch ? window.mbposFetch(`index.php?page=fetch_notifications&last_id=${lastId}`, { timeout: 5000 }) : fetch(`index.php?page=fetch_notifications&last_id=${lastId}`);
+        request
             .then(response => response.json())
             .then(data => {
                 const incomingNotifications = Array.isArray(data.notifications) ? data.notifications : [];

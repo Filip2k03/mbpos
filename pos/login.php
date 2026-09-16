@@ -135,8 +135,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $mail->isSMTP();
                     $mail->Host       = 'mail.mbpos.online'; 
                     $mail->SMTPAuth   = true;
-                    $mail->Username   = 'noreplay@mbpos.online'; 
-                    $mail->Password   = 'mbposV32026'; 
+                    $mail->Username   = getenv('MBPOS_SMTP_USER') ?: 'noreplay@mbpos.online';
+                    $mail->Password   = getenv('MBPOS_SMTP_PASSWORD') ?: '';
                     $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; 
                     $mail->Port       = 465; 
 

@@ -61,37 +61,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include_template('header', ['page' => 'customer_register']);
 ?>
 
-<div class="flex items-center justify-center min-h-screen -mt-20">
-    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg border border-gray-100">
-        <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Register New Customer</h2>
-        
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-            <label for="username" class="form-label">Username</label>
-            <input type="text" id="username" name="username" class="w-full rounded-lg border border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 px-4 py-2" required>
+<div class="relative min-h-[85vh] p-4 sm:p-8 flex items-center justify-center font-sans">
+    <div class="w-full max-w-xl v5-glass-card p-8 sm:p-10 shadow-2xl relative z-10 animate-fadeInDown">
+        <div class="text-center space-y-2 mb-8">
+            <div class="mx-auto w-14 h-14 bg-gradient-to-tr from-blue-600 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/25 text-white mb-4">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+            </div>
+            <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight" data-i18n="Register Customer">Register Customer</h2>
+            <p class="text-sm font-medium text-slate-500" data-i18n="Add a new customer profile to the MBPOS ledger">Add a new customer profile to the MBPOS ledger</p>
         </div>
-        <div>
-            <label for="phone" class="form-label">Phone Number</label>
-            <input type="tel" id="phone" name="phone" class="w-full rounded-lg border border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 px-4 py-2" required>
-            <p class="text-xs text-gray-500 mt-1">This links the customer to their vouchers.</p>
-        </div>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-            <label for="password" class="form-label">Password</label>
-            <input type="password" id="password" name="password" class="w-full rounded-lg border border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 px-4 py-2" required>
-        </div>
-        <div>
-            <label for="confirm_password" class="form-label">Confirm Password</label>
-            <input type="password" id="confirm_password" name="confirm_password" class="w-full rounded-lg border border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 px-4 py-2" required>
-        </div>
-    </div>
 
-    <div class="pt-4">
-        <button type="submit" class="btn w-full bg-blue-500 text-white rounded-lg py-2 hover:bg-blue-600 transition duration-200">Register Customer</button>
-    </div>
-</form>
+        <form action="index.php?page=customer_register" method="POST" class="space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div class="space-y-1.5">
+                    <label for="username" class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1" data-i18n="Username">Username</label>
+                    <input type="text" id="username" name="username" class="w-full rounded-xl border border-slate-200 bg-white/70 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 px-4 py-3 text-sm font-medium text-slate-800 transition-all" placeholder="Customer username" required>
+                </div>
+                <div class="space-y-1.5">
+                    <label for="phone" class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1" data-i18n="Phone Number">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" class="w-full rounded-xl border border-slate-200 bg-white/70 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 px-4 py-3 text-sm font-medium text-slate-800 transition-all" placeholder="+95 9 123 456789" required>
+                </div>
+            </div>
 
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div class="space-y-1.5">
+                    <label for="password" class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1" data-i18n="Password">Password</label>
+                    <input type="password" id="password" name="password" class="w-full rounded-xl border border-slate-200 bg-white/70 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 px-4 py-3 text-sm font-medium text-slate-800 transition-all" placeholder="••••••••" required>
+                </div>
+                <div class="space-y-1.5">
+                    <label for="confirm_password" class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1" data-i18n="Confirm Password">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" class="w-full rounded-xl border border-slate-200 bg-white/70 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 px-4 py-3 text-sm font-medium text-slate-800 transition-all" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <div class="pt-2 flex items-center justify-between gap-4">
+                <a href="index.php?page=customer_list" class="px-5 py-3 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all" data-i18n="Go Back">Go Back</a>
+                <button type="submit" class="flex-1 btn-primary py-3 px-6 rounded-xl font-bold text-sm text-white shadow-lg shadow-blue-500/30 hover:opacity-95 transition-all" data-i18n="Register Customer">Register Customer</button>
+            </div>
+        </form>
     </div>
 </div>
 

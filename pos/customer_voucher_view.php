@@ -43,77 +43,112 @@ if ($voucher_id <= 0) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Track Your Voucher</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MBLOGISTICS V5 • Track Voucher <?= htmlspecialchars($voucher_data['voucher_code'] ?? '') ?></title>
+    <meta name="theme-color" content="#0b6ff5">
+    <link rel="icon" type="image/png" href="https://img.icons8.com/ios-filled/50/000000/shipping-container.png">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .status-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        :root {
+            --v5-blue: #0b6ff5;
+            --v5-cyan: #20b8f5;
+            --v5-surface: rgba(255, 255, 255, 0.92);
+            --v5-shadow: 0 20px 60px rgba(32, 75, 125, 0.12);
         }
-        .status-icon {
-            width: 50px;
-            height: 50px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        body {
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at 80% -5%, #d9f2ff 0, transparent 35%),
+                        radial-gradient(circle at -5% 55%, #e7efff 0, transparent 35%),
+                        #f3f7fc;
+            min-height: 100vh;
+        }
+        .origami-mark {
+            width: 44px;
+            height: 36px;
+            position: relative;
+            display: inline-block;
+        }
+        .origami-mark:before, .origami-mark:after {
+            content: "";
+            position: absolute;
+            transform: skew(-28deg);
+            border-radius: 5px;
+        }
+        .origami-mark:before {
+            left: 3px;
+            top: 3px;
+            width: 15px;
+            height: 30px;
+            background: linear-gradient(160deg, #096ff0, #79dcff);
+        }
+        .origami-mark:after {
+            left: 20px;
+            top: 8px;
+            width: 15px;
+            height: 25px;
+            background: linear-gradient(160deg, #1167d8, #bdefff);
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
-    <div class="w-full max-w-md mx-auto">
+<body class="flex items-center justify-center p-4 sm:p-6">
+    <div class="w-full max-w-lg mx-auto">
+        <!-- Brand Header -->
         <div class="text-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">Shipment Status</h1>
+            <div class="origami-mark mb-2"></div>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">MBLOGISTICS <span class="text-blue-600">POS V5</span></h1>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest" data-i18n="Real-time Tracking">Real-Time Waybill Tracking</p>
         </div>
 
         <?php if ($error_message): ?>
-            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-md" role="alert">
-                <p class="font-bold">Error</p>
-                <p><?= htmlspecialchars($error_message) ?></p>
+            <div class="v5-glass-card border border-rose-200 bg-rose-50/90 text-rose-800 p-6 rounded-2xl shadow-lg text-center" role="alert">
+                <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3 text-xl font-bold">✕</div>
+                <h3 class="font-bold text-base mb-1" data-i18n="Error">Error</h3>
+                <p class="text-sm"><?= htmlspecialchars($error_message) ?></p>
             </div>
         <?php elseif ($voucher_data): ?>
-            <div class="bg-white rounded-2xl shadow-xl p-8">
-                <div class="status-card text-white p-6 rounded-xl text-center mb-6">
-                    <div class="status-icon mx-auto mb-3">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div class="v5-glass-card bg-white/95 rounded-[2rem] shadow-2xl p-6 sm:p-8 border border-white/80">
+                <!-- Status Banner -->
+                <div class="bg-gradient-to-r from-blue-600 to-cyan-600 text-white p-6 rounded-2xl text-center mb-6 shadow-lg shadow-blue-500/20">
+                    <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-sm">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                     </div>
-                    <p class="text-lg font-semibold">Current Status:</p>
-                    <h2 class="text-4xl font-bold"><?= htmlspecialchars($voucher_data['status']) ?></h2>
+                    <p class="text-xs font-extrabold uppercase tracking-widest text-blue-100 mb-1" data-i18n="Current Status">Current Status</p>
+                    <h2 class="text-3xl font-black tracking-tight"><?= htmlspecialchars($voucher_data['status']) ?></h2>
                 </div>
                 
+                <!-- Details List -->
                 <div>
-                    <h3 class="font-semibold text-lg text-gray-700 mb-2">Voucher Details</h3>
-                    <div class="border-t border-gray-200">
-                        <dl>
-                            <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                <dt class="text-sm font-medium text-gray-500">Voucher Code</dt>
-                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono"><?= htmlspecialchars($voucher_data['voucher_code']) ?></dd>
-                            </div>
-                            <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                <dt class="text-sm font-medium text-gray-500">Origin</dt>
-                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"><?= htmlspecialchars($voucher_data['origin_region'] ?? 'N/A') ?></dd>
-                            </div>
-                             <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                <dt class="text-sm font-medium text-gray-500">Destination</dt>
-                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"><?= htmlspecialchars($voucher_data['destination_region'] ?? 'N/A') ?></dd>
-                            </div>
-                             <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                <dt class="text-sm font-medium text-gray-500">Creation Date</dt>
-                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"><?= date('F j, Y', strtotime($voucher_data['created_at'])) ?></dd>
-                            </div>
-                        </dl>
+                    <h3 class="font-bold text-sm text-slate-700 mb-3 px-1 uppercase tracking-wider text-xs" data-i18n="Order Summary">Shipment Details</h3>
+                    <div class="divide-y divide-slate-100 rounded-xl bg-slate-50/80 border border-slate-200/80 overflow-hidden">
+                        <div class="p-3.5 flex justify-between items-center text-sm">
+                            <span class="text-slate-500 font-semibold" data-i18n="Voucher Code">Voucher Code</span>
+                            <span class="font-mono font-bold text-blue-600"><?= htmlspecialchars($voucher_data['voucher_code']) ?></span>
+                        </div>
+                        <div class="p-3.5 flex justify-between items-center text-sm">
+                            <span class="text-slate-500 font-semibold" data-i18n="Origin Point">Origin</span>
+                            <span class="font-bold text-slate-800"><?= htmlspecialchars($voucher_data['origin_region'] ?? 'N/A') ?></span>
+                        </div>
+                        <div class="p-3.5 flex justify-between items-center text-sm">
+                            <span class="text-slate-500 font-semibold" data-i18n="Destination">Destination</span>
+                            <span class="font-bold text-slate-800"><?= htmlspecialchars($voucher_data['destination_region'] ?? 'N/A') ?></span>
+                        </div>
+                        <div class="p-3.5 flex justify-between items-center text-sm">
+                            <span class="text-slate-500 font-semibold" data-i18n="Date">Creation Date</span>
+                            <span class="font-medium text-slate-700"><?= date('F j, Y · H:i', strtotime($voucher_data['created_at'])) ?> (GMT+6:30)</span>
+                        </div>
                     </div>
+                </div>
+
+                <div class="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                    <span>Verified via QR Code</span>
+                    <span class="font-bold text-blue-500">MBLOGISTICS Global</span>
                 </div>
             </div>
         <?php endif; ?>
 
-         <div class="text-center mt-6 text-sm text-gray-500">
-            <p>&copy; <?= date('Y') ?> MBLOGISTICS. All rights reserved.</p>
+        <div class="text-center mt-6 text-xs font-semibold text-slate-400">
+            <p>&copy; <?= date('Y') ?> MBLOGISTICS POS V5 · All rights reserved.</p>
         </div>
     </div>
 </body>

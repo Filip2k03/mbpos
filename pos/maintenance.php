@@ -92,7 +92,7 @@ include_template('header', ['page' => 'maintenance']);
         <div class="v5-page-head__copy">
             <span class="v5-kicker" data-i18n="System">System</span>
             <h1 data-i18n="Maintenance Zones">Maintenance Zones</h1>
-            <p data-i18n="maintenance.subtitle">Control operational maintenance categories without interrupting active POS sessions.</p>
+            <p data-i18n="Control operational maintenance categories without interrupting active POS sessions.">Control operational maintenance categories without interrupting active POS sessions.</p>
         </div>
         <span class="v5-count"><?= count($categories) ?> <span data-i18n="configured">configured</span></span>
     </div>
@@ -101,7 +101,7 @@ include_template('header', ['page' => 'maintenance']);
     <div class="v5-panel" style="border-color:#fecdd3;background:#fff1f2;">
         <div class="v5-panel__body" style="display:flex;align-items:center;gap:.85rem;padding:.9rem 1.15rem;">
             <span class="v5-badge" style="background:#fee2e2;color:#b91c1c;font-size:.78rem;padding:.4rem .85rem;display:inline-flex;align-items:center;gap:.35rem;">
-                <svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> <span data-i18n="maintenance.active_warning_badge">MAINTENANCE ACTIVE</span>
+                <svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> <span data-i18n="MAINTENANCE ACTIVE">MAINTENANCE ACTIVE</span>
             </span>
             <span style="color:#9f1239;font-size:.82rem;font-weight:700;" data-i18n-params='{"count":<?= $active_count ?>}'>
                 <?= $active_count === 1
@@ -115,10 +115,10 @@ include_template('header', ['page' => 'maintenance']);
     <section class="v5-panel">
         <div class="v5-panel__head">
             <h2><?= $edit_category
-                ? '<span data-i18n="maintenance.edit_title">Edit Maintenance Zone</span>'
-                : '<span data-i18n="maintenance.add_title">Add Maintenance Zone</span>' ?></h2>
+                ? '<span data-i18n="Edit Maintenance Zone">Edit Maintenance Zone</span>'
+                : '<span data-i18n="Add Maintenance Zone">Add Maintenance Zone</span>' ?></h2>
             <?php if ($edit_category): ?>
-            <a class="v5-btn-ghost" href="index.php?page=maintenance" data-i18n="Cancel edit">Cancel edit</a>
+            <a class="v5-btn-ghost" href="index.php?page=maintenance" data-i18n="Cancel">Cancel</a>
             <?php endif; ?>
         </div>
         <div class="v5-panel__body">
@@ -155,8 +155,8 @@ include_template('header', ['page' => 'maintenance']);
             <?php if (empty($categories)): ?>
             <div class="v5-empty">
                 <span class="v5-empty__icon"><?= mbpos_icon('maintenance', 'w-8 h-8 text-slate-400') ?></span>
-                <strong data-i18n="maintenance.empty_title">No maintenance zones configured</strong>
-                <p data-i18n="maintenance.empty_hint">Add the first zone using the form above.</p>
+                <strong data-i18n="No maintenance zones configured">No maintenance zones configured</strong>
+                <p data-i18n="Add the first zone using the form above.">Add the first zone using the form above.</p>
             </div>
             <?php else: ?>
             <div class="v5-record-list">

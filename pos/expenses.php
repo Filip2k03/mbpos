@@ -117,16 +117,16 @@ include_template('header', ['page' => 'expenses']);
         <div class="v5-page-head__copy">
             <span class="v5-kicker" data-i18n="Finance">Finance</span>
             <h1 data-i18n="System Expenses">System Expenses</h1>
-            <p data-i18n="expenses_subtitle">Record and monitor operational outgoings</p>
+            <p data-i18n="Record and monitor operational outgoings">Record and monitor operational outgoings</p>
         </div>
         <span class="v5-count"><?= count($expenses) ?> <span data-i18n="entries">entries</span></span>
     </div>
 
     <section class="v5-panel">
         <div class="v5-panel__head">
-            <h2 data-i18n="<?= $edit_expense ? 'edit_expense' : 'log_new_expense' ?>"><?= $edit_expense ? 'Edit Expense' : 'Log New Expense' ?></h2>
+            <h2 data-i18n="<?= $edit_expense ? 'Edit Expense' : 'Log New Expense' ?>"><?= $edit_expense ? 'Edit Expense' : 'Log New Expense' ?></h2>
             <?php if ($edit_expense): ?>
-                <a class="v5-btn-ghost" href="index.php?page=expenses" data-i18n="cancel">Cancel</a>
+                <a class="v5-btn-ghost" href="index.php?page=expenses" data-i18n="Cancel">Cancel</a>
             <?php endif; ?>
         </div>
         <div class="v5-panel__body">
@@ -136,17 +136,17 @@ include_template('header', ['page' => 'expenses']);
                 <input type="hidden" name="expense_id" value="<?= (int)($edit_expense['id'] ?? 0) ?>">
 
                 <div class="v5-field v5-field--wide">
-                    <label for="description" data-i18n="description">Description</label>
+                    <label for="description" data-i18n="Description">Description</label>
                     <textarea id="description" name="description" rows="2" placeholder="e.g. Office Supplies / ရုံးသုံးပစ္စည်း" required><?= htmlspecialchars($edit_expense['description'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
                 </div>
 
                 <div class="v5-field">
-                    <label for="amount" data-i18n="amount">Amount</label>
+                    <label for="amount" data-i18n="Amount">Amount</label>
                     <input type="number" step="0.01" id="amount" name="amount" placeholder="0.00" value="<?= htmlspecialchars($edit_expense['amount'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
                 </div>
 
                 <div class="v5-field">
-                    <label for="currency" data-i18n="currency">Currency</label>
+                    <label for="currency" data-i18n="Currency">Currency</label>
                     <select id="currency" name="currency" required>
                         <option value="" disabled <?= empty($edit_expense['currency']) ? 'selected' : '' ?> data-i18n="Select currency">Select currency</option>
                         <?php foreach ($currencies as $currency_code): ?>
@@ -159,12 +159,12 @@ include_template('header', ['page' => 'expenses']);
                 </div>
 
                 <div class="v5-field">
-                    <label for="expense_date" data-i18n="expense_date">Expense Date</label>
+                    <label for="expense_date" data-i18n="Expense Date">Expense Date</label>
                     <input type="date" id="expense_date" name="expense_date" value="<?= htmlspecialchars($edit_expense['expense_date'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
                 </div>
 
                 <div class="v5-field">
-                    <button type="submit" class="btn w-full" data-i18n="<?= $edit_expense ? 'update_expense' : 'record_expense' ?>"><?= $edit_expense ? 'Update Expense' : 'Record Expense' ?></button>
+                    <button type="submit" class="btn w-full" data-i18n="<?= $edit_expense ? 'Update Expense' : 'Record Expense' ?>"><?= $edit_expense ? 'Update Expense' : 'Record Expense' ?></button>
                 </div>
             </form>
         </div>
@@ -172,17 +172,17 @@ include_template('header', ['page' => 'expenses']);
 
     <section class="v5-panel">
         <div class="v5-panel__head">
-            <h2 data-i18n="expense_ledger">Expense Ledger</h2>
+            <h2 data-i18n="Expense Ledger">Expense Ledger</h2>
             <span class="v5-count"><?= count($expenses) ?> <span data-i18n="entries">entries</span></span>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full">
                 <thead>
                     <tr>
-                        <th data-i18n="date">Date</th>
-                        <th data-i18n="description">Description</th>
-                        <th data-i18n="amount">Amount</th>
-                        <th data-i18n="actions">Actions</th>
+                        <th data-i18n="Date">Date</th>
+                        <th data-i18n="Description">Description</th>
+                        <th data-i18n="Amount">Amount</th>
+                        <th data-i18n="Actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -191,8 +191,8 @@ include_template('header', ['page' => 'expenses']);
                             <td colspan="4">
                                 <div class="v5-empty">
                                     <span class="v5-empty__icon"><?= mbpos_icon('expenses', 'w-8 h-8 text-slate-400') ?></span>
-                                    <strong data-i18n="no_expenses_recorded">No expenses recorded yet.</strong>
-                                    <p data-i18n="add_first_expense">Add the first record using the form above.</p>
+                                    <strong data-i18n="No expenses recorded yet.">No expenses recorded yet.</strong>
+                                    <p data-i18n="Add the first record using the form above.">Add the first record using the form above.</p>
                                 </div>
                             </td>
                         </tr>
@@ -213,15 +213,15 @@ include_template('header', ['page' => 'expenses']);
                                 </td>
                                 <td>
                                     <div class="v5-toolbar__group">
-                                        <a href="index.php?page=expenses&action=edit&id=<?= (int)$expense['id'] ?>" class="v5-btn-ghost" data-i18n="edit" title="Edit">
+                                        <a href="index.php?page=expenses&action=edit&id=<?= (int)$expense['id'] ?>" class="v5-btn-ghost" data-i18n="Edit" title="Edit">
                                             <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                            <span data-i18n="edit">Edit</span>
+                                            <span data-i18n="Edit">Edit</span>
                                         </a>
                                         <form method="POST" action="index.php?page=expenses" class="inline" onsubmit="return confirm('Delete this expense?');">
                                             <?= csrf_input() ?><input type="hidden" name="delete_id" value="<?= (int)$expense['id'] ?>">
-                                            <button type="submit" class="v5-btn-danger" data-i18n="delete" title="Delete">
+                                            <button type="submit" class="v5-btn-danger" data-i18n="Delete" title="Delete">
                                                 <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                                <span data-i18n="delete">Delete</span>
+                                                <span data-i18n="Delete">Delete</span>
                                             </button>
                                         </form>
                                     </div>

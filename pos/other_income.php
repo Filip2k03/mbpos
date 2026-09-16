@@ -119,7 +119,7 @@ include_template('header', ['page' => 'other_income']);
         <div class="v5-page-head__copy">
             <span class="v5-kicker" data-i18n="Finance">Finance</span>
             <h1 data-i18n="Other Income">Other Income</h1>
-            <p data-i18n="other_income.subtitle">Record non-freight revenue with currency-safe totals and an auditable history.</p>
+            <p data-i18n="Record non-freight revenue with currency-safe totals and an auditable history.">Record non-freight revenue with currency-safe totals and an auditable history.</p>
         </div>
         <?php if ($income_totals): ?>
         <div class="v5-toolbar__group">
@@ -140,10 +140,10 @@ include_template('header', ['page' => 'other_income']);
             <section class="v5-panel">
                 <div class="v5-panel__head">
                     <h2><?= $edit_income
-                        ? '<span data-i18n="other_income.edit_title">Edit Income Record</span>'
-                        : '<span data-i18n="other_income.add_title">Add Income Record</span>' ?></h2>
+                        ? '<span data-i18n="Edit Income Record">Edit Income Record</span>'
+                        : '<span data-i18n="Add Income Record">Add Income Record</span>' ?></h2>
                     <?php if ($edit_income): ?>
-                    <a class="v5-btn-ghost" href="index.php?page=other_income" data-i18n="Cancel edit">Cancel edit</a>
+                    <a class="v5-btn-ghost" href="index.php?page=other_income" data-i18n="Cancel">Cancel</a>
                     <?php endif; ?>
                 </div>
                 <div class="v5-panel__body">
@@ -220,8 +220,8 @@ include_template('header', ['page' => 'other_income']);
                                 <td colspan="5">
                                     <div class="v5-empty">
                                         <span class="v5-empty__icon"><?= mbpos_icon('other_income', 'w-8 h-8 text-slate-400') ?></span>
-                                        <strong data-i18n="other_income.empty_title">No additional income recorded</strong>
-                                        <p data-i18n="other_income.empty_hint">Add the first record using the form.</p>
+                                        <strong data-i18n="No additional income recorded">No additional income recorded</strong>
+                                        <p data-i18n="Add the first record using the form.">Add the first record using the form.</p>
                                     </div>
                                 </td>
                             </tr>

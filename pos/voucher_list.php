@@ -60,6 +60,8 @@ if ($stmt_count) {
     $result_count = mysqli_stmt_get_result($stmt_count);
     $total_vouchers = (int)mysqli_fetch_row($result_count)[0];
     mysqli_stmt_close($stmt_count);
+} else {
+    error_log('MBPOS voucher count prepare failed: ' . mysqli_error($connection));
 }
 $total_pages = max(1, (int)ceil($total_vouchers / $limit));
 $page = min($page, $total_pages);
@@ -104,6 +106,8 @@ if ($stmt) {
         }
     }
     mysqli_stmt_close($stmt);
+} else {
+    error_log('MBPOS voucher page prepare failed: ' . mysqli_error($connection));
 }
 
 // Prepare pagination links
@@ -111,6 +115,17 @@ $pagination_params = $_GET;
 unset($pagination_params['page'], $pagination_params['p']);
 $pagination_query_string = http_build_query($pagination_params);
 $pagination_suffix = $pagination_query_string !== '' ? '&' . $pagination_query_string : '';
+$export_params = array_filter([
+    'page' => 'export_vouchers',
+    'start_date' => $start_date,
+    'end_date' => $end_date,
+    'origin_region_id' => $filter_origin_region_id,
+    'destination_region_id' => $filter_destination_region_id,
+    'status' => $filter_status,
+    'search_column' => $search_column,
+    'search' => $search_term,
+], static fn($value) => $value !== '' && $value !== 'All');
+$export_url = 'index.php?' . http_build_query($export_params);
 
 include_template('header', ['page' => 'voucher_list']);
 ?>
@@ -124,6 +139,9 @@ include_template('header', ['page' => 'voucher_list']);
         </div>
         <div class="v5-page-actions flex items-center gap-3">
             <span class="v5-count"><?= number_format($total_vouchers) ?> <span data-i18n="total entries">total entries</span></span>
+            <?php if (is_admin() || is_developer() || is_staff()): ?>
+                <a href="<?= e($export_url) ?>" class="btn-secondary" data-i18n="Export CSV">Export CSV</a>
+            <?php endif; ?>
             <a href="index.php?page=voucher_create" class="btn-primary" data-i18n="Create Voucher">
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                 Create Voucher

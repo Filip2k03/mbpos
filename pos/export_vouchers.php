@@ -46,12 +46,41 @@ $query .= $queryFilter['where_sql'] . ' ORDER BY v.created_at DESC, v.id DESC';
 $stmt = mysqli_prepare($connection, $query);
 if ($stmt) {
     if (!empty($bind_params)) { mysqli_stmt_bind_param($stmt, $bind_params, ...$bind_values); }
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
+    if (!mysqli_stmt_execute($stmt)) {
+        error_log('MBPOS voucher export execute failed: ' . mysqli_stmt_error($stmt));
+        mysqli_stmt_close($stmt);
+        flash_message('error', 'Unable to generate the export right now. Please try again.');
+        redirect('index.php?page=voucher_list');
+    }
+
+    // Bind and fetch rows incrementally instead of buffering the complete
+    // ledger in PHP memory. This keeps large exports predictable as data grows.
+    mysqli_stmt_bind_result(
+        $stmt,
+        $row_id,
+        $voucher_code,
+        $sender_name,
+        $receiver_name,
+        $status,
+        $created_at,
+        $total_amount,
+        $currency,
+        $weight_kg,
+        $sender_phone,
+        $receiver_phone,
+        $origin_region,
+        $origin_branch,
+        $destination_region,
+        $destination_branch,
+        $created_by_username,
+        $creator_branch_name
+    );
 
     // --- Generate CSV Output ---
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="vouchers_export_' . date('Y-m-d') . '.csv"');
+    header('Cache-Control: no-store, private');
+    header('X-Content-Type-Options: nosniff');
 
     $output = fopen('php://output', 'w');
 
@@ -62,20 +91,25 @@ if ($stmt) {
     fputcsv($output, ['Voucher Code', 'Sender', 'Sender Phone', 'Receiver', 'Receiver Phone', 'Origin', 'Destination', 'Status', 'Total Amount', 'Weight (kg)', 'Date', 'Created By']);
 
     // Add data rows
-    while ($row = mysqli_fetch_assoc($result)) {
+    $csvSafe = static function ($value): string {
+        $value = (string)($value ?? '');
+        return preg_match('/^[=+\-@\t\r]/u', $value) ? "'" . $value : $value;
+    };
+
+    while (mysqli_stmt_fetch($stmt)) {
         fputcsv($output, [
-            $row['voucher_code'],
-            $row['sender_name'],
-            $row['sender_phone'],
-            $row['receiver_name'],
-            $row['receiver_phone'],
-            $row['origin_region'] . ' / ' . $row['origin_branch'],
-            $row['destination_region'] . ' / ' . $row['destination_branch'],
-            $row['status'],
-            $row['currency'] . ' ' . number_format($row['total_amount'], 2),
-            $row['weight_kg'],
-            $row['created_at'],
-            $row['created_by_username'] . ' (' . $row['creator_branch_name'] . ')'
+            $csvSafe($voucher_code),
+            $csvSafe($sender_name),
+            $csvSafe($sender_phone),
+            $csvSafe($receiver_name),
+            $csvSafe($receiver_phone),
+            $csvSafe($origin_region . ' / ' . $origin_branch),
+            $csvSafe($destination_region . ' / ' . $destination_branch),
+            $csvSafe($status),
+            $csvSafe($currency) . ' ' . number_format((float)$total_amount, 2),
+            $weight_kg,
+            $created_at,
+            $csvSafe($created_by_username . ' (' . $creator_branch_name . ')')
         ]);
     }
 

@@ -56,6 +56,13 @@ document.addEventListener('DOMContentLoaded', function () {
 (function () {
     const translations = {
         "Dashboard": "ဒက်ရှ်ဘုတ်",
+        "Create Voucher": "ဘောက်ချာဖန်တီးရန်",
+        "Shipments": "ပို့ဆောင်မှုများ",
+        "Customers": "ဖောက်သည်များ",
+        "Reports": "အစီရင်ခံစာများ",
+        "Settings": "ဆက်တင်များ",
+        "System Online": "စနစ်အွန်လိုင်း",
+        "Login Securely": "လုံခြုံစွာ ဝင်ရောက်ရန်",
         "Ledger": "မှတ်တမ်း",
         "Financials": "ဘဏ္ဍာရေး",
         "Admin Tools": "စီမံခန့်ခွဲမှုကိရိယာများ",

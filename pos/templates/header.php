@@ -18,6 +18,7 @@ $is_user_staff = is_staff();
 // Page title
 $page_title = $page_title ?? ((APP_NAME ?? 'MBLOGISTICS POS') . ' V5');
 $current_page = $_GET['page'] ?? 'dashboard';
+$is_voucher_workspace = ($current_page === 'voucher_create');
 
 // Fetch the unread notification count for the logged-in user
 $unread_notifications = 0;
@@ -310,150 +311,64 @@ if (is_logged_in()) {
     <div class="progress-bar-v3"><div class="progress-v3" id="loaderProgress"></div></div>
 </div>
 
-<!-- Desktop Glass Header -->
-<header class="glass-nav sticky top-0 z-40 transition-all duration-300">
-    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-20">
-            <!-- Brand -->
-            <a href="index.php?page=dashboard" class="flex items-center gap-2 group">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-indigo-500/30 transform group-hover:rotate-12 transition-all">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                </div>
-                <span class="text-2xl font-extrabold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent tracking-tight">MBLOGISTICS</span>
-                <span class="hidden sm:inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-indigo-600 border border-indigo-100">V5</span>
+<?php if (!$is_voucher_workspace): ?>
+<div class="mbpos-global-shell">
+    <?php if (is_logged_in()): ?>
+    <aside class="mbpos-sidebar" aria-label="POS navigation">
+        <a href="index.php?page=dashboard" class="mbpos-sidebar-brand">
+            <span class="mbpos-brand-mark" aria-hidden="true">M</span>
+            <span><strong>MBLOGISTICS</strong><small>POS V5 · FAST · SAFE · GLOBAL</small></span>
+        </a>
+        <nav class="mbpos-sidebar-nav">
+            <a href="index.php?page=dashboard" class="<?= $current_page === 'dashboard' ? 'is-active' : '' ?>"><span aria-hidden="true">⌂</span><span data-i18n="Dashboard">Dashboard</span></a>
+            <?php if ($is_user_staff || $is_user_admin || $is_user_developer): ?>
+            <a href="index.php?page=voucher_create" class="<?= $current_page === 'voucher_create' ? 'is-active' : '' ?>"><span aria-hidden="true">＋</span><span data-i18n="Create Voucher">Create Voucher</span></a>
+            <?php endif; ?>
+            <a href="index.php?page=stock_list" class="<?= $current_page === 'stock_list' ? 'is-active' : '' ?>"><span aria-hidden="true">◇</span><span data-i18n="Shipments">Shipments</span></a>
+            <a href="index.php?page=customer_list" class="<?= $current_page === 'customer_list' ? 'is-active' : '' ?>"><span aria-hidden="true">♙</span><span data-i18n="Customers">Customers</span></a>
+            <a href="index.php?page=voucher_list" class="<?= $current_page === 'voucher_list' ? 'is-active' : '' ?>"><span aria-hidden="true">▤</span><span data-i18n="Ledger">Ledger</span></a>
+            <a href="index.php?page=profit_loss" class="<?= $current_page === 'profit_loss' ? 'is-active' : '' ?>"><span aria-hidden="true">▥</span><span data-i18n="Reports">Reports</span></a>
+            <?php if ($is_user_admin || $is_user_developer): ?>
+            <a href="index.php?page=branches" class="<?= $current_page === 'branches' ? 'is-active' : '' ?>"><span aria-hidden="true">⌘</span><span data-i18n="Branches">Branches</span></a>
+            <a href="index.php?page=admin_dashboard" class="<?= $current_page === 'admin_dashboard' ? 'is-active' : '' ?>"><span aria-hidden="true">⚙</span><span data-i18n="Settings">Settings</span></a>
+            <?php endif; ?>
+        </nav>
+        <div class="mbpos-sidebar-status"><span class="mbpos-status-dot"></span><span data-i18n="System Online">System Online</span><small>MBPOS V5</small></div>
+    </aside>
+    <?php endif; ?>
+    <div class="mbpos-global-content">
+        <header class="mbpos-global-header">
+            <a href="index.php?page=dashboard" class="mbpos-header-brand">
+                <span class="mbpos-brand-mark" aria-hidden="true">M</span>
+                <span><strong>MBLOGISTICS</strong><small>V5 · Logistics POS</small></span>
             </a>
-
-            <button type="button" id="language-toggle" class="language-toggle ml-auto md:ml-2" aria-label="Switch language" title="Switch language">
-                <span class="language-option language-option-en">EN</span>
-                <span class="language-option language-option-mm">မြန်မာ</span>
-            </button>
-            <button type="button" id="install-pwa" class="pwa-install-button ml-2" hidden data-i18n="Install app">Install app</button>
-
-            <!-- Desktop Links -->
-            <div class="hidden md:flex items-center space-x-2">
+            <?php if (is_logged_in()): ?>
+            <div class="v5-global-search" role="search">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
+                <input id="global-search" type="search" autocomplete="off" placeholder="Search customer, tracking number, or voucher..." data-i18n-placeholder="Search customer, tracking number, or voucher..." aria-label="Search customer, tracking number, or voucher...">
+                <kbd>⌘ K</kbd>
+            </div>
+            <?php endif; ?>
+            <div class="mbpos-header-actions">
+                <button type="button" id="language-toggle" class="language-toggle" aria-label="Switch language" title="Switch language"><span class="language-option language-option-en">EN</span><span class="language-option language-option-mm">မြန်မာ</span></button>
+                <button type="button" id="install-pwa" class="pwa-install-button" hidden data-i18n="Install app">Install app</button>
                 <?php if (is_logged_in()): ?>
-                    <div class="v5-global-search hidden xl:flex" role="search">
-                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
-                        <input id="global-search" type="search" autocomplete="off" placeholder="Search customer, tracking number, or voucher..." data-i18n-placeholder="Search customer, tracking number, or voucher..." aria-label="Search customer, tracking number, or voucher...">
-                        <kbd>⌘ K</kbd>
-                    </div>
-                    <a data-i18n="Dashboard" href="index.php?page=dashboard" class="nav-link px-4 py-2 text-gray-600 hover:text-indigo-600 font-bold text-sm rounded-lg <?= $current_page == 'dashboard' ? 'active text-indigo-600' : '' ?>">Dashboard</a>
-                    <a data-i18n="Ledger" href="index.php?page=voucher_list" class="nav-link px-4 py-2 text-gray-600 hover:text-indigo-600 font-bold text-sm rounded-lg <?= $current_page == 'voucher_list' ? 'active text-indigo-600' : '' ?>">Ledger</a>
-                    <a data-i18n="Financials" href="index.php?page=profit_loss" class="nav-link px-4 py-2 text-gray-600 hover:text-indigo-600 font-bold text-sm rounded-lg <?= $current_page == 'profit_loss' ? 'active text-indigo-600' : '' ?>">Financials</a>
-                    
-                    <?php if ($is_user_admin || $is_user_developer): ?>
-                        <div class="relative group">
-                            <button data-i18n="Admin Tools" class="nav-link px-4 py-2 text-gray-600 hover:text-indigo-600 font-bold text-sm rounded-lg flex items-center gap-1 <?= in_array($current_page, ['admin_dashboard', 'developer_dashboard', 'branches', 'register']) ? 'active text-indigo-600' : '' ?>">
-                                Admin Tools
-                                <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                            </button>
-                            <!-- Dropdown -->
-                            <div class="glass-dropdown absolute left-0 mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-[0_10px_40px_rgb(0,0,0,0.1)] border border-gray-100 py-2 z-50">
-                                <a href="index.php?page=admin_dashboard" class="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-gray-600 hover:text-indigo-600 hover:bg-indigo-50/50 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                                    <span data-i18n="Admin Dashboard">Admin Dashboard</span>
-                                </a>
-                                <a href="index.php?page=register" class="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-gray-600 hover:text-indigo-600 hover:bg-indigo-50/50 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                                    <span data-i18n="User Management">User Management</span>
-                                </a>
-                                <?php if ($is_user_developer): ?>
-                                <a href="index.php?page=developer_dashboard" class="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-gray-600 hover:text-indigo-600 hover:bg-indigo-50/50 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                                    <span data-i18n="Dev Center">Dev Center</span>
-                                </a>
-                                <?php endif; ?>
-                                <a href="index.php?page=branches" class="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-gray-600 hover:text-indigo-600 hover:bg-indigo-50/50 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                                    <span data-i18n="Branches">Branches</span>
-                                </a>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-
-                    <div class="flex items-center gap-4 ml-2 border-l border-gray-200 pl-5">
-                        <!-- System Diagnostics & Load Trigger Button -->
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                            <span id="notification-badge" class="v3-badge" style="<?= $unread_notifications > 0 ? '' : 'display: none;' ?>"><?= $unread_notifications ?></span>
-                        </a>
-
-                        <!-- User Profile Pill -->
-                        <div class="flex items-center gap-3 bg-white border border-gray-100 shadow-sm py-1.5 px-2 pr-4 rounded-full">
-                            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-100 to-blue-50 text-indigo-600 flex items-center justify-center font-bold text-sm border border-indigo-100">
-                                <?= strtoupper(substr($_SESSION['username'] ?? 'U', 0, 1)) ?>
-                            </div>
-                            <div class="flex flex-col">
-                                <span class="text-gray-800 font-extrabold text-sm leading-tight"><?= htmlspecialchars($_SESSION['username'] ?? 'User'); ?></span>
-                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider leading-tight"><?= htmlspecialchars(get_user_branch_name() ?? 'Global'); ?></span>
-                            </div>
-                        </div>
-
-                        <!-- Logout -->
-                        <a href="index.php?page=logout" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors" title="Logout">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 11-6 0v-1m6-10v1" /></svg>
-                        </a>
-                    </div>
+                <a href="index.php?page=notifications" class="mbpos-icon-button" aria-label="Notifications">🔔<span id="notification-badge" class="v3-badge" style="<?= $unread_notifications > 0 ? '' : 'display: none;' ?>"><?= $unread_notifications ?></span></a>
+                <div class="mbpos-user-chip"><span class="mbpos-user-avatar"><?= strtoupper(substr($_SESSION['username'] ?? 'U', 0, 1)) ?></span><span><strong><?= htmlspecialchars($_SESSION['username'] ?? 'User') ?></strong><small><?= htmlspecialchars(get_user_branch_name() ?? 'Global') ?></small></span></div>
+                <a href="index.php?page=logout" class="mbpos-icon-button mbpos-logout" aria-label="Logout">↪</a>
                 <?php else: ?>
-                    <a href="index.php?page=login" class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold hover:shadow-lg hover:shadow-indigo-500/30 transition-all transform hover:-translate-y-0.5">Login Securely</a>
+                <a href="index.php?page=login" class="mbpos-login-link" data-i18n="Login Securely">Login Securely</a>
                 <?php endif; ?>
             </div>
-        </div>
-    </nav>
-</header>
-
-
-<!-- Floating Glass Mobile Nav (Premium V5) -->
-<?php if (is_logged_in()): ?>
-<div class="md:hidden fixed bottom-5 left-4 right-4 z-50">
-    <nav class="glass-mobile-nav rounded-3xl px-2 py-3 flex justify-between items-center relative" aria-label="Mobile Navigation">
-        
-        <a href="index.php?page=dashboard" class="mobile-nav-item flex-1 flex flex-col items-center gap-1 text-gray-400 transition-colors <?= $current_page === 'dashboard' ? 'active' : '' ?>">
-            <div class="<?= $current_page === 'dashboard' ? 'bg-indigo-50 p-1.5 rounded-xl' : 'p-1.5' ?> transition-colors">
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-            </div>
-            <span data-i18n="Home" class="text-[10px] font-bold tracking-wide">Home</span>
-        </a>
-
-        <a href="index.php?page=notifications" class="mobile-nav-item flex-1 flex flex-col items-center gap-1 text-gray-400 transition-colors relative <?= $current_page === 'notifications' ? 'active' : '' ?>">
-            <div class="<?= $current_page === 'notifications' ? 'bg-indigo-50 p-1.5 rounded-xl' : 'p-1.5' ?> transition-colors relative">
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                <span id="mobile-notification-badge" class="v3-badge right-0 top-0" style="<?= $unread_notifications > 0 ? '' : 'display: none;' ?>"><?= $unread_notifications ?></span>
-            </div>
-            <span data-i18n="Alerts" class="text-[10px] font-bold tracking-wide">Alerts</span>
-        </a>
-        
-        <!-- Center Floating Action Button (FAB) -->
-        <?php if ($is_user_staff || $is_user_admin || $is_user_developer): ?>
-        <div class="flex-1 flex justify-center">
-            <a href="index.php?page=voucher_create" class="mobile-fab flex items-center justify-center text-white rounded-full w-14 h-14 -mt-10 border-4 border-white z-20">
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                    <path d="M12 4v16m8-8H4" />
-                </svg>
-            </a>
-        </div>
-        <?php else: ?>
-        <div class="flex-1"></div> <!-- Spacer if not authorized to create -->
-        <?php endif; ?>
-
-        <a href="index.php?page=voucher_list" class="mobile-nav-item flex-1 flex flex-col items-center gap-1 text-gray-400 transition-colors <?= $current_page === 'voucher_list' ? 'active' : '' ?>">
-            <div class="<?= $current_page === 'voucher_list' ? 'bg-indigo-50 p-1.5 rounded-xl' : 'p-1.5' ?> transition-colors">
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-            </div>
-            <span data-i18n="Ledger" class="text-[10px] font-bold tracking-wide">Ledger</span>
-        </a>
-
-        <a href="index.php?page=logout" class="mobile-nav-item flex-1 flex flex-col items-center gap-1 text-gray-400 hover:text-red-500 transition-colors">
-            <div class="p-1.5 transition-colors">
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 11-6 0v-1m6-10v1" /></svg>
-            </div>
-            <span data-i18n="Logout" class="text-[10px] font-bold tracking-wide">Logout</span>
-        </a>
-    </nav>
-</div>
+        </header>
 <?php endif; ?>
 
-<main class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 relative z-10">
+<?php if (!$is_voucher_workspace): ?>
+<main class="mbpos-global-main container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 relative z-10">
     <?php display_flash_messages(); ?>
+<?php else: ?>
+    <?php display_flash_messages(); ?>
+<?php endif; ?>
 <!-- Note: Main tag remains open to wrap content, gets closed in footer.php -->
 
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>

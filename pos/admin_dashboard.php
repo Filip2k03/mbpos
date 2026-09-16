@@ -22,8 +22,17 @@ $total_vouchers = mysqli_fetch_assoc($total_vouchers_result)['total'] ?? 0;
 $total_users_result = mysqli_query($connection, "SELECT COUNT(id) AS total FROM users");
 $total_users = mysqli_fetch_assoc($total_users_result)['total'] ?? 0;
 
-$total_revenue_result = mysqli_query($connection, "SELECT SUM(total_amount) AS total FROM vouchers");
-$total_revenue = mysqli_fetch_assoc($total_revenue_result)['total'] ?? 0;
+$revenue_by_currency = [];
+$rev_result = mysqli_query($connection, "SELECT currency, SUM(total_amount) AS total FROM vouchers WHERE status != 'Cancelled' GROUP BY currency ORDER BY total DESC");
+if ($rev_result) {
+    while ($row = mysqli_fetch_assoc($rev_result)) {
+        $c = trim($row['currency'] ?? '');
+        if ($c === '') {
+            $c = 'MMK';
+        }
+        $revenue_by_currency[$c] = (float)($row['total'] ?? 0);
+    }
+}
 
 $today_vouchers_result = mysqli_query($connection, "SELECT COUNT(id) AS today FROM vouchers WHERE DATE(created_at) = CURDATE()");
 $today_vouchers = mysqli_fetch_assoc($today_vouchers_result)['today'] ?? 0;
@@ -84,7 +93,26 @@ include_template('header', ['page' => 'admin_dashboard']);
                 </span>
                 <span class="v5-status-dot" style="background:#fffbeb;color:#d97706;" data-i18n="Gross Revenue">Gross Revenue</span>
             </div>
-            <div style="font-size:2.25rem;font-weight:900;color:var(--v5-text);line-height:1;margin-bottom:.35rem;"><?php echo number_format($total_revenue, 2); ?></div>
+            <div style="margin-bottom:.35rem;">
+                <?php if (empty($revenue_by_currency)): ?>
+                    <div style="font-size:2.25rem;font-weight:900;color:var(--v5-text);line-height:1;">0.00</div>
+                <?php elseif (count($revenue_by_currency) === 1): ?>
+                    <?php foreach ($revenue_by_currency as $curr => $amt): ?>
+                        <div style="font-size:1.65rem;font-weight:900;color:var(--v5-text);line-height:1.1;word-break:break-all;">
+                            <span style="font-size:.85rem;font-weight:700;color:var(--v5-muted);margin-right:.25rem;"><?= e($curr) ?></span><?= number_format($amt, 2) ?>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div style="display:flex;flex-direction:column;gap:.35rem;max-height:6rem;overflow-y:auto;">
+                        <?php foreach ($revenue_by_currency as $curr => $amt): ?>
+                            <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;">
+                                <span class="v5-badge" style="font-size:.65rem;padding:0.1rem 0.35rem;font-weight:800;"><?= e($curr) ?></span>
+                                <span style="font-size:1.05rem;font-weight:900;color:var(--v5-text);font-variant-numeric:tabular-nums;"><?= number_format($amt, 2) ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
             <div style="font-size:.72rem;font-weight:700;color:var(--v5-muted);text-transform:uppercase;letter-spacing:.06em;" data-i18n="Gross Ledger Revenue">Gross Ledger Revenue</div>
         </div>
 

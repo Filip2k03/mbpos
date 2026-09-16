@@ -4,6 +4,7 @@
 require_once 'config.php';
 require_once 'includes/functions.php';
 require_once 'includes/cache.php';
+require_once 'includes/voucher_query.php';
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -28,59 +29,28 @@ $regions = mbpos_cache_remember('lookup-regions', 'all', 300, function () use ($
     return $rows;
 });
 $possible_statuses = ['Pending', 'In Transit', 'Delivered', 'Received', 'Cancelled', 'Returned', 'Maintenance'];
-$allowed_search_columns = ['voucher_code', 'sender_name', 'receiver_name', 'receiver_phone'];
 
 // --- Get Filter Parameters from GET request ---
-$start_date = $_GET['start_date'] ?? '';
-$end_date = $_GET['end_date'] ?? '';
-$filter_origin_region_id = $_GET['origin_region_id'] ?? 'All';
-$filter_destination_region_id = $_GET['destination_region_id'] ?? 'All';
-$filter_status = $_GET['status'] ?? '';
-$search_term = trim($_GET['search'] ?? '');
-$search_column = $_GET['search_column'] ?? 'voucher_code';
+$filters = mbpos_normalize_voucher_filters($_GET, $possible_statuses);
+$start_date = $filters['start_date'];
+$end_date = $filters['end_date'];
+$filter_origin_region_id = $filters['origin_region_id'];
+$filter_destination_region_id = $filters['destination_region_id'];
+$filter_status = $filters['status'];
+$search_term = $filters['search'];
+$search_column = $filters['search_column'];
 
 // --- Pagination Setup ---
 $limit = 30; // Vouchers per page
 $page = isset($_GET['p']) ? max(1, (int)$_GET['p']) : 1;
-$offset = ($page - 1) * $limit;
-
-// --- Build Query with Filters ---
-$base_query = "FROM vouchers v
-               LEFT JOIN regions r_origin ON v.region_id = r_origin.id
-               LEFT JOIN regions r_dest ON v.destination_region_id = r_dest.id
-               LEFT JOIN branches b_origin ON v.origin_branch_id = b_origin.id
-               LEFT JOIN branches b_dest ON v.destination_branch_id = b_dest.id
-               LEFT JOIN users u ON v.created_by_user_id = u.id
-               LEFT JOIN branches b_user ON u.branch_id = b_user.id";
-
-$where_clauses = [];
-$bind_params = '';
-$bind_values = [];
-
-// --- Apply Branch and Role-Based Security Filter ---
-if (is_staff() && $user_branch_id) {
-    $where_clauses[] = "(v.origin_branch_id = ? OR (v.destination_branch_id = ? AND v.status != 'Pending'))";
-    $bind_params .= 'ii';
-    $bind_values[] = $user_branch_id;
-    $bind_values[] = $user_branch_id;
-}
-
-// --- Apply User-Selected Filters ---
-if (!empty($start_date)) { $where_clauses[] = "DATE(v.created_at) >= ?"; $bind_params .= 's'; $bind_values[] = $start_date; }
-if (!empty($end_date)) { $where_clauses[] = "DATE(v.created_at) <= ?"; $bind_params .= 's'; $bind_values[] = $end_date; }
-if ($filter_origin_region_id !== 'All' && is_numeric($filter_origin_region_id)) { $where_clauses[] = "v.region_id = ?"; $bind_params .= 'i'; $bind_values[] = intval($filter_origin_region_id); }
-if ($filter_destination_region_id !== 'All' && is_numeric($filter_destination_region_id)) { $where_clauses[] = "v.destination_region_id = ?"; $bind_params .= 'i'; $bind_values[] = intval($filter_destination_region_id); }
-if (!empty($filter_status)) { $where_clauses[] = "v.status = ?"; $bind_params .= 's'; $bind_values[] = $filter_status; }
-if (!empty($search_term) && in_array($search_column, $allowed_search_columns)) { $where_clauses[] = "v.$search_column LIKE ?"; $bind_params .= 's'; $bind_values[] = '%' . $search_term . '%'; }
-
-$where_sql = '';
-if (!empty($where_clauses)) {
-    $where_sql = " WHERE " . implode(' AND ', $where_clauses);
-}
+$queryFilter = mbpos_build_voucher_filter_sql($filters, (int)$user_branch_id, is_staff());
+$where_sql = $queryFilter['where_sql'];
+$bind_params = $queryFilter['types'];
+$bind_values = $queryFilter['values'];
 
 // --- Get Total Count for Pagination ---
 $total_vouchers = 0;
-$count_query = "SELECT COUNT(v.id) " . $base_query . $where_sql;
+$count_query = 'SELECT COUNT(*) FROM vouchers v' . $where_sql;
 $stmt_count = mysqli_prepare($connection, $count_query);
 if ($stmt_count) {
     if (!empty($bind_params)) {
@@ -92,6 +62,8 @@ if ($stmt_count) {
     mysqli_stmt_close($stmt_count);
 }
 $total_pages = max(1, (int)ceil($total_vouchers / $limit));
+$page = min($page, $total_pages);
+$offset = ($page - 1) * $limit;
 
 // --- Fetch Vouchers for the Current Page ---
 $vouchers = [];
@@ -105,7 +77,19 @@ $select_fields = "SELECT\n" .
                 "u.username as created_by_username,\n" .
                 "b_user.branch_name as creator_branch_name ";
 
-$query = $select_fields . $base_query . $where_sql . " ORDER BY v.created_at DESC LIMIT ? OFFSET ?";
+// Filter and paginate voucher IDs before joining lookup tables, so each request
+// performs enrichment joins for at most one page of records.
+$query = $select_fields .
+    "FROM (SELECT v.id FROM vouchers v" . $where_sql .
+    " ORDER BY v.created_at DESC, v.id DESC LIMIT ? OFFSET ?) page_rows " .
+    "INNER JOIN vouchers v ON v.id = page_rows.id " .
+    "LEFT JOIN regions r_origin ON v.region_id = r_origin.id " .
+    "LEFT JOIN regions r_dest ON v.destination_region_id = r_dest.id " .
+    "LEFT JOIN branches b_origin ON v.origin_branch_id = b_origin.id " .
+    "LEFT JOIN branches b_dest ON v.destination_branch_id = b_dest.id " .
+    "LEFT JOIN users u ON v.created_by_user_id = u.id " .
+    "LEFT JOIN branches b_user ON u.branch_id = b_user.id " .
+    "ORDER BY v.created_at DESC, v.id DESC";
 $page_bind_params = $bind_params . 'ii';
 $page_bind_values = array_merge($bind_values, [$limit, $offset]);
 
@@ -124,8 +108,9 @@ if ($stmt) {
 
 // Prepare pagination links
 $pagination_params = $_GET;
-unset($pagination_params['p']);
+unset($pagination_params['page'], $pagination_params['p']);
 $pagination_query_string = http_build_query($pagination_params);
+$pagination_suffix = $pagination_query_string !== '' ? '&' . $pagination_query_string : '';
 
 include_template('header', ['page' => 'voucher_list']);
 ?>
@@ -203,6 +188,7 @@ include_template('header', ['page' => 'voucher_list']);
                             <option value="voucher_code" <?= ($search_column === 'voucher_code') ? 'selected' : '' ?> data-i18n="Voucher Code">Voucher Code</option>
                             <option value="sender_name" <?= ($search_column === 'sender_name') ? 'selected' : '' ?> data-i18n="Sender Name">Sender Name</option>
                             <option value="receiver_name" <?= ($search_column === 'receiver_name') ? 'selected' : '' ?> data-i18n="Receiver Name">Receiver Name</option>
+                            <option value="receiver_phone" <?= ($search_column === 'receiver_phone') ? 'selected' : '' ?> data-i18n="Receiver Phone">Receiver Phone</option>
                         </select>
                         <input type="search" id="search_term" name="search" class="v5-input flex-1" placeholder="Type to search..." value="<?= e($search_term) ?>">
                     </div>
@@ -298,7 +284,7 @@ include_template('header', ['page' => 'voucher_list']);
             <div class="v5-panel__head border-t border-slate-100 flex items-center justify-between">
                 <div>
                     <?php if ($page > 1): ?>
-                        <a href="index.php?page=voucher_list&p=<?= $page - 1 ?>&<?= e($pagination_query_string) ?>" class="btn-secondary btn-sm inline-flex items-center gap-1.5">
+                        <a href="index.php?page=voucher_list&p=<?= $page - 1 ?><?= e($pagination_suffix) ?>" class="btn-secondary btn-sm inline-flex items-center gap-1.5">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                             <span data-i18n="Previous">Previous</span>
                         </a>
@@ -311,7 +297,7 @@ include_template('header', ['page' => 'voucher_list']);
 
                 <div>
                     <?php if ($page < $total_pages): ?>
-                        <a href="index.php?page=voucher_list&p=<?= $page + 1 ?>&<?= e($pagination_query_string) ?>" class="btn-secondary btn-sm inline-flex items-center gap-1.5">
+                        <a href="index.php?page=voucher_list&p=<?= $page + 1 ?><?= e($pagination_suffix) ?>" class="btn-secondary btn-sm inline-flex items-center gap-1.5">
                             <span data-i18n="Next">Next</span>
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                         </a>

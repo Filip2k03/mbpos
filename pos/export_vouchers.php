@@ -3,6 +3,7 @@
 
 require_once 'config.php';
 require_once 'includes/functions.php';
+require_once 'includes/voucher_query.php';
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -17,17 +18,9 @@ if (!is_logged_in() || (!is_admin() && !is_developer() && !is_staff())) {
 global $connection;
 $user_branch_id = get_user_branch_id();
 
-// --- Define search columns ---
-$allowed_search_columns = ['voucher_code', 'sender_name', 'receiver_name', 'receiver_phone'];
-
 // Get filter parameters from GET request
-$start_date = $_GET['start_date'] ?? '';
-$end_date = $_GET['end_date'] ?? '';
-$filter_origin_region_id = $_GET['origin_region_id'] ?? 'All';
-$filter_destination_region_id = $_GET['destination_region_id'] ?? 'All';
-$filter_status = $_GET['status'] ?? '';
-$search_term = trim($_GET['search'] ?? '');
-$search_column = $_GET['search_column'] ?? 'voucher_code';
+$possible_statuses = ['Pending', 'In Transit', 'Delivered', 'Received', 'Cancelled', 'Returned', 'Maintenance'];
+$filters = mbpos_normalize_voucher_filters($_GET, $possible_statuses);
 
 // Build the main query
 $query = "SELECT v.id, v.voucher_code, v.sender_name, v.receiver_name, v.status, v.created_at, v.total_amount, v.currency, v.weight_kg, v.sender_phone, v.receiver_phone,
@@ -45,28 +38,10 @@ $query = "SELECT v.id, v.voucher_code, v.sender_name, v.receiver_name, v.status,
           LEFT JOIN users u ON v.created_by_user_id = u.id
           LEFT JOIN branches b_user ON u.branch_id = b_user.id";
 
-$where_clauses = [];
-$bind_params = '';
-$bind_values = [];
-
-// Apply Branch and Role-Based Security Filter
-if (is_staff() && $user_branch_id) {
-    $where_clauses[] = "(v.origin_branch_id = ? OR (v.destination_branch_id = ? AND v.status != 'Pending'))";
-    $bind_params .= 'ii';
-    $bind_values[] = $user_branch_id;
-    $bind_values[] = $user_branch_id;
-}
-
-// Apply User-Selected Filters
-if (!empty($start_date)) { $where_clauses[] = "DATE(v.created_at) >= ?"; $bind_params .= 's'; $bind_values[] = $start_date; }
-if (!empty($end_date)) { $where_clauses[] = "DATE(v.created_at) <= ?"; $bind_params .= 's'; $bind_values[] = $end_date; }
-if ($filter_origin_region_id !== 'All' && is_numeric($filter_origin_region_id)) { $where_clauses[] = "v.region_id = ?"; $bind_params .= 'i'; $bind_values[] = intval($filter_origin_region_id); }
-if ($filter_destination_region_id !== 'All' && is_numeric($filter_destination_region_id)) { $where_clauses[] = "v.destination_region_id = ?"; $bind_params .= 'i'; $bind_values[] = intval($filter_destination_region_id); }
-if (!empty($filter_status)) { $where_clauses[] = "v.status = ?"; $bind_params .= 's'; $bind_values[] = $filter_status; }
-if (!empty($search_term) && in_array($search_column, $allowed_search_columns)) { $where_clauses[] = "v.$search_column LIKE ?"; $bind_params .= 's'; $bind_values[] = '%' . $search_term . '%'; }
-
-if(!empty($where_clauses)){ $query .= " WHERE " . implode(' AND ', $where_clauses); }
-$query .= " ORDER BY v.created_at DESC";
+$queryFilter = mbpos_build_voucher_filter_sql($filters, (int)$user_branch_id, is_staff());
+$bind_params = $queryFilter['types'];
+$bind_values = $queryFilter['values'];
+$query .= $queryFilter['where_sql'] . ' ORDER BY v.created_at DESC, v.id DESC';
 
 $stmt = mysqli_prepare($connection, $query);
 if ($stmt) {
@@ -111,6 +86,6 @@ if ($stmt) {
 } else {
     error_log('MBPOS voucher export prepare failed: ' . mysqli_error($connection));
     flash_message('error', 'Unable to prepare the export right now. Please try again.');
-    redirect('index.php?page=voucher_bulk_update');
+    redirect('index.php?page=voucher_list');
 }
 ?>

@@ -391,17 +391,61 @@ document.addEventListener('DOMContentLoaded', function () {
         "total entries": "စုစုပေါင်း မှတ်တမ်း",
         "Export CSV": "CSV ထုတ်ယူရန်",
 
-        // Diagnostics & Maintenance
+        // Diagnostics, Dev Center & Maintenance
         "Error Logs": "ချို့ယွင်းချက် မှတ်တမ်း",
         "System Diagnostics": "စနစ်စစ်ဆေးမှု",
         "High Load Alert": "ဝန်ထုပ်ဝန်ပိုးမြင့်မားနေပါသည်",
         "System Advisory": "စနစ်ဆိုင်ရာ အကြံပြုချက်",
         "Modify in Dev Center": "စနစ်ပြုပြင်ရေးတွင် ပြင်ရန်",
-        "Dev Center": "စနစ်ပြုပြင်ရေး ဗဟို",
+        "Developer Tools": "ဆော့ဖ်ဝဲရေးသားသူ ကိရိယာများ",
         "Developer-Only Area": "စနစ်ပြုပြင်သူများသာ ဝင်ရောက်နိုင်သော နေရာ",
+        "System diagnostics, database access, and core configuration": "စနစ်စစ်ဆေးမှု၊ ဒေတာဘေ့စ်နှင့် အဓိကဆက်တင်များ",
+        "Database Console": "ဒေတာဘေ့စ် ထိန်းချုပ်ခန်း",
+        "Read-Only": "ဖတ်ရှုခွင့်သာ",
+        "SQL Query": "SQL မေးခွန်းထုတ်မှု",
+        "Execute Query": "မေးခွန်းထုတ်မှုကို စစ်ဆေးရန်",
+        "System error_log": "စနစ်ချို့ယွင်းချက် မှတ်တမ်း",
+        "View Full Log": "မှတ်တမ်းအပြည့်အစုံ ကြည့်ရန်",
+        "Query Output": "စစ်ဆေးမှု ရလဒ်",
+        "Query executed successfully.": "မေးခွန်းထုတ်မှု အောင်မြင်ပါသည်",
+        "rows affected.": "ခု တွေ့ရှိပါသည်",
+        "Core Configuration Shortcuts": "အဓိက ဆက်တင် ဖြတ်လမ်းများ",
+        "Branch Logic": "ရုံးခွဲ ဆက်တင်များ",
+        "Identity Hub": "အသုံးပြုသူ စီမံခန့်ခွဲမှု",
+        "Full Debug Log": "အပြည့်အစုံ စစ်ဆေးမှု မှတ်တမ်း",
+        "Toggle site offline mode": "စနစ်ထိန်းသိမ်းမှု ဖွင့်/ပိတ်ရန်",
+        "Manage operational nodes": "ရုံးခွဲကွန်ရက်များ စီမံရန်",
+        "Provision new accounts": "အကောင့်အသစ်များ ဖွင့်ရန်",
+        "Trace system exceptions": "စနစ်ချို့ယွင်းချက်များ ခြေရာခံရန်",
+        "Querying Database Metrics...": "ဒေတာဘေ့စ် အချက်အလက်များ စစ်ဆေးနေပါသည်...",
+        "DB Size": "ဒေတာဘေ့စ် အရွယ်အစား",
+        "Tables": "ဇယားများ",
+        "Version": "ဗားရှင်း",
+        "Cache Layer": "ကက်ရှ် အလွှာ",
+        "Fail-open active": "အရန်စနစ် အသက်ဝင်နေပါသည်",
+        "Failed to fetch live database metrics.": "ဒေတာဘေ့စ် အချက်အလက် ရယူရန် မအောင်မြင်ပါ",
         "Routine maintenance & updates in progress": "ပုံမှန်စနစ်ထိန်းသိမ်းမှုနှင့် အဆင့်မြှင့်တင်မှုများ ဆောင်ရွက်နေပါသည်",
         "Active Maintenance": "စနစ်ထိန်းသိမ်းနေဆဲ",
         "Normal Operation": "ပုံမှန်လည်ပတ်နေသည်",
+
+        // Admin Control Center & System Oversight
+        "High-level operational metrics and systemic oversight.": "အဆင့်မြင့် လုပ်ငန်းဆောင်ရွက်မှုဆိုင်ရာ အချက်အလက်များနှင့် ကြီးကြပ်ကွပ်ကဲမှု",
+        "Administrator Access": "စီမံခန့်ခွဲသူ အသုံးပြုခွင့်",
+        "Total Vouchers": "စုစုပေါင်း ဘောက်ချာများ",
+        "Global Vouchers Processed": "စနစ်တစ်ခုလုံး၏ ဘောက်ချာအရေအတွက်",
+        "Registered Personnel": "စာရင်းသွင်းထားသော ဝန်ထမ်းများ",
+        "Active System Users": "လက်ရှိ စနစ်အသုံးပြုသူများ",
+        "Gross Ledger Revenue": "စာရင်းအရ စုစုပေါင်း ဝင်ငွေ",
+        "Today": "ယနေ့",
+        "Vouchers Today": "ယနေ့ ဘောက်ချာများ",
+        "Administrative Actions": "စီမံခန့်ခွဲမှု ဆောင်ရွက်ချက်များ",
+        "Register and manage staff access.": "ဝန်ထမ်းအကောင့်များ စာရင်းသွင်းခြင်းနှင့် စီမံခန့်ခွဲခြင်း",
+        "Global Ledger": "စနစ်လုံးဆိုင်ရာ ဘောက်ချာမှတ်တမ်း",
+        "View and audit all system vouchers.": "ဘောက်ချာအားလုံးကို စစ်ဆေးကြည့်ရှုရန်",
+        "Branch Architecture": "ရုံးခွဲကွန်ရက် ဖွဲ့စည်းပုံ",
+        "Configure regions and operating nodes.": "ဒေသများနှင့် ရုံးခွဲကွန်ရက်များ ပြင်ဆင်ရန်",
+        "Profit / Loss": "အမြတ် / အရှုံး",
+        "Analyze overall system financials.": "စနစ်၏ စုစုပေါင်း ဘဏ္ဍာရေးကို သုံးသပ်ရန်",
 
         // Auth & Portal
         "MBPOS Portal": "MBPOS စနစ်ဝင်ရောက်ရန်",
@@ -485,6 +529,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.mbposT = function (key) {
         return currentLanguage() === 'mm' ? (translations[key] || key) : key;
     };
+    window.mbposApplyLanguage = applyLanguage;
 
     function translateText(text, language) {
         const normalized = text.trim();

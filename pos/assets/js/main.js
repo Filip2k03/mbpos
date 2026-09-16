@@ -605,7 +605,7 @@ document.addEventListener('DOMContentLoaded', function () {
         "Adjust the search or reset the filter set.": "ရှာဖွေမှု ပြင်ဆင်ပါ သို့မဟုတ် စစ်ထုတ်မှု ပြန်လည်သတ်မှတ်ပါ",
         "No shipments match these filters": "ရှာဖွေမှုနှင့် ကိုက်ညီသော ပို့ဆောင်မှု မရှိပါ",
         "Adjust the date, region, status, or search query.": "ရက်စွဲ၊ ဒေသ၊ အခြေအနေ သို့မဟုတ် စာလုံး ပြင်ဆင်ရှာဖွေပါ",
-        "Filter up to 500 ledger records and apply controlled shipment-status changes.": "ဘောက်ချာမှတ်တမ်း ၅၀၀ အထိ စစ်ထုတ်ပြီး ပို့ဆောင်မှု အခြေအနေများကို အစုလိုက် ပြောင်းလဲပါ",
+        "Filter ledger records and apply controlled shipment-status changes.": "ဘောက်ချာမှတ်တမ်းများကို စစ်ထုတ်ပြီး ပို့ဆောင်မှုအခြေအနေများအား ထိန်းချုပ်၍ အစုလိုက် ပြောင်းလဲပါ",
         "Search, monitor, and update the active logistics queue.": "လက်ရှိ ပို့ဆောင်မှု အစီအစဉ်များကို ရှာဖွေ၊ စောင့်ကြည့်၊ မွမ်းမံပါ",
         "selected": "ခု ရွေးချယ်ထားသည်",
         "Live database records": "လက်ရှိ ဒေတာဘေ့စ် မှတ်တမ်းများ",

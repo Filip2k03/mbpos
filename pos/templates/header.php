@@ -162,7 +162,7 @@ $nav_groups = [
 ];
 ?>
 <!DOCTYPE html>
-<html lang="en" data-app-version="<?= defined('APP_VERSION') ? htmlspecialchars(APP_VERSION, ENT_QUOTES, 'UTF-8') : '5.2.8' ?>">
+<html lang="en" data-app-version="<?= defined('APP_VERSION') ? htmlspecialchars(APP_VERSION, ENT_QUOTES, 'UTF-8') : '5.2.9' ?>">
 <head>
     <meta charset="UTF-8" />
     <script>

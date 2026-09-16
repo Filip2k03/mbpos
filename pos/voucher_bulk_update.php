@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mysqli_stmt_bind_param($stmt, $types, ...$update_values);
             if (mysqli_stmt_execute($stmt)) {
                 $count = mysqli_stmt_affected_rows($stmt);
-                flash_message('success', "$count vouchers were successfully updated to '" . e($new_status) . "'.");
+                flash_message('success', "$count vouchers were successfully updated to '" . $new_status . "'.");
             } else {
                 error_log('MBPOS bulk voucher update execute failed: ' . mysqli_stmt_error($stmt));
                 flash_message('error', 'Unable to update the selected vouchers. Please try again.');

@@ -56,22 +56,13 @@ $nav_groups = [
             'mobile_priority' => 2,
         ],
         [
-            'key' => 'stock_list',
-            'label' => 'Shipments',
-            'route' => 'index.php?page=stock_list',
-            'icon' => 'stock_list',
-            'allowed' => true,
-            'aliases' => ['stock_list'],
-            'mobile_priority' => 3,
-        ],
-        [
             'key' => 'voucher_list',
             'label' => 'Voucher Ledger',
             'route' => 'index.php?page=voucher_list',
             'icon' => 'voucher_list',
             'allowed' => true,
             'aliases' => ['voucher_list', 'voucher_bulk_update', 'voucher_view'],
-            'mobile_priority' => 4,
+            'mobile_priority' => 3,
         ],
     ],
     'Finance' => [
@@ -328,13 +319,6 @@ $nav_groups = [
                         </div>
                         <span class="mbpos-cmd-item-badge">Operations</span>
                     </a>
-                    <a href="index.php?page=stock_list" class="mbpos-cmd-item" data-jump="shipments">
-                        <div class="mbpos-cmd-item-left">
-                            <span class="mbpos-cmd-item-icon"><?= mbpos_icon('stock_list', 'w-4 h-4') ?></span>
-                            <span data-i18n="Shipments">Shipments</span>
-                        </div>
-                        <span class="mbpos-cmd-item-badge">Operations</span>
-                    </a>
                     <?php if ($is_user_admin || $is_user_developer): ?>
                     <a href="index.php?page=profit_loss" class="mbpos-cmd-item" data-jump="profit">
                         <div class="mbpos-cmd-item-left">
@@ -407,10 +391,6 @@ $nav_groups = [
                         <span><kbd>L</kbd></span>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(220, 231, 243, 0.6);">
-                        <span data-i18n="Shipments Queue">Shipments Queue</span>
-                        <span><kbd>S</kbd></span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(220, 231, 243, 0.6);">
                         <span data-i18n="Shortcuts Cheat Sheet">Shortcuts Cheat Sheet</span>
                         <span><kbd>?</kbd></span>
                     </div>
@@ -436,10 +416,6 @@ $nav_groups = [
                 <span data-i18n="Create Voucher">Create</span>
             </a>
             <?php endif; ?>
-            <a href="index.php?page=stock_list" class="mbpos-mobile-nav-item <?= $current_page === 'stock_list' ? 'is-active' : '' ?>" <?= $current_page === 'stock_list' ? 'aria-current="page"' : '' ?>>
-                <span class="mbpos-mobile-icon" aria-hidden="true"><?= mbpos_icon('stock_list', 'w-5 h-5') ?></span>
-                <span data-i18n="Shipments">Shipments</span>
-            </a>
             <a href="index.php?page=voucher_list" class="mbpos-mobile-nav-item <?= in_array($current_page, ['voucher_list', 'voucher_bulk_update', 'voucher_view'], true) ? 'is-active' : '' ?>" <?= in_array($current_page, ['voucher_list', 'voucher_bulk_update', 'voucher_view'], true) ? 'aria-current="page"' : '' ?>>
                 <span class="mbpos-mobile-icon" aria-hidden="true"><?= mbpos_icon('voucher_list', 'w-5 h-5') ?></span>
                 <span data-i18n="Ledger">Ledger</span>

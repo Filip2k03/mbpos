@@ -1396,7 +1396,6 @@ include_template('header', ['page' => 'voucher_create']);
     <nav class="nav">
       <a href="index.php?page=dashboard"><?= mbpos_icon('dashboard', 'w-4 h-4') ?><span data-i18n="Dashboard">Dashboard</span></a>
       <a href="index.php?page=voucher_create" class="active" aria-current="page"><?= mbpos_icon('voucher_create', 'w-4 h-4') ?><span data-i18n="Create Voucher">Create Voucher</span></a>
-      <a href="index.php?page=stock_list"><?= mbpos_icon('stock_list', 'w-4 h-4') ?><span data-i18n="Shipments">Shipments</span></a>
       <a href="index.php?page=voucher_list"><?= mbpos_icon('voucher_list', 'w-4 h-4') ?><span data-i18n="Voucher Ledger">Voucher Ledger</span></a>
       <?php if (is_admin() || is_developer()): ?>
         <a href="index.php?page=profit_loss"><?= mbpos_icon('profit_loss', 'w-4 h-4') ?><span data-i18n="Profit & Loss">Profit &amp; Loss</span></a>

@@ -72,7 +72,7 @@ Do not duplicate role checks in four separate markup trees. The server decides v
 
 Target information architecture:
 
-1. Operations: Dashboard, Create Voucher, Shipments, Voucher Ledger.
+1. Operations: Dashboard, Create Voucher, Voucher Ledger.
 2. Finance: Expenses, Other Income, Profit & Loss.
 3. Configuration: Branches, Currencies, Delivery Types, Item Types.
 4. Administration: Users, Notifications, Maintenance, Diagnostics/Error Logs as permitted.

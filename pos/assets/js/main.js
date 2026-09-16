@@ -627,9 +627,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else if (event.key === 'l' || event.key === 'L') {
                     event.preventDefault();
                     window.location.href = 'index.php?page=voucher_list';
-                } else if (event.key === 's' || event.key === 'S') {
-                    event.preventDefault();
-                    window.location.href = 'index.php?page=stock_list';
                 }
             }
         });

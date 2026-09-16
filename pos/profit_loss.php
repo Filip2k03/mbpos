@@ -209,8 +209,14 @@ include_template('header', ['page' => 'profit_loss']);
             <div class="v5-glass-card p-5 relative overflow-hidden">
                 <div class="flex items-center justify-between mb-3">
                     <span class="v5-badge v5-badge-info font-mono font-bold text-xs"><?= e($curr) ?></span>
-                    <span class="text-xs font-semibold <?= $is_positive ? 'text-success' : 'text-danger' ?>">
-                        <?= $is_positive ? '▲ Net Positive' : '▼ Net Deficit' ?>
+                    <span class="text-xs font-semibold inline-flex items-center gap-1 <?= $is_positive ? 'text-success' : 'text-danger' ?>">
+                        <?php if ($is_positive): ?>
+                            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                            <span data-i18n="Net Positive">Net Positive</span>
+                        <?php else: ?>
+                            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>
+                            <span data-i18n="Net Deficit">Net Deficit</span>
+                        <?php endif; ?>
                     </span>
                 </div>
                 <div class="text-2xl font-black text-main leading-tight mb-1 font-mono">
@@ -258,7 +264,7 @@ include_template('header', ['page' => 'profit_loss']);
                                 <tr>
                                     <td colspan="6">
                                         <div class="v5-empty">
-                                            <span class="v5-empty__icon">▤</span>
+                                            <span class="v5-empty__icon"><?= mbpos_icon('profit_loss', 'w-8 h-8 text-slate-400') ?></span>
                                             <strong data-i18n="No financial records available.">No financial records available.</strong>
                                             <p data-i18n="Create vouchers or log expenses to see financial reports.">Create vouchers or log expenses to see financial reports.</p>
                                         </div>

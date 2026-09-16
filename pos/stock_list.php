@@ -299,7 +299,7 @@ include_template('header', ['page' => 'stock_list']);
                             <tr>
                                 <td colspan="<?= $can_bulk_update ? 6 : 5 ?>">
                                     <div class="v5-empty">
-                                        <span class="v5-empty__icon">◇</span>
+                                        <span class="v5-empty__icon"><?= mbpos_icon('shipments', 'w-8 h-8 text-slate-400') ?></span>
                                         <strong data-i18n="No shipments match these filters">No shipments match these filters</strong>
                                         <p data-i18n="Adjust the date, region, status, or search query.">Adjust the date, region, status, or search query.</p>
                                     </div>

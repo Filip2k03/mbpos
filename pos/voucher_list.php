@@ -242,7 +242,7 @@ include_template('header', ['page' => 'voucher_list']);
                             <tr>
                                 <td colspan="8">
                                     <div class="v5-empty">
-                                        <span class="v5-empty__icon">▤</span>
+                                        <span class="v5-empty__icon"><?= mbpos_icon('vouchers', 'w-8 h-8 text-slate-400') ?></span>
                                         <strong data-i18n="No ledger records match your criteria.">No ledger records match your criteria.</strong>
                                         <p data-i18n="Try clearing filters or adjusting your date range.">Try clearing filters or adjusting your date range.</p>
                                     </div>
@@ -298,8 +298,9 @@ include_template('header', ['page' => 'voucher_list']);
             <div class="v5-panel__head border-t border-slate-100 flex items-center justify-between">
                 <div>
                     <?php if ($page > 1): ?>
-                        <a href="index.php?page=voucher_list&p=<?= $page - 1 ?>&<?= e($pagination_query_string) ?>" class="btn-secondary btn-sm" data-i18n="Previous">
-                            ← Previous
+                        <a href="index.php?page=voucher_list&p=<?= $page - 1 ?>&<?= e($pagination_query_string) ?>" class="btn-secondary btn-sm inline-flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                            <span data-i18n="Previous">Previous</span>
                         </a>
                     <?php endif; ?>
                 </div>
@@ -310,8 +311,9 @@ include_template('header', ['page' => 'voucher_list']);
 
                 <div>
                     <?php if ($page < $total_pages): ?>
-                        <a href="index.php?page=voucher_list&p=<?= $page + 1 ?>&<?= e($pagination_query_string) ?>" class="btn-secondary btn-sm" data-i18n="Next">
-                            Next →
+                        <a href="index.php?page=voucher_list&p=<?= $page + 1 ?>&<?= e($pagination_query_string) ?>" class="btn-secondary btn-sm inline-flex items-center gap-1.5">
+                            <span data-i18n="Next">Next</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                         </a>
                     <?php endif; ?>
                 </div>

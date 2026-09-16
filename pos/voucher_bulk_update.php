@@ -293,7 +293,7 @@ include_template('header', ['page' => 'voucher_bulk_update']);
                             <tr>
                                 <td colspan="6">
                                     <div class="v5-empty">
-                                        <span class="v5-empty__icon">▤</span>
+                                        <span class="v5-empty__icon"><?= mbpos_icon('vouchers', 'w-8 h-8 text-slate-400') ?></span>
                                         <strong data-i18n="No vouchers match these filters">No vouchers match these filters</strong>
                                         <p data-i18n="Adjust the search or reset the filter set.">Adjust the search or reset the filter set.</p>
                                     </div>

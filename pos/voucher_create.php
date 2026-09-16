@@ -1381,10 +1381,10 @@ include_template('header', ['page' => 'voucher_create']);
 
 <div class="app voucher-create-page" id="voucher-page">
   <!-- Accessibility Skip Link -->
-  <a href="#voucher-main-content" class="sr-only focus:not-sr-only" style="position:fixed;top:10px;left:10px;z-index:999;background:#0b6ff5;color:#fff;padding:8px 14px;border-radius:8px;font-weight:700;text-decoration:none;">Skip to content</a>
+  <a href="#voucher-main-content" class="sr-only focus:not-sr-only" style="position:fixed;top:10px;left:10px;z-index:999;background:#0b6ff5;color:#fff;padding:8px 14px;border-radius:8px;font-weight:700;text-decoration:none;" data-i18n="Skip to content">Skip to content</a>
 
   <!-- Sidebar (Desktop Enterprise Nav) -->
-  <aside class="sidebar" id="voucher-sidebar" aria-label="Primary navigation">
+  <aside class="sidebar" id="voucher-sidebar" aria-label="Primary navigation" data-i18n-aria-label="Primary navigation">
     <div class="brand">
       <div class="brand-mark" aria-hidden="true">M</div>
       <div>
@@ -1405,27 +1405,27 @@ include_template('header', ['page' => 'voucher_create']);
       <?php endif; ?>
     </nav>
 
-    <div class="side-health" aria-label="System Online">
+    <div class="side-health" aria-label="System Online" data-i18n-aria-label="System Online">
       <span class="system-dot"></span>
       <b style="font-size:11px" data-i18n="System Online">System Online</b>
       <div style="font-size:10px;color:var(--vc-text-muted);margin-top:4px" data-i18n="Live records available">Live records available</div>
     </div>
   </aside>
-  <button type="button" class="nav-scrim" id="nav-scrim" aria-label="Close menu"></button>
+  <button type="button" class="nav-scrim" id="nav-scrim" aria-label="Close menu" data-i18n-aria-label="Close menu"></button>
 
   <!-- Main Viewport -->
   <main class="main" id="voucher-main-content">
     <!-- Topbar Header -->
     <header class="top">
-      <button type="button" class="menu-toggle" id="nav-toggle" aria-controls="voucher-sidebar" aria-expanded="false" aria-label="Open menu"><?= mbpos_icon('menu', 'w-5 h-5') ?></button>
+      <button type="button" class="menu-toggle" id="nav-toggle" aria-controls="voucher-sidebar" aria-expanded="false" aria-label="Open menu" data-i18n-aria-label="Open menu"><?= mbpos_icon('menu', 'w-5 h-5') ?></button>
 
       <div class="search-wrap">
         <?= mbpos_icon('search') ?>
-        <input id="global-search" class="search" placeholder="Search tracking number or voucher" data-i18n-placeholder="Search tracking number or voucher" aria-label="Global search">
+        <input id="global-search" class="search" placeholder="Search tracking number or voucher" data-i18n-placeholder="Search tracking number or voucher" aria-label="Global search" data-i18n-aria-label="Global search">
       </div>
 
       <div class="operator">
-        <button type="button" id="language-toggle" class="language-toggle" aria-label="Switch language" title="Switch language">
+        <button type="button" id="language-toggle" class="language-toggle" aria-label="Switch language" title="Switch language" data-i18n-aria-label="Switch language" data-i18n-title="Switch language">
           <span class="language-option language-option-en">EN</span>
           <span class="language-option language-option-mm">မြန်မာ</span>
         </button>
@@ -1441,7 +1441,7 @@ include_template('header', ['page' => 'voucher_create']);
           <small style="display:block;color:var(--vc-text-muted);font-size:10px"><?= htmlspecialchars(ucfirst($_SESSION['role'] ?? 'Operator'), ENT_QUOTES, 'UTF-8') ?><?php if (!empty($user_info['branch_name'])): ?> · <?= htmlspecialchars($user_info['branch_name'], ENT_QUOTES, 'UTF-8') ?><?php endif; ?></small>
         </div>
 
-        <a href="index.php?page=logout" class="logout-btn" title="Logout" aria-label="Logout">
+        <a href="index.php?page=logout" class="logout-btn" title="Logout" aria-label="Logout" data-i18n-title="Logout" data-i18n-aria-label="Logout">
           <?= mbpos_icon('logout', 'w-4 h-4') ?>
         </a>
       </div>
@@ -1451,7 +1451,7 @@ include_template('header', ['page' => 'voucher_create']);
       <!-- Page Head -->
       <div class="head">
         <div>
-          <h1><span data-i18n="Create Delivery Voucher">Create Delivery Voucher</span> <span class="chip">V5 Workspace</span></h1>
+          <h1><span data-i18n="Create Delivery Voucher">Create Delivery Voucher</span> <span class="chip" data-i18n="V5 Workspace">V5 Workspace</span></h1>
           <p data-i18n="Enter shipment details and review totals before creating the voucher.">Enter shipment details and review totals before creating the voucher.</p>
         </div>
         <div class="voucher-code" style="font-size:11px;color:var(--vc-text-muted);text-align:right">
@@ -1461,12 +1461,12 @@ include_template('header', ['page' => 'voucher_create']);
       </div>
 
       <!-- Step Wizard Progress Indicator -->
-      <div class="steps glass" role="progressbar" aria-label="Voucher creation progress">
+      <div class="steps glass" role="progressbar" aria-label="Voucher creation progress" data-i18n-aria-label="Voucher creation progress">
         <div class="step active" id="st-1"><b>1</b><span data-i18n="Sender & Receiver">Sender &amp; Receiver</span></div>
-        <div class="step" id="st-2"><b>2</b><span data-i18n="Routing & Logistics">Routing &amp; Service</span></div>
-        <div class="step" id="st-3"><b>3</b><span data-i18n="Item Breakdown">Package Items</span></div>
-        <div class="step" id="st-4"><b>4</b><span data-i18n="Order Summary">Order Review</span></div>
-        <div class="step" id="st-5"><b>5</b><span data-i18n="Create">Issue Voucher</span></div>
+        <div class="step" id="st-2"><b>2</b><span data-i18n="Routing & Service">Routing &amp; Service</span></div>
+        <div class="step" id="st-3"><b>3</b><span data-i18n="Package Items">Package Items</span></div>
+        <div class="step" id="st-4"><b>4</b><span data-i18n="Order Review">Order Review</span></div>
+        <div class="step" id="st-5"><b>5</b><span data-i18n="Issue Voucher">Issue Voucher</span></div>
       </div>
 
       <!-- V5 Form & Workspace -->
@@ -1564,7 +1564,7 @@ include_template('header', ['page' => 'voucher_create']);
 
                   <div class="field">
                     <label><span data-i18n="Currency">Currency</span> <span class="required">*</span></label>
-                    <div class="currencies" role="radiogroup" aria-label="Currency selection">
+                    <div class="currencies" role="radiogroup" aria-label="Currency selection" data-i18n-aria-label="Currency selection">
                       <?php foreach ($currencies as $idx => $curr): ?>
                         <button type="button" class="<?= ($duplicate_voucher && ($duplicate_voucher['currency'] ?? '') === $curr) ? 'active' : '' ?>" data-currency="<?= htmlspecialchars($curr) ?>" aria-pressed="<?= ($duplicate_voucher && ($duplicate_voucher['currency'] ?? '') === $curr) ? 'true' : 'false' ?>">
                           <?= htmlspecialchars($curr) ?>
@@ -1613,7 +1613,7 @@ include_template('header', ['page' => 'voucher_create']);
               </button>
               <div class="totals">
                 <span><span data-i18n="Total Weight">Total Weight</span> <strong id="weightTotal">0.00 kg</strong></span>
-                <span><span data-i18n="Grand Total">Grand Total</span> <strong id="grandTotal">0 MMK</strong></span>
+                <span><span data-i18n="Grand Total">Grand Total</span> <strong id="grandTotal">0</strong></span>
               </div>
             </div>
 
@@ -1625,11 +1625,11 @@ include_template('header', ['page' => 'voucher_create']);
             <!-- Summary Card -->
             <div class="summary glass">
               <h3><span data-i18n="Order Summary">Order Summary</span> <span class="status" data-i18n="Pending">Pending</span></h3>
-              <div class="sum"><span data-i18n="Subtotal">Subtotal</span><b id="subtotal">0 MMK</b></div>
+              <div class="sum"><span data-i18n="Subtotal">Subtotal</span><b id="subtotal">0</b></div>
               <div class="sum"><span data-i18n="Delivery Charge">Delivery Charge</span><b id="extraSum">0</b></div>
               <div class="grand">
                 <span data-i18n="Grand Total">Grand Total</span>
-                <strong id="grand2">0 MMK</strong>
+                <strong id="grand2">0</strong>
               </div>
               <div class="actions">
                 <button type="submit" class="primary" id="create">
@@ -1651,8 +1651,6 @@ include_template('header', ['page' => 'voucher_create']);
               <b id="pvoucher"><?= htmlspecialchars($preview_voucher_code) ?></b>
               <div class="line" data-i18n="Tracking Number">Tracking Number</div>
               <b id="tracking"><?= htmlspecialchars($preview_tracking_no) ?></b>
-
-              <div class="barcode" aria-hidden="true"></div>
 
               <div class="track-bottom">
                 <div>
@@ -1680,11 +1678,11 @@ include_template('header', ['page' => 'voucher_create']);
                       <div style="font-size:7.5px;color:#64748b;font-weight:700">FAST · SAFE · GLOBAL</div>
                     </div>
                   </div>
-                  <small>SHIPMENT VOUCHER<br><b style="color:#0b6ff5">V5 · ORIGINAL PRINT STYLE</b></small>
+                  <small><span data-i18n="Shipment Voucher">Shipment Voucher</span><br><b style="color:#0b6ff5">V5 · <span data-i18n="Original print style">Original print style</span></b></small>
                 </div>
                 <div style="display:flex;justify-content:space-between;font-size:8px;margin-top:10px;color:#64748b">
-                  <span>Voucher: <b id="pno" style="color:#0f172a"><?= htmlspecialchars($preview_voucher_code) ?></b></span>
-                  <span>Tracking: <b id="ptracking" style="color:#0f172a"><?= htmlspecialchars($preview_tracking_no) ?></b></span>
+                  <span><span data-i18n="Voucher">Voucher</span>: <b id="pno" style="color:#0f172a"><?= htmlspecialchars($preview_voucher_code) ?></b></span>
+                  <span><span data-i18n="Tracking">Tracking</span>: <b id="ptracking" style="color:#0f172a"><?= htmlspecialchars($preview_tracking_no) ?></b></span>
                 </div>
 
                 <h4 data-i18n="Sender & Receiver">Sender &amp; Receiver</h4>
@@ -1717,7 +1715,7 @@ include_template('header', ['page' => 'voucher_create']);
                     <tr>
                       <th data-i18n="Category">Category</th>
                       <th data-i18n="Weight">Weight</th>
-                      <th data-i18n="Price/Kg">Price/Kg</th>
+                      <th data-i18n="Price / Kg">Price / Kg</th>
                       <th data-i18n="Total">Total</th>
                     </tr>
                   </thead>
@@ -1726,20 +1724,20 @@ include_template('header', ['page' => 'voucher_create']);
 
                 <div class="paper-total">
                   <span><span data-i18n="Total Weight">Total Weight</span>: <span id="pweight">0.00 kg</span></span>
-                  <span><span data-i18n="Grand Total">Grand Total</span>: <strong id="ptotal">0 MMK</strong></span>
+                  <span><span data-i18n="Grand Total">Grand Total</span>: <strong id="ptotal">0</strong></span>
                 </div>
 
                 <div class="legacy-print-notes">
                   <b data-i18n="Important Notes">Important Notes</b>
                   <ol>
-                    <li>ဥပဒေနှင့်မလွတ်ကင်းသောပစ္စည်းများ လုံးဝ လက်မခံပါ။</li>
-                    <li>ပစ္စည်းအမျိုးအစားကို မှန်ကန်စွာကြေညာပြီး လုံခြုံရေးစစ်ဆေးမှုကို လက်ခံရပါမည်။</li>
-                    <li>အစားအသောက်နှင့် ပျက်စီးလွယ်သောပစ္စည်းများကို သတ်မှတ်ချက်အတိုင်း ထုပ်ပိုးရပါမည်။</li>
+                    <li data-i18n="Illegal or prohibited goods are not accepted.">Illegal or prohibited goods are not accepted.</li>
+                    <li data-i18n="Items must be declared accurately and may be inspected for security.">Items must be declared accurately and may be inspected for security.</li>
+                    <li data-i18n="Food and fragile items must be packed for safe handling.">Food and fragile items must be packed for safe handling.</li>
                   </ol>
                 </div>
 
                 <div style="border-top:1px solid #dce5ef;padding-top:10px;margin-top:10px;font-size:7.5px;color:#64748b;line-height:1.45">
-                  Keep this voucher for tracking and enquiry support. Delivery timing may vary by destination. Operational notes are visible to authorized logistics personnel only.
+                  <span data-i18n="Keep this voucher for tracking and enquiry support. Delivery timing may vary by destination. Operational notes are visible to authorized logistics personnel only.">Keep this voucher for tracking and enquiry support. Delivery timing may vary by destination. Operational notes are visible to authorized logistics personnel only.</span>
                 </div>
               </div>
             </div>
@@ -1766,6 +1764,7 @@ let currency = <?= json_encode((string) ($duplicate_voucher['currency'] ?? ''), 
 let rowId = 0;
 
 const byId = id => document.getElementById(id);
+const t = key => typeof window.mbposT === "function" ? window.mbposT(key) : key;
 const money = n => Number(n || 0).toLocaleString(undefined, {maximumFractionDigits: 2}) + (currency ? " " + currency : "");
 const safeText = s => String(s ?? "").replace(/[<>]/g, "");
 const escapeHtml = s => String(s ?? "").replace(/[&<>"']/g, character => ({
@@ -1792,28 +1791,28 @@ function addRow(data = {}) {
   const weightVal = (data.weight !== undefined && data.weight !== null && data.weight !== "") ? data.weight : "";
   const priceVal = (data.price !== undefined && data.price !== null && data.price !== "") ? data.price : "";
   tr.innerHTML = `
-    <td class="num" data-label="Item" style="font-weight:800;color:var(--vc-blue)"></td>
-    <td data-label="Item Category">
-      <select class="category" name="item_type[]" required aria-label="Item category">
-        <option value="">Select category</option>
+    <td class="num" data-label="${escapeHtml(t("Item"))}" style="font-weight:800;color:var(--vc-blue)"></td>
+    <td data-label="${escapeHtml(t("Item Category"))}">
+      <select class="category" name="item_type[]" required aria-label="${escapeHtml(t("Item Category"))}">
+        <option value="">${escapeHtml(t("Select category"))}</option>
         ${categories.map(c => `<option value="${escapeHtml(c)}" ${c === selCategory ? "selected" : ""}>${escapeHtml(c)}</option>`).join("")}
       </select>
     </td>
-    <td data-label="Weight (kg)">
-      <input class="weight" name="item_kg[]" type="number" min="0.01" max="99999" step="0.01" value="${weightVal}" placeholder="0.00" required inputmode="decimal" aria-label="Weight in kilograms">
+    <td data-label="${escapeHtml(t("Weight (kg)"))}">
+      <input class="weight" name="item_kg[]" type="number" min="0.01" max="99999" step="0.01" value="${weightVal}" placeholder="0.00" required inputmode="decimal" aria-label="${escapeHtml(t("Weight (kg)"))}">
     </td>
-    <td data-label="Price / kg">
-      <input class="price" name="item_price_per_kg[]" type="number" min="0" max="999999999" step="0.01" value="${priceVal}" placeholder="0.00" required inputmode="decimal" aria-label="Price per kilogram">
+    <td data-label="${escapeHtml(t("Price / Kg"))}">
+      <input class="price" name="item_price_per_kg[]" type="number" min="0" max="999999999" step="0.01" value="${priceVal}" placeholder="0.00" required inputmode="decimal" aria-label="${escapeHtml(t("Price / Kg"))}">
     </td>
-    <td class="lineTotal" data-label="Total" style="font-weight:800;color:#0f2238;text-align:right">0</td>
-    <td data-label="Action" style="text-align:center"><button type="button" class="remove" title="Remove item" aria-label="Remove item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:17px;height:17px"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15M10 10v7m4-7v7"/></svg></button></td>
+    <td class="lineTotal" data-label="${escapeHtml(t("Total"))}" style="font-weight:800;color:#0f2238;text-align:right">0</td>
+    <td data-label="${escapeHtml(t("Action"))}" style="text-align:center"><button type="button" class="remove" title="${escapeHtml(t("Remove Item"))}" aria-label="${escapeHtml(t("Remove Item"))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:17px;height:17px"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15M10 10v7m4-7v7"/></svg></button></td>
   `;
   byId("rows").appendChild(tr);
 
   tr.querySelectorAll("input,select").forEach(el => el.addEventListener("input", update));
   tr.querySelector(".remove").onclick = () => {
     if (document.querySelectorAll("#rows tr").length <= 1) {
-      toast("Voucher requires at least one item");
+      toast(t("Voucher requires at least one item."));
       return;
     }
     tr.remove();
@@ -1836,7 +1835,9 @@ function update() {
     totalWeight += w;
     tr.querySelector(".lineTotal").textContent = Number(line).toLocaleString();
     const catVal = tr.querySelector(".category").value;
-    prows.push(`<tr><td>${escapeHtml(catVal || 'Unspecified')}</td><td>${w.toFixed(2)} kg</td><td>${Number(p).toLocaleString()}</td><td>${Number(line).toLocaleString()}</td></tr>`);
+    if (catVal || w > 0 || p > 0) {
+      prows.push(`<tr><td>${escapeHtml(catVal || t("Not selected"))}</td><td>${w.toFixed(2)} kg</td><td>${Number(p).toLocaleString()}</td><td>${Number(line).toLocaleString()}</td></tr>`);
+    }
   });
 
   const extra = Math.max(0, +byId("extra").value || 0);
@@ -1852,26 +1853,26 @@ function update() {
   // Paper preview
   byId("pweight").textContent = totalWeight.toFixed(2) + " kg";
   byId("ptotal").textContent = money(grand);
-  byId("prows").innerHTML = prows.join("") || `<tr><td colspan="4" style="text-align:center;color:#94a3b8">No items added</td></tr>`;
+  byId("prows").innerHTML = prows.join("") || `<tr><td colspan="4" style="text-align:center;color:#94a3b8">${escapeHtml(t("No items added"))}</td></tr>`;
 
-  byId("psender").textContent = safeText(byId("sender").value) || "Not entered";
-  byId("psphone").textContent = safeText(byId("senderPhone").value) || "Not entered";
-  byId("preceiver").textContent = safeText(byId("receiver").value) || "Not entered";
-  byId("prphone").textContent = safeText(byId("receiverPhone").value) || "Not entered";
-  byId("paddress").textContent = safeText(byId("address").value) || "Not entered";
-  byId("porigin").textContent = safeText(byId("origin").value) || "Select origin";
+  byId("psender").textContent = safeText(byId("sender").value) || t("Not entered");
+  byId("psphone").textContent = safeText(byId("senderPhone").value) || t("Not entered");
+  byId("preceiver").textContent = safeText(byId("receiver").value) || t("Not entered");
+  byId("prphone").textContent = safeText(byId("receiverPhone").value) || t("Not entered");
+  byId("paddress").textContent = safeText(byId("address").value) || t("Not entered");
+  byId("porigin").textContent = safeText(byId("origin").value) || t("Select origin");
 
   const regSel = byId("region");
-  const regText = regSel.selectedIndex >= 0 && regSel.options[regSel.selectedIndex] && regSel.value ? regSel.options[regSel.selectedIndex].text : "Select destination";
+  const regText = regSel.selectedIndex >= 0 && regSel.options[regSel.selectedIndex] && regSel.value ? regSel.options[regSel.selectedIndex].text : t("Select destination");
   byId("pregion").textContent = regText;
 
   const branchSel = byId("branch");
-  const branchText = branchSel.selectedIndex >= 0 && branchSel.options[branchSel.selectedIndex] && branchSel.value ? branchSel.options[branchSel.selectedIndex].text : "Select branch";
+  const branchText = branchSel.selectedIndex >= 0 && branchSel.options[branchSel.selectedIndex] && branchSel.value ? branchSel.options[branchSel.selectedIndex].text : t("Select branch");
   byId("pbranch").textContent = branchText;
 
-  byId("pcurrency").textContent = currency || "Select currency";
+  byId("pcurrency").textContent = currency || t("Select currency");
   const deliveryChecked = document.querySelector('input[name="delivery_type"]:checked');
-  byId("pdelivery").textContent = deliveryChecked ? deliveryChecked.value : "Select delivery type";
+  byId("pdelivery").textContent = deliveryChecked ? deliveryChecked.value : t("Select delivery type");
 
   // Step state tracking
   updateSteps();
@@ -1893,7 +1894,7 @@ function updateSteps() {
 // Load branches dynamically based on region selection
 function loadBranches(regionId) {
   const select = byId("branch");
-  select.innerHTML = '<option value="">Select branch</option>';
+  select.innerHTML = `<option value="">${escapeHtml(t("Select branch"))}</option>`;
   if (!regionId) return;
 
   const filtered = allBranches.filter(b => b.region_id == regionId);
@@ -1907,7 +1908,7 @@ function loadBranches(regionId) {
   } else {
     const opt = document.createElement("option");
     opt.value = "";
-    opt.textContent = "No branches available";
+    opt.textContent = t("No branches available");
     opt.disabled = true;
     select.appendChild(opt);
   }
@@ -1933,53 +1934,53 @@ function bindCurrencies() {
 // Client-side Validation before POST
 function validate() {
   const required = [
-    ["sender", "Sender full name"],
-    ["senderPhone", "Sender phone number"],
-    ["receiver", "Receiver full name"],
-    ["receiverPhone", "Receiver phone number"],
-    ["address", "Delivery address"],
-    ["region", "Destination region"],
-    ["branch", "Destination branch"]
+    ["sender", "Sender full name is required."],
+    ["senderPhone", "Sender phone number is required."],
+    ["receiver", "Receiver full name is required."],
+    ["receiverPhone", "Receiver phone number is required."],
+    ["address", "Delivery address is required."],
+    ["region", "Destination region is required."],
+    ["branch", "Destination branch is required."]
   ];
 
-  for (const [id, label] of required) {
+  for (const [id, message] of required) {
     const el = byId(id);
     if (!el || !el.value.trim()) {
-      toast(label + " is required");
+      toast(t(message));
       if (el) el.focus();
       return false;
     }
   }
 
   if (!currency) {
-    toast("Select a currency");
+    toast(t("Select a currency."));
     document.querySelector("[data-currency]")?.focus();
     return false;
   }
 
   const deliveryType = document.querySelector('input[name="delivery_type"]:checked');
   if (!deliveryType) {
-    toast("Select a delivery type");
+    toast(t("Select a delivery type."));
     document.querySelector('input[name="delivery_type"]')?.focus();
     return false;
   }
 
   const rows = document.querySelectorAll("#rows tr");
   if (!rows.length) {
-    toast("Add at least one item breakdown");
+    toast(t("Add at least one item."));
     return false;
   }
 
   for (const tr of rows) {
     const category = tr.querySelector(".category");
     if (!category.value) {
-      toast("Select an item category");
+      toast(t("Select an item category."));
       category.focus();
       return false;
     }
     const w = parseFloat(tr.querySelector(".weight").value) || 0;
     if (w <= 0) {
-      toast("Each item requires a weight greater than 0 kg");
+      toast(t("Enter a weight greater than 0 kg for each item."));
       tr.querySelector(".weight").focus();
       return false;
     }
@@ -1996,9 +1997,9 @@ document.getElementById("voucher-form").addEventListener("submit", function(e) {
   }
   const btn = byId("create");
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Creating Ledger Entry…';
+  btn.innerHTML = '<span class="spinner"></span><span>' + escapeHtml(t("Creating ledger entry...")) + '</span>';
   byId("requestStatus").className = "request-status ok";
-  byId("requestStatus").textContent = "Submitting secure voucher transaction…";
+  byId("requestStatus").textContent = t("Submitting voucher securely...");
 });
 
 // Print handlers
@@ -2028,12 +2029,28 @@ const navScrim = byId("nav-scrim");
 const setNavigationOpen = open => {
   voucherPage.classList.toggle("nav-open", open);
   navToggle.setAttribute("aria-expanded", open ? "true" : "false");
-  navToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  navToggle.dataset.i18nAriaLabel = open ? "Close menu" : "Open menu";
+  navToggle.setAttribute("aria-label", t(open ? "Close menu" : "Open menu"));
 };
 navToggle.addEventListener("click", () => setNavigationOpen(!voucherPage.classList.contains("nav-open")));
 navScrim.addEventListener("click", () => setNavigationOpen(false));
 document.addEventListener("keydown", event => {
   if (event.key === "Escape") setNavigationOpen(false);
+});
+document.addEventListener("mbpos:languagechange", () => {
+  document.querySelectorAll("#rows tr").forEach(tr => {
+    const labels = ["Item", "Item Category", "Weight (kg)", "Price / Kg", "Total", "Action"];
+    tr.querySelectorAll("td").forEach((cell, index) => cell.dataset.label = t(labels[index]));
+    const category = tr.querySelector(".category");
+    category.setAttribute("aria-label", t("Item Category"));
+    category.options[0].textContent = t("Select category");
+    tr.querySelector(".weight").setAttribute("aria-label", t("Weight (kg)"));
+    tr.querySelector(".price").setAttribute("aria-label", t("Price / Kg"));
+    const remove = tr.querySelector(".remove");
+    remove.title = t("Remove Item");
+    remove.setAttribute("aria-label", t("Remove Item"));
+  });
+  update();
 });
 
 // Initialize Defaults
@@ -2060,7 +2077,7 @@ if (duplicateCurrency) {
 
 if (duplicateItems && duplicateItems.length > 0) {
   duplicateItems.forEach(item => addRow(item));
-  toast("Loaded voucher data for duplication. Review and create new entry.");
+  toast(t("Voucher details loaded. Review them before creating the new voucher."));
 } else {
   addRow();
 }

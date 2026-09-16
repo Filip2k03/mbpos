@@ -25,8 +25,14 @@ $is_critical = $pos_diagnostics['maintenance_active'] || $load_pct > 80;
                 </span>
                 
                 <div class="flex items-center gap-2">
-                    <span class="font-extrabold uppercase tracking-wider text-[11px] bg-black/25 px-2 py-0.5 rounded-full border border-white/20 shadow-inner">
-                        <?= $is_critical ? '⚠️ High Load Alert' : '⚡ System Advisory' ?>
+                    <span class="font-extrabold uppercase tracking-wider text-[11px] bg-black/25 px-2.5 py-0.5 rounded-full border border-white/20 shadow-inner inline-flex items-center gap-1.5">
+                        <?php if ($is_critical): ?>
+                            <svg class="w-3 h-3 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            <span data-i18n="High Load Alert">High Load Alert</span>
+                        <?php else: ?>
+                            <svg class="w-3 h-3 text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            <span data-i18n="System Advisory">System Advisory</span>
+                        <?php endif; ?>
                     </span>
                     <span class="font-semibold text-white/95 truncate max-w-[220px] sm:max-w-none">
                         <?= $pos_diagnostics['maintenance_active'] ? 'Routine Maintenance & Updates in Progress' : 'High Operational Traffic Running on POS Node' ?>

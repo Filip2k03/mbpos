@@ -64,6 +64,7 @@ if (!$voucher) {
 
 // --- Handle POST request (Form Submission for Status Update) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf_request();
     $new_status = trim($_POST['status'] ?? '');
     $notes_update = trim($_POST['notes'] ?? $voucher['notes']); // Allow notes to be updated too
 
@@ -154,6 +155,7 @@ include_template('header', ['page' => 'status_edit']);
 
         <!-- Form -->
         <form action="index.php?page=status_edit&id=<?= htmlspecialchars($voucher['id']); ?>" method="POST" class="space-y-5">
+            <?= csrf_input() ?>
             <div class="space-y-1.5">
                 <label for="status" class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1" data-i18n="Status">Update Status</label>
                 <select id="status" name="status" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" required>

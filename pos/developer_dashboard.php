@@ -80,8 +80,8 @@ include_template('header', ['page' => 'developer_dashboard']);
             <p class="v5-page-subtitle" data-i18n="dev.subtitle">System diagnostics, database access, and core configuration</p>
         </div>
         <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
-            <span class="v5-badge v5-badge-danger" style="font-size:.7rem;letter-spacing:.08em;" data-i18n="dev.restricted_badge">
-                &#128274; Developer-Only Area
+            <span class="v5-badge v5-badge-danger" style="font-size:.7rem;letter-spacing:.08em;" data-i18n="Developer-Only Area">
+                <svg style="width:12px;height:12px;display:inline-block;vertical-align:-1px;margin-right:4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Developer-Only Area
             </span>
         </div>
     </div>

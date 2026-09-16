@@ -138,6 +138,14 @@ document.addEventListener('DOMContentLoaded', function () {
         "Menu": "မီနူး",
         "Navigation": "လမ်းညွှန်",
         "Close Menu": "မီနူးပိတ်ရန်",
+        "Skip to content": "အဓိကအကြောင်းအရာသို့ သွားရန်",
+        "Primary navigation": "အဓိက လမ်းညွှန်မီနူး",
+        "Close menu": "မီနူးပိတ်ရန်",
+        "Open menu": "မီနူးဖွင့်ရန်",
+        "Global search": "အထွေထွေ ရှာဖွေမှု",
+        "Switch language": "ဘာသာစကား ပြောင်းရန်",
+        "Voucher creation progress": "ဘောက်ချာဖန်တီးမှု အဆင့်များ",
+        "Currency selection": "ငွေကြေး ရွေးချယ်မှု",
 
         // Target IA Groups
         "Operations": "လုပ်ငန်းဆောင်ရွက်မှု",
@@ -161,6 +169,20 @@ document.addEventListener('DOMContentLoaded', function () {
         "Create Delivery Voucher": "ပို့ဆောင်ရေးဘောက်ချာ ဖန်တီးရန်",
         "Record a new shipment into the ledger": "ပို့ဆောင်မှုအသစ်ကို မှတ်တမ်းတွင် ထည့်သွင်းပါ",
         "Enter shipment details and review totals before creating the voucher.": "ဘောက်ချာမဖန်တီးမီ ပို့ဆောင်မှုအချက်အလက်များကို ဖြည့်စွက်ပြီး ကျသင့်ငွေကို စစ်ဆေးပါ။",
+        "Online": "အွန်လိုင်း",
+        "Live records available": "တိုက်ရိုက်မှတ်တမ်းများ အသုံးပြုနိုင်ပါသည်",
+        "Search tracking number or voucher": "ခြေရာခံနံပါတ် သို့မဟုတ် ဘောက်ချာ ရှာရန်",
+        "Sender & Receiver": "ပို့သူနှင့် လက်ခံသူ",
+        "Routing": "လမ်းကြောင်း",
+        "Routing & Service": "လမ်းကြောင်းနှင့် ဝန်ဆောင်မှု",
+        "Items": "ပစ္စည်းများ",
+        "Item": "ပစ္စည်း",
+        "Package Items": "ပို့ဆောင်မည့် ပစ္စည်းများ",
+        "Review": "ပြန်လည်စစ်ဆေးရန်",
+        "Order Review": "အမှာစာ ပြန်လည်စစ်ဆေးရန်",
+        "Create": "ဖန်တီးရန်",
+        "Issue Voucher": "ဘောက်ချာ ထုတ်ပေးရန်",
+        "V5 Workspace": "V5 လုပ်ငန်းခွင်",
         "Sender Details": "ပို့သူအချက်အလက်",
         "Receiver Details": "လက်ခံသူအချက်အလက်",
         "New Sender Details": "ပို့သူအချက်အလက် အသစ်",
@@ -182,6 +204,7 @@ document.addEventListener('DOMContentLoaded', function () {
         "Existing": "ရှိပြီးသား",
         "Full Name": "အမည်အပြည့်အစုံ",
         "Phone Number": "ဖုန်းနံပါတ်",
+        "Phone number": "ဖုန်းနံပါတ်",
         "Delivery Address": "ပို့ဆောင်မည့်လိပ်စာ",
         "Origin Point": "မူလနေရာ",
         "Dest. Region": "ခရီးဆုံးဒေသ",
@@ -199,10 +222,15 @@ document.addEventListener('DOMContentLoaded', function () {
         "Select Category...": "အမျိုးအစားရွေးပါ...",
         "Select category": "အမျိုးအစားရွေးပါ",
         "Select branch": "ရုံးခွဲရွေးပါ",
+        "Select region first": "ဒေသကို ဦးစွာရွေးပါ",
+        "No branches available": "အသုံးပြုနိုင်သော ရုံးခွဲမရှိပါ",
+        "Select origin": "မူလနေရာရွေးပါ",
         "Select origin branch": "မူလရုံးခွဲရွေးပါ",
         "Select currency": "ငွေကြေးရွေးပါ",
         "Select delivery type": "ပို့ဆောင်မှုရွေးပါ",
         "Remove Item": "ပစ္စည်းဖယ်ရှားရန်",
+        "Item Category": "ပစ္စည်းအမျိုးအစား",
+        "Action": "လုပ်ဆောင်ချက်",
         "Order Summary": "အမှာစာ အကျဉ်းချုပ်",
         "Subtotal": "ကျသင့်ငွေ",
         "Delivery Charge": "ပို့ဆောင်ခ",
@@ -212,6 +240,8 @@ document.addEventListener('DOMContentLoaded', function () {
         "Preview / Print Voucher": "ဘောက်ချာ အကြိုကြည့် / ပရင့်ထုတ်ရန်",
         "Voucher Preview": "ဘောက်ချာ အကြိုကြည့်ရှုမှု",
         "Tracking & Voucher Info": "ခြေရာခံနှင့် ဘောက်ချာ အချက်အလက်",
+        "Voucher ID": "ဘောက်ချာ အမှတ်",
+        "Pending Save": "ဖန်တီးပြီးမှ သတ်မှတ်ပါမည်",
         "Shipment Status": "ပို့ဆောင်မှု အခြေအနေ",
         "Not created": "မဖန်တီးရသေးပါ",
         "Tracking begins after creation": "ဘောက်ချာဖန်တီးပြီးမှ ခြေရာခံနိုင်ပါမည်",
@@ -221,10 +251,38 @@ document.addEventListener('DOMContentLoaded', function () {
         "Sender full name": "ပို့သူ အမည်အပြည့်အစုံ",
         "Receiver full name": "လက်ခံသူ အမည်အပြည့်အစုံ",
         "Delivery address": "ပို့ဆောင်မည့် လိပ်စာ",
+        "Operational notes (optional)...": "လိုအပ်ပါက လုပ်ငန်းမှတ်ချက် ရေးပါ...",
         "Validated securely when submitted": "တင်သွင်းချိန်တွင် လုံခြုံစွာ စစ်ဆေးအတည်ပြုပါမည်",
         "Important Notes": "အရေးကြီးသော မှတ်ချက်များ",
         "No items added": "ပစ္စည်း မထည့်သွင်းရသေးပါ",
         "Not entered": "မထည့်သွင်းရသေးပါ",
+        "Not selected": "မရွေးချယ်ရသေးပါ",
+        "Shipment Voucher": "ပို့ဆောင်ရေး ဘောက်ချာ",
+        "Original print style": "မူလပရင့်ပုံစံ",
+        "Voucher": "ဘောက်ချာ",
+        "Tracking": "ခြေရာခံနံပါတ်",
+        "Keep this voucher for tracking and enquiry support. Delivery timing may vary by destination. Operational notes are visible to authorized logistics personnel only.": "ခြေရာခံရန်နှင့် စုံစမ်းမေးမြန်းရန် ဤဘောက်ချာကို သိမ်းဆည်းထားပါ။ ခရီးဆုံးနေရာအလိုက် ပို့ဆောင်ချိန် ကွာခြားနိုင်ပါသည်။ လုပ်ငန်းမှတ်ချက်များကို ခွင့်ပြုထားသော ဝန်ထမ်းများသာ ကြည့်ရှုနိုင်ပါသည်။",
+        "Illegal or prohibited goods are not accepted.": "ဥပဒေနှင့်မလွတ်ကင်းသောပစ္စည်းများ လုံးဝ လက်မခံပါ။",
+        "Items must be declared accurately and may be inspected for security.": "ပစ္စည်းအမျိုးအစားကို မှန်ကန်စွာကြေညာပြီး လုံခြုံရေးစစ်ဆေးမှုကို လက်ခံရပါမည်။",
+        "Food and fragile items must be packed for safe handling.": "အစားအသောက်နှင့် ပျက်စီးလွယ်သောပစ္စည်းများကို သတ်မှတ်ချက်အတိုင်း ထုပ်ပိုးရပါမည်။",
+
+        // Voucher interaction and validation feedback
+        "Voucher requires at least one item.": "ဘောက်ချာတွင် အနည်းဆုံး ပစ္စည်းတစ်မျိုး ထည့်သွင်းပါ။",
+        "Sender full name is required.": "ပို့သူအမည်အပြည့်အစုံ ထည့်သွင်းပါ။",
+        "Sender phone number is required.": "ပို့သူဖုန်းနံပါတ် ထည့်သွင်းပါ။",
+        "Receiver full name is required.": "လက်ခံသူအမည်အပြည့်အစုံ ထည့်သွင်းပါ။",
+        "Receiver phone number is required.": "လက်ခံသူဖုန်းနံပါတ် ထည့်သွင်းပါ။",
+        "Delivery address is required.": "ပို့ဆောင်မည့်လိပ်စာ ထည့်သွင်းပါ။",
+        "Destination region is required.": "ခရီးဆုံးဒေသ ရွေးချယ်ပါ။",
+        "Destination branch is required.": "ခရီးဆုံးရုံးခွဲ ရွေးချယ်ပါ။",
+        "Select a currency.": "အသုံးပြုမည့် ငွေကြေးကို ရွေးချယ်ပါ။",
+        "Select a delivery type.": "ပို့ဆောင်မှုအမျိုးအစားကို ရွေးချယ်ပါ။",
+        "Add at least one item.": "အနည်းဆုံး ပစ္စည်းတစ်မျိုး ထည့်သွင်းပါ။",
+        "Select an item category.": "ပစ္စည်းအမျိုးအစားကို ရွေးချယ်ပါ။",
+        "Enter a weight greater than 0 kg for each item.": "ပစ္စည်းတစ်မျိုးစီအတွက် ၀ ကီလိုထက်များသော အလေးချိန် ထည့်သွင်းပါ။",
+        "Creating ledger entry...": "မှတ်တမ်းသွင်းနေပါသည်...",
+        "Submitting voucher securely...": "ဘောက်ချာကို လုံခြုံစွာ တင်သွင်းနေပါသည်...",
+        "Voucher details loaded. Review them before creating the new voucher.": "ဘောက်ချာအချက်အလက်များ ထည့်သွင်းပြီးပါပြီ။ ဘောက်ချာအသစ် မဖန်တီးမီ ပြန်လည်စစ်ဆေးပါ။",
 
         // Statuses
         "Pending": "ဆိုင်းငံ့ထားဆဲ",
@@ -300,6 +358,11 @@ document.addEventListener('DOMContentLoaded', function () {
         "Daily Ledger": "နေ့စဉ် မှတ်တမ်း",
         "Monthly Ledger": "လစဉ် မှတ်တမ်း",
         "By Currency": "ငွေကြေးအလိုက်",
+        "Net Positive": "အသားတင် အမြတ်ပေါ်",
+        "Net Deficit": "အသားတင် အရှုံးပေါ်",
+        "Net Worth": "အသားတင် တန်ဖိုး",
+        "Strict currency separation enforced": "ငွေကြေးအလိုက် သီးခြားတွက်ချက်ထားပါသည်",
+        "Voucher Income": "ဘောက်ချာ ဝင်ငွေ",
 
         // Configuration
         "Operating Branches": "ဖွင့်လှစ်ထားသော ရုံးခွဲများ",
@@ -308,11 +371,34 @@ document.addEventListener('DOMContentLoaded', function () {
         "Delivery Types": "ပို့ဆောင်မှုအမျိုးအစားများ",
         "Currencies": "ငွေကြေးများ",
         "Branch Management": "ရုံးခွဲ စီမံခန့်ခွဲမှု",
+        "System Currencies": "စနစ်သုံး ငွေကြေးများ",
+        "Active Delivery Services": "လက်ရှိ ပို့ဆောင်မှု ဝန်ဆောင်မှုများ",
+        "Network Directory": "ကွန်ရက် လမ်းညွှန်",
+        "Shipment Operations": "ပို့ဆောင်ရေး လုပ်ငန်းစဉ်များ",
+        "Shipment Stock": "ပို့ဆောင်ရေး စာရင်း",
+        "Active Shipment Queue": "လက်ရှိ ပို့ဆောင်မှု တန်းစီစာရင်း",
+        "Update Selected": "ရွေးချယ်ထားသည်ကို မွမ်းမံရန်",
+        "Bulk Voucher Update": "ဘောက်ချာ အစုလိုက် မွမ်းမံရန်",
+        "Filtered Voucher Ledger": "စစ်ထုတ်ထားသော ဘောက်ချာ စာရင်း",
+        "Selected Status:": "ရွေးချယ်ထားသော အခြေအနေ-",
+        "Set Selected To:": "ရွေးချယ်ထားသည်ကို ပြောင်းရန်-",
+        "Choose status": "အခြေအနေ ရွေးပါ",
+        "Maximum 200 updates per batch": "တစ်ကြိမ်လျှင် အများဆုံး ၂၀၀ သာ ပြင်ဆင်နိုင်ပါသည်",
+        "Universal Search": "အထွေထွေ ရှာဖွေမှု",
+        "Tracking Code": "ခြေရာခံ ကုဒ်",
+        "Master Voucher Ledger": "ပင်မ ဘောက်ချာ စာရင်း",
+        "Total entries": "စုစုပေါင်း မှတ်တမ်း",
+        "total entries": "စုစုပေါင်း မှတ်တမ်း",
+        "Export CSV": "CSV ထုတ်ယူရန်",
 
         // Diagnostics & Maintenance
         "Error Logs": "ချို့ယွင်းချက် မှတ်တမ်း",
         "System Diagnostics": "စနစ်စစ်ဆေးမှု",
         "High Load Alert": "ဝန်ထုပ်ဝန်ပိုးမြင့်မားနေပါသည်",
+        "System Advisory": "စနစ်ဆိုင်ရာ အကြံပြုချက်",
+        "Modify in Dev Center": "စနစ်ပြုပြင်ရေးတွင် ပြင်ရန်",
+        "Dev Center": "စနစ်ပြုပြင်ရေး ဗဟို",
+        "Developer-Only Area": "စနစ်ပြုပြင်သူများသာ ဝင်ရောက်နိုင်သော နေရာ",
         "Routine maintenance & updates in progress": "ပုံမှန်စနစ်ထိန်းသိမ်းမှုနှင့် အဆင့်မြှင့်တင်မှုများ ဆောင်ရွက်နေပါသည်",
         "Active Maintenance": "စနစ်ထိန်းသိမ်းနေဆဲ",
         "Normal Operation": "ပုံမှန်လည်ပတ်နေသည်",
@@ -345,6 +431,10 @@ document.addEventListener('DOMContentLoaded', function () {
         try { return localStorage.getItem(languageKey) || 'en'; } catch (e) { return 'en'; }
     }
 
+    window.mbposT = function (key) {
+        return currentLanguage() === 'mm' ? (translations[key] || key) : key;
+    };
+
     function translateText(text, language) {
         const normalized = text.trim();
         if (!normalized) return text;
@@ -364,6 +454,14 @@ document.addEventListener('DOMContentLoaded', function () {
             const key = node.dataset.i18nPlaceholder;
             node.placeholder = language === 'mm' ? (translations[key] || key) : key;
         });
+        document.querySelectorAll('[data-i18n-aria-label]').forEach(function (node) {
+            const key = node.dataset.i18nAriaLabel;
+            node.setAttribute('aria-label', language === 'mm' ? (translations[key] || key) : key);
+        });
+        document.querySelectorAll('[data-i18n-title]').forEach(function (node) {
+            const key = node.dataset.i18nTitle;
+            node.title = language === 'mm' ? (translations[key] || key) : key;
+        });
         // Translate plain text nodes without touching scripts, styles, or inputs
         const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
         const nodes = [];
@@ -376,6 +474,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('#language-toggle .language-option').forEach(function (option) {
             option.classList.toggle('is-selected', option.classList.contains('language-option-mm') ? language === 'mm' : language === 'en');
         });
+        document.dispatchEvent(new CustomEvent('mbpos:languagechange', { detail: { language: language } }));
     }
 
     function setOfflineState() {

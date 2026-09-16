@@ -14,7 +14,7 @@ if ($voucher_id <= 0) {
     $error_message = 'Invalid voucher ID provided.';
 } else {
     // Fetch only the necessary, non-sensitive data for a public view
-    $query = "SELECT 
+    $query = "SELECT
                 v.voucher_code, v.status, v.created_at,
                 r_origin.region_name AS origin_region,
                 r_dest.region_name AS destination_region
@@ -102,7 +102,9 @@ if ($voucher_id <= 0) {
 
         <?php if ($error_message): ?>
             <div class="v5-glass-card border border-rose-200 bg-rose-50/90 text-rose-800 p-6 rounded-2xl shadow-lg text-center" role="alert">
-                <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3 text-xl font-bold">✕</div>
+                <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </div>
                 <h3 class="font-bold text-base mb-1" data-i18n="Error">Error</h3>
                 <p class="text-sm"><?= htmlspecialchars($error_message) ?></p>
             </div>
@@ -116,7 +118,7 @@ if ($voucher_id <= 0) {
                     <p class="text-xs font-extrabold uppercase tracking-widest text-blue-100 mb-1" data-i18n="Current Status">Current Status</p>
                     <h2 class="text-3xl font-black tracking-tight"><?= htmlspecialchars($voucher_data['status']) ?></h2>
                 </div>
-                
+
                 <!-- Details List -->
                 <div>
                     <h3 class="font-bold text-sm text-slate-700 mb-3 px-1 uppercase tracking-wider text-xs" data-i18n="Order Summary">Shipment Details</h3>

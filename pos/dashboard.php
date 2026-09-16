@@ -145,7 +145,7 @@ include_template('header', ['page' => 'dashboard']);
                                     <tr>
                                         <td colspan="5">
                                             <div class="v5-empty">
-                                                <span class="v5-empty__icon">▤</span>
+                                                <span class="v5-empty__icon"><?= mbpos_icon('dashboard', 'w-8 h-8 text-slate-400') ?></span>
                                                 <strong data-i18n="No vouchers issued yet.">No vouchers issued yet.</strong>
                                                 <p><a href="index.php?page=voucher_create" class="text-primary font-bold hover:underline" data-i18n="Create your first entry">Create your first entry</a></p>
                                             </div>

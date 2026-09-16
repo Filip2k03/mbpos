@@ -33,6 +33,7 @@ $currencies = mbpos_cache_remember('lookup-currencies', 'codes', 300, function (
 
 // --- Handle Add/Update/Delete ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    require_csrf_request();
     $expense_id = intval($_POST['delete_id']);
     $stmt = mysqli_prepare($connection, "DELETE FROM expenses WHERE id = ? AND created_by_user_id = ?");
     mysqli_stmt_bind_param($stmt, 'ii', $expense_id, $user_id);
@@ -43,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf_request();
     $expense_id = intval($_POST['expense_id'] ?? 0);
     $description = trim($_POST['description']);
     $amount = floatval($_POST['amount']);
@@ -146,6 +148,7 @@ include_template('header', ['page' => 'expenses']);
                 <div class="v5-field">
                     <label for="currency" data-i18n="currency">Currency</label>
                     <select id="currency" name="currency" required>
+                        <option value="" disabled <?= empty($edit_expense['currency']) ? 'selected' : '' ?> data-i18n="Select currency">Select currency</option>
                         <?php foreach ($currencies as $currency_code): ?>
                             <option value="<?= htmlspecialchars($currency_code, ENT_QUOTES, 'UTF-8') ?>"
                                 <?= (isset($edit_expense) && $edit_expense['currency'] === $currency_code) ? 'selected' : '' ?>>
@@ -157,7 +160,7 @@ include_template('header', ['page' => 'expenses']);
 
                 <div class="v5-field">
                     <label for="expense_date" data-i18n="expense_date">Expense Date</label>
-                    <input type="date" id="expense_date" name="expense_date" value="<?= htmlspecialchars($edit_expense['expense_date'] ?? date('Y-m-d'), ENT_QUOTES, 'UTF-8') ?>" required>
+                    <input type="date" id="expense_date" name="expense_date" value="<?= htmlspecialchars($edit_expense['expense_date'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
                 </div>
 
                 <div class="v5-field">
@@ -187,7 +190,7 @@ include_template('header', ['page' => 'expenses']);
                         <tr>
                             <td colspan="4">
                                 <div class="v5-empty">
-                                    <span class="v5-empty__icon">＋</span>
+                                    <span class="v5-empty__icon"><?= mbpos_icon('expenses', 'w-8 h-8 text-slate-400') ?></span>
                                     <strong data-i18n="no_expenses_recorded">No expenses recorded yet.</strong>
                                     <p data-i18n="add_first_expense">Add the first record using the form above.</p>
                                 </div>

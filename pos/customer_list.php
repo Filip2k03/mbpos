@@ -35,7 +35,7 @@ include_template('header', ['page' => 'customer_list']);
 <!-- V5 Liquid UI Customer Directory -->
 <div class="relative min-h-[85vh] p-4 sm:p-8 font-sans">
     <div class="max-w-7xl mx-auto relative z-10">
-        
+
         <!-- Header Section -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-5 animate-fadeInDown">
             <div>
@@ -57,7 +57,7 @@ include_template('header', ['page' => 'customer_list']);
             <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-black">
-                        👥
+                        <?= mbpos_icon('users', 'w-5 h-5') ?>
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-slate-800" data-i18n="Customers">Registered Profiles</h2>

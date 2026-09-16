@@ -165,7 +165,7 @@ include_template('header', ['page' => 'currencies']);
                                     <tr>
                                         <td colspan="4">
                                             <div class="v5-empty">
-                                                <span class="v5-empty__icon">◇</span>
+                                                <span class="v5-empty__icon"><?= mbpos_icon('currencies', 'w-8 h-8 text-slate-400') ?></span>
                                                 <strong data-i18n="No currencies configured.">No currencies configured.</strong>
                                                 <p data-i18n="Use the form on the left to add a supported currency.">Use the form on the left to add a supported currency.</p>
                                             </div>

@@ -158,7 +158,7 @@ include_template('header', ['page' => 'delivery_types']);
                                     <tr>
                                         <td colspan="3">
                                             <div class="v5-empty">
-                                                <span class="v5-empty__icon">◇</span>
+                                                <span class="v5-empty__icon"><?= mbpos_icon('delivery_types', 'w-8 h-8 text-slate-400') ?></span>
                                                 <strong data-i18n="No delivery services configured.">No delivery services configured.</strong>
                                                 <p data-i18n="Use the form on the left to add a new delivery service.">Use the form on the left to add a new delivery service.</p>
                                             </div>

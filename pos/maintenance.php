@@ -100,8 +100,8 @@ include_template('header', ['page' => 'maintenance']);
     <?php if ($active_count > 0): ?>
     <div class="v5-panel" style="border-color:#fecdd3;background:#fff1f2;">
         <div class="v5-panel__body" style="display:flex;align-items:center;gap:.85rem;padding:.9rem 1.15rem;">
-            <span class="v5-badge" style="background:#fee2e2;color:#b91c1c;font-size:.78rem;padding:.4rem .85rem;">
-                &#9888; <span data-i18n="maintenance.active_warning_badge">MAINTENANCE ACTIVE</span>
+            <span class="v5-badge" style="background:#fee2e2;color:#b91c1c;font-size:.78rem;padding:.4rem .85rem;display:inline-flex;align-items:center;gap:.35rem;">
+                <svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> <span data-i18n="maintenance.active_warning_badge">MAINTENANCE ACTIVE</span>
             </span>
             <span style="color:#9f1239;font-size:.82rem;font-weight:700;" data-i18n-params='{"count":<?= $active_count ?>}'>
                 <?= $active_count === 1
@@ -154,7 +154,7 @@ include_template('header', ['page' => 'maintenance']);
         <div class="v5-panel__body">
             <?php if (empty($categories)): ?>
             <div class="v5-empty">
-                <span class="v5-empty__icon">&#9881;</span>
+                <span class="v5-empty__icon"><?= mbpos_icon('maintenance', 'w-8 h-8 text-slate-400') ?></span>
                 <strong data-i18n="maintenance.empty_title">No maintenance zones configured</strong>
                 <p data-i18n="maintenance.empty_hint">Add the first zone using the form above.</p>
             </div>
@@ -168,8 +168,8 @@ include_template('header', ['page' => 'maintenance']);
                     </div>
                     <div class="v5-record-row__actions">
                         <?php if ($cat['is_active']): ?>
-                        <span class="v5-badge" style="background:#fee2e2;color:#b91c1c;" data-i18n="Active">
-                            &#9888; Active
+                        <span class="v5-badge" style="background:#fee2e2;color:#b91c1c;display:inline-flex;align-items:center;gap:.3rem;" data-i18n="Active">
+                            <svg style="width:12px;height:12px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> Active
                         </span>
                         <?php else: ?>
                         <span class="v5-badge" style="background:#f1f5f9;color:#64748b;" data-i18n="Inactive">

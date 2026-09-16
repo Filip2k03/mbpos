@@ -179,7 +179,7 @@ include_template('header', ['page' => 'branches']);
                                     <tr>
                                         <td colspan="4">
                                             <div class="v5-empty">
-                                                <span class="v5-empty__icon">◇</span>
+                                                <span class="v5-empty__icon"><?= mbpos_icon('branches', 'w-8 h-8 text-slate-400') ?></span>
                                                 <strong data-i18n="No branches configured.">No branches configured.</strong>
                                                 <p data-i18n="Use the form on the left to add a branch node.">Use the form on the left to add a branch node.</p>
                                             </div>

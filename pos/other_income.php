@@ -31,6 +31,7 @@ $currencies = mbpos_cache_remember('lookup-currencies', 'codes', 300, function (
 
 // --- Handle Add/Update/Delete ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    require_csrf_request();
     $income_id = intval($_POST['delete_id']);
     $stmt = mysqli_prepare($connection, "DELETE FROM other_income WHERE id = ? AND created_by_user_id = ?");
     mysqli_stmt_bind_param($stmt, 'ii', $income_id, $user_id);
@@ -41,6 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf_request();
     $income_id = intval($_POST['income_id'] ?? 0);
     $description = trim($_POST['description']);
     $amount = floatval($_POST['amount']);
@@ -167,6 +169,7 @@ include_template('header', ['page' => 'other_income']);
                         <div class="v5-field">
                             <label for="currency" data-i18n="Currency">Currency</label>
                             <select id="currency" name="currency" required>
+                                <option value="" disabled <?= empty($edit_income['currency']) ? 'selected' : '' ?> data-i18n="Select currency">Select currency</option>
                                 <?php foreach ($currencies as $currency_code): ?>
                                 <option value="<?= htmlspecialchars($currency_code, ENT_QUOTES, 'UTF-8') ?>"
                                     <?= ($edit_income && $edit_income['currency'] === $currency_code) ? 'selected' : '' ?>>
@@ -179,7 +182,7 @@ include_template('header', ['page' => 'other_income']);
                         <div class="v5-field v5-field--wide">
                             <label for="income_date" data-i18n="Income date">Income date</label>
                             <input type="date" id="income_date" name="income_date"
-                                   value="<?= htmlspecialchars($edit_income['income_date'] ?? date('Y-m-d'), ENT_QUOTES, 'UTF-8') ?>"
+                                   value="<?= htmlspecialchars($edit_income['income_date'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
                                    required>
                         </div>
 
@@ -216,7 +219,7 @@ include_template('header', ['page' => 'other_income']);
                             <tr>
                                 <td colspan="5">
                                     <div class="v5-empty">
-                                        <span class="v5-empty__icon">＋</span>
+                                        <span class="v5-empty__icon"><?= mbpos_icon('other_income', 'w-8 h-8 text-slate-400') ?></span>
                                         <strong data-i18n="other_income.empty_title">No additional income recorded</strong>
                                         <p data-i18n="other_income.empty_hint">Add the first record using the form.</p>
                                     </div>

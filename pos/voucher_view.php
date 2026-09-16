@@ -177,8 +177,8 @@ include_template('header', ['page' => 'voucher_view']);
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     </div>
                     <div>
-                        <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Shipment Details</h2>
-                        <p class="text-gray-500 font-medium mt-1">Issued by <span class="font-bold text-gray-700"><?= htmlspecialchars($voucher['created_by_username'] ?? 'System', ENT_QUOTES, 'UTF-8') ?></span></p>
+                        <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight" data-i18n="Voucher Details">Voucher Details</h2>
+                        <p class="text-gray-500 font-medium mt-1"><span data-i18n="Issued by">Issued by</span> <span class="font-bold text-gray-700"><?= htmlspecialchars($voucher['created_by_username'] ?? 'System', ENT_QUOTES, 'UTF-8') ?></span></p>
                     </div>
                 </div>
                 <div class="text-left md:text-right flex flex-col md:items-end">
@@ -203,7 +203,7 @@ include_template('header', ['page' => 'voucher_view']);
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                             </div>
                             <div>
-                                <p class="text-xs font-bold text-blue-500 uppercase tracking-wider mb-1">Sender</p>
+                                <p class="text-xs font-bold text-blue-500 uppercase tracking-wider mb-1" data-i18n="Sender">Sender</p>
                                 <p class="font-extrabold text-gray-900 text-lg"><?= htmlspecialchars($voucher['sender_name'], ENT_QUOTES, 'UTF-8') ?></p>
                                 <p class="text-gray-500 font-medium text-sm mt-0.5"><?= htmlspecialchars($voucher['sender_phone'], ENT_QUOTES, 'UTF-8') ?></p>
                             </div>
@@ -218,7 +218,7 @@ include_template('header', ['page' => 'voucher_view']);
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                             </div>
                             <div>
-                                <p class="text-xs font-bold text-emerald-500 uppercase tracking-wider mb-1">Receiver</p>
+                                <p class="text-xs font-bold text-emerald-500 uppercase tracking-wider mb-1" data-i18n="Receiver">Receiver</p>
                                 <p class="font-extrabold text-gray-900 text-lg"><?= htmlspecialchars($voucher['receiver_name'], ENT_QUOTES, 'UTF-8') ?></p>
                                 <p class="text-gray-500 font-medium text-sm mt-0.5"><?= htmlspecialchars($voucher['receiver_phone'], ENT_QUOTES, 'UTF-8') ?></p>
                             </div>
@@ -233,7 +233,7 @@ include_template('header', ['page' => 'voucher_view']);
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                             </div>
                             <div>
-                                <p class="text-xs font-bold text-purple-500 uppercase tracking-wider mb-1">Deliver To</p>
+                                <p class="text-xs font-bold text-purple-500 uppercase tracking-wider mb-1" data-i18n="Deliver To">Deliver To</p>
                                 <p class="text-gray-700 font-medium text-sm leading-relaxed"><?= nl2br(htmlspecialchars($voucher['receiver_address'], ENT_QUOTES, 'UTF-8')) ?></p>
                             </div>
                         </div>
@@ -245,21 +245,21 @@ include_template('header', ['page' => 'voucher_view']);
                     <!-- Metrics Grid -->
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div class="bg-gray-50/80 rounded-2xl p-4 border border-gray-100 text-center hover:bg-white hover:shadow-md transition-all">
-                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Origin</p>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1" data-i18n="Origin">Origin</p>
                             <p class="font-bold text-gray-800 truncate"><?= htmlspecialchars($voucher['origin_region_name'] ?? 'N/A', ENT_QUOTES, 'UTF-8') ?></p>
                             <p class="text-xs font-medium text-gray-500 mt-1 truncate"><?= htmlspecialchars($voucher['origin_branch_name'] ?? 'N/A', ENT_QUOTES, 'UTF-8') ?></p>
                         </div>
                         <div class="bg-gray-50/80 rounded-2xl p-4 border border-gray-100 text-center hover:bg-white hover:shadow-md transition-all">
-                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Destination</p>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1" data-i18n="Destination">Destination</p>
                             <p class="font-bold text-gray-800 truncate"><?= htmlspecialchars($voucher['destination_region_name'] ?? 'N/A', ENT_QUOTES, 'UTF-8') ?></p>
                             <p class="text-xs font-medium text-gray-500 mt-1 truncate"><?= htmlspecialchars($voucher['destination_branch_name'] ?? 'N/A', ENT_QUOTES, 'UTF-8') ?></p>
                         </div>
                         <div class="bg-gray-50/80 rounded-2xl p-4 border border-gray-100 text-center hover:bg-white hover:shadow-md transition-all">
-                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Weight</p>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1" data-i18n="Weight">Weight</p>
                             <p class="font-extrabold text-indigo-600 text-lg"><?= number_format($voucher['weight_kg'], 2) ?> <span class="text-sm">kg</span></p>
                         </div>
                         <div class="bg-indigo-50/50 rounded-2xl p-4 border border-indigo-100 text-center hover:bg-indigo-50 hover:shadow-md transition-all">
-                            <p class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-1">Total Due</p>
+                            <p class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-1" data-i18n="Total Due">Total Due</p>
                             <p class="font-extrabold text-indigo-700 text-lg"><?= htmlspecialchars($voucher['currency'], ENT_QUOTES, 'UTF-8') ?> <?= number_format($voucher['total_amount'], 2) ?></p>
                         </div>
                     </div>
@@ -270,13 +270,13 @@ include_template('header', ['page' => 'voucher_view']);
                             <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                             </div>
-                            Operational Timeline
+                            <span data-i18n="Operational Timeline">Operational Timeline</span>
                         </h3>
 
                         <div class="space-y-6 mb-8 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                             <?php if (empty($chat_bubbles)): ?>
                                 <div class="text-center py-6">
-                                    <p class="text-gray-400 font-medium text-sm">No operational notes recorded yet.</p>
+                                    <p class="text-gray-400 font-medium text-sm" data-i18n="No operational notes recorded yet.">No operational notes recorded yet.</p>
                                 </div>
                             <?php else: ?>
                                 <?php foreach ($chat_bubbles as $bubble): ?>
@@ -321,14 +321,14 @@ include_template('header', ['page' => 'voucher_view']);
 
                                 <div class="md:col-span-8 space-y-2">
                                     <label for="new_note" class="block text-xs font-bold text-gray-500 uppercase tracking-wider ml-1" data-i18n="Add to Conversation">Add to Conversation</label>
-                                    <textarea id="new_note" name="new_note" rows="2" class="w-full rounded-xl border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm font-medium text-gray-800 py-3 px-4 shadow-sm" placeholder="Write an operational note... (Supports English & Myanmar)"></textarea>
+                                    <textarea id="new_note" name="new_note" rows="2" class="w-full rounded-xl border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm font-medium text-gray-800 py-3 px-4 shadow-sm" placeholder="Write an operational note... (Supports English & Myanmar)" data-i18n-placeholder="Write an operational note... (Supports English & Myanmar)"></textarea>
                                 </div>
                             </div>
 
                             <div class="mt-5 flex justify-end">
-                                <button type="submit" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 px-6 rounded-xl font-bold text-sm hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500/30 shadow-[0_8px_20px_rgb(79,70,229,0.2)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2" data-i18n="Add Entry & Update">
+                                <button type="submit" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 px-6 rounded-xl font-bold text-sm hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500/30 shadow-[0_8px_20px_rgb(79,70,229,0.2)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                                    Add Entry & Update
+                                    <span data-i18n="Add Entry & Update">Add Entry & Update</span>
                                 </button>
                             </div>
                         </form>

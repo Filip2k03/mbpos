@@ -114,15 +114,21 @@ include_template('header', ['page' => 'notifications']);
             <div class="mt-8 pt-5 border-t border-slate-100 flex justify-between items-center text-xs font-bold text-slate-500">
                 <div>
                     <?php if ($page > 1): ?>
-                        <a href="index.php?page=notifications&p=<?= $page - 1 ?>" class="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-all">&larr; <span data-i18n="Previous">Previous</span></a>
+                        <a href="index.php?page=notifications&p=<?= $page - 1 ?>" class="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-all inline-flex items-center">
+                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                            <span data-i18n="Previous">Previous</span>
+                        </a>
                     <?php endif; ?>
                 </div>
                 <div>
-                    Page <?= $page ?> of <?= max(1, $total_pages) ?>
+                    <span data-i18n="Page">Page</span> <?= $page ?> <span data-i18n="of">of</span> <?= max(1, $total_pages) ?>
                 </div>
                 <div>
                     <?php if ($page < $total_pages): ?>
-                        <a href="index.php?page=notifications&p=<?= $page + 1 ?>" class="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-all"><span data-i18n="Next">Next</span> &rarr;</a>
+                        <a href="index.php?page=notifications&p=<?= $page + 1 ?>" class="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-all inline-flex items-center">
+                            <span data-i18n="Next">Next</span>
+                            <svg class="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </a>
                     <?php endif; ?>
                 </div>
             </div>

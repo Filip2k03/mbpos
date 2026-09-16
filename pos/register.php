@@ -23,6 +23,7 @@ global $connection;
 
 // --- Handle Form Submission ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf_request();
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
@@ -110,67 +111,67 @@ include_template('header', ['page' => 'register']);
         <div class="v5-page-head__copy">
             <span class="v5-kicker" data-i18n="Administration">Administration</span>
             <h1 data-i18n="User Management">User Management</h1>
-            <p data-i18n="register_subtitle">Register new personnel and manage access roles</p>
+            <p data-i18n="Register new personnel and manage access roles">Register new personnel and manage access roles</p>
         </div>
         <span class="v5-count"><?= count($users_list) ?> <span data-i18n="users">users</span></span>
     </div>
 
     <div class="v5-panel">
         <div class="v5-panel__head">
-            <h2 data-i18n="register_account">Register Account</h2>
+            <h2 data-i18n="Register Account">Register Account</h2>
         </div>
         <div class="v5-panel__body">
             <form action="index.php?page=register" method="POST" class="v5-filter-grid" accept-charset="UTF-8">
                 <?= csrf_input() ?>
 
                 <div class="v5-field v5-field--wide">
-                    <label for="username" data-i18n="username">Username</label>
+                    <label for="username" data-i18n="Username">Username</label>
                     <input type="text" id="username" name="username" placeholder="e.g. jdoe_staff" required>
                 </div>
 
                 <div class="v5-field v5-field--wide">
-                    <label for="user_type" data-i18n="access_role">Access Role</label>
+                    <label for="user_type" data-i18n="Access Role">Access Role</label>
                     <select id="user_type" name="user_type" required>
-                        <option value="" data-i18n="select_role">Select Role&hellip;</option>
-                        <option value="ADMIN" data-i18n="role_admin">Administrator</option>
-                        <option value="Developer" data-i18n="role_developer">Developer</option>
-                        <option value="Staff" data-i18n="role_staff">Standard Staff</option>
-                        <option value="General" data-i18n="role_general">General (No Region/Branch)</option>
+                        <option value="" data-i18n="Select Role...">Select Role&hellip;</option>
+                        <option value="ADMIN" data-i18n="Administrator">Administrator</option>
+                        <option value="Developer" data-i18n="Developer">Developer</option>
+                        <option value="Staff" data-i18n="Standard Staff">Standard Staff</option>
+                        <option value="General" data-i18n="General (No Region/Branch)">General (No Region/Branch)</option>
                     </select>
                 </div>
 
                 <div id="location-fields" class="v5-field--wide" style="display:none;grid-column:span 12">
                     <div class="v5-filter-grid" style="padding:0">
                         <div class="v5-field v5-field--wide">
-                            <label for="region_id" data-i18n="assigned_region">Assigned Region</label>
+                            <label for="region_id" data-i18n="Assigned Region">Assigned Region</label>
                             <select id="region_id" name="region_id">
-                                <option value="" data-i18n="select_region_first">Select Region First</option>
+                                <option value="" data-i18n="Select Region First">Select Region First</option>
                                 <?php foreach ($regions as $region): ?>
                                     <option value="<?= htmlspecialchars($region['id']) ?>"><?= htmlspecialchars($region['region_name']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="v5-field v5-field--wide">
-                            <label for="branch_id" data-i18n="assigned_branch">Assigned Branch</label>
+                            <label for="branch_id" data-i18n="Assigned Branch">Assigned Branch</label>
                             <select id="branch_id" name="branch_id">
-                                <option value="" data-i18n="select_region_first">Select Region First</option>
+                                <option value="" data-i18n="Select Region First">Select Region First</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
                 <div class="v5-field v5-field--wide">
-                    <label for="password" data-i18n="password">Password</label>
+                    <label for="password" data-i18n="Password">Password</label>
                     <input type="password" id="password" name="password" placeholder="••••••••" required>
                 </div>
 
                 <div class="v5-field v5-field--wide">
-                    <label for="confirm_password" data-i18n="confirm_password">Confirm Password</label>
+                    <label for="confirm_password" data-i18n="Confirm Password">Confirm Password</label>
                     <input type="password" id="confirm_password" name="confirm_password" placeholder="••••••••" required>
                 </div>
 
                 <div class="v5-field">
-                    <button type="submit" class="btn w-full" data-i18n="create_account">Create Account</button>
+                    <button type="submit" class="btn w-full" data-i18n="Create Account">Create Account</button>
                 </div>
             </form>
         </div>
@@ -178,16 +179,16 @@ include_template('header', ['page' => 'register']);
 
     <section class="v5-panel">
         <div class="v5-panel__head">
-            <h2 data-i18n="active_user_directory">Active User Directory</h2>
+            <h2 data-i18n="Active User Directory">Active User Directory</h2>
             <span class="v5-count"><?= count($users_list) ?> <span data-i18n="users">users</span></span>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full">
                 <thead>
                     <tr>
-                        <th data-i18n="username">Username</th>
-                        <th data-i18n="access_role">Access Role</th>
-                        <th data-i18n="assignment">Assignment (Region/Branch)</th>
+                        <th data-i18n="Username">Username</th>
+                        <th data-i18n="Access Role">Access Role</th>
+                        <th data-i18n="Assignment (Region/Branch)">Assignment (Region/Branch)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -196,8 +197,8 @@ include_template('header', ['page' => 'register']);
                             <td colspan="3">
                                 <div class="v5-empty">
                                     <span class="v5-empty__icon"><?= mbpos_icon('register', 'w-8 h-8 text-slate-400') ?></span>
-                                    <strong data-i18n="no_users_found">No users found.</strong>
-                                    <p data-i18n="register_first_user">Register the first account using the form above.</p>
+                                    <strong data-i18n="No users found.">No users found.</strong>
+                                    <p data-i18n="Register the first account using the form above.">Register the first account using the form above.</p>
                                 </div>
                             </td>
                         </tr>
@@ -227,7 +228,7 @@ include_template('header', ['page' => 'register']);
                                 </td>
                                 <td>
                                     <?php if ($user['user_type'] === 'General' || (empty($user['region_name']) && empty($user['branch_name']))): ?>
-                                        <em style="color:var(--v5-muted);font-size:.82rem" data-i18n="global_access">Global Access</em>
+                                        <em style="color:var(--v5-muted);font-size:.82rem" data-i18n="Global Access">Global Access</em>
                                     <?php else: ?>
                                         <div>
                                             <strong style="display:block;font-size:.88rem"><?= htmlspecialchars($user['region_name']) ?></strong>

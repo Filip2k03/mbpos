@@ -414,6 +414,56 @@ document.addEventListener('DOMContentLoaded', function () {
         "Hide": "ဝှက်ပါ",
         "Enter your username": "အသုံးပြုသူအမည် ရိုက်ထည့်ပါ",
 
+        // Voucher View & Details
+        "Voucher Details": "ဘောက်ချာ အချက်အလက်များ",
+        "Issued by": "ထုတ်ပေးသူ",
+        "Deliver To": "ပို့ဆောင်ရမည့်လိပ်စာ",
+        "Origin": "မူရင်းဒေသ",
+        "Total Due": "ပေးချေရန် စုစုပေါင်း",
+        "Operational Timeline": "လုပ်ငန်းစဉ် အချိန်မှတ်တမ်း",
+        "No operational notes recorded yet.": "မှတ်တမ်းမှတ်ရာများ မရှိသေးပါ",
+        "Current Status": "လက်ရှိအခြေအနေ",
+        "Add to Conversation": "မှတ်ချက်အသစ် ထည့်သွင်းရန်",
+        "Write an operational note... (Supports English & Myanmar)": "မှတ်ချက်ရေးသားရန်... (အင်္ဂလိပ် / မြန်မာ)",
+        "Add Entry & Update": "မှတ်တမ်းထည့်ပြီး အတည်ပြုရန်",
+        "Print Waybill": "ဘောက်ချာ ပရင့်ထုတ်ရန်",
+
+        // Notifications
+        "Notification History": "အသိပေးချက် မှတ်တမ်း",
+        "Operational dispatch alerts and status changes": "လုပ်ငန်းဆိုင်ရာ အသိပေးချက်များနှင့် အခြေအနေပြောင်းလဲမှုများ",
+        "Mark All as Read": "အားလုံး ဖတ်ပြီးအဖြစ် သတ်မှတ်ရန်",
+        "You have no notifications yet.": "အသိပေးချက် မရှိသေးပါ",
+
+        // Pagination
+        "Page": "စာမျက်နှာ",
+        "of": "၏",
+        "Previous": "ရှေ့သို့",
+        "Next": "နောက်သို့",
+
+        // User Management & Access Control
+        "User Management": "အသုံးပြုသူ စီမံခန့်ခွဲမှု",
+        "Register new personnel and manage access roles": "ဝန်ထမ်းအသစ် စာရင်းသွင်းခြင်းနှင့် လုပ်ပိုင်ခွင့် သတ်မှတ်ခြင်း",
+        "Register Account": "အကောင့် စာရင်းသွင်းရန်",
+        "Username": "အသုံးပြုသူအမည်",
+        "Access Role": "အသုံးပြုခွင့် အဆင့်",
+        "Select Role...": "အဆင့် ရွေးချယ်ပါ…",
+        "Administrator": "အက်ဒမင်",
+        "Developer": "ဆော့ဖ်ဝဲရေးသားသူ",
+        "Standard Staff": "ရုံးဝန်ထမ်း",
+        "General (No Region/Branch)": "အထွေထွေ (ရုံးခွဲမသတ်မှတ်)",
+        "Assigned Region": "တာဝန်ကျ ဒေသ",
+        "Select Region First": "ဒေသ အရင်ရွေးပါ",
+        "Assigned Branch": "တာဝန်ကျ ရုံးခွဲ",
+        "Password": "လျှို့ဝှက်နံပါတ်",
+        "Confirm Password": "လျှို့ဝှက်နံပါတ် အတည်ပြုပါ",
+        "Create Account": "အကောင့် ဖွင့်ရန်",
+        "Active User Directory": "လက်ရှိ အသုံးပြုသူများ စာရင်း",
+        "Assignment (Region/Branch)": "တာဝန်ကျ (ဒေသ/ရုံးခွဲ)",
+        "No users found.": "အသုံးပြုသူ မတွေ့ရှိပါ",
+        "Register the first account using the form above.": "အထက်ပါဖောင်ဖြင့် ပထမဆုံး အကောင့်ကို စာရင်းသွင်းပါ",
+        "Global Access": "အထွေထွေ အသုံးပြုခွင့်",
+        "users": "ဦး",
+
         // System messages & feedback
         "You are offline. Saved pages remain available; live records require a connection.": "အင်တာနက်ချိတ်ဆက်မှု မရှိပါ။ သိမ်းထားသောစာမျက်နှာများကို အသုံးပြုနိုင်သော်လည်း တိုက်ရိုက်မှတ်တမ်းများအတွက် ချိတ်ဆက်မှုလိုအပ်ပါသည်။",
         "Search customer, tracking number, or voucher...": "ဖောက်သည်၊ ခြေရာခံနံပါတ် သို့မဟုတ် ဘောက်ချာ ရှာရန်...",

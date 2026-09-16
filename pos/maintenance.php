@@ -17,7 +17,7 @@ if (!is_logged_in() || !is_developer()) {
 global $connection;
 $edit_category = null;
 
-// --- Handle POST Requests (Add/Update/Toggle) ---
+// --- Handle POST Requests (Add/Update/Toggle/Delete) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
     $id = intval($_POST['delete_id']);
     if ($id > 0) {
@@ -72,10 +72,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
 
 // --- Fetch all maintenance categories ---
 $categories = [];
+$active_count = 0;
 $result = mysqli_query($connection, "SELECT * FROM maintenance ORDER BY name");
 if ($result) {
     while ($row = mysqli_fetch_assoc($result)) {
         $categories[] = $row;
+        if (!empty($row['is_active'])) {
+            $active_count++;
+        }
     }
 }
 
@@ -83,31 +87,59 @@ include_template('header', ['page' => 'maintenance']);
 ?>
 
 <div class="v5-page">
+
     <div class="v5-page-head">
         <div class="v5-page-head__copy">
-            <span class="v5-kicker">Developer configuration</span>
-            <h1 data-i18n="Maintenance Settings">Maintenance Settings</h1>
-            <p>Control operational maintenance categories without interrupting active POS sessions.</p>
+            <span class="v5-kicker" data-i18n="System">System</span>
+            <h1 data-i18n="Maintenance Zones">Maintenance Zones</h1>
+            <p data-i18n="maintenance.subtitle">Control operational maintenance categories without interrupting active POS sessions.</p>
         </div>
-        <span class="v5-count"><?= count($categories) ?> configured categories</span>
+        <span class="v5-count"><?= count($categories) ?> <span data-i18n="configured">configured</span></span>
     </div>
+
+    <?php if ($active_count > 0): ?>
+    <div class="v5-panel" style="border-color:#fecdd3;background:#fff1f2;">
+        <div class="v5-panel__body" style="display:flex;align-items:center;gap:.85rem;padding:.9rem 1.15rem;">
+            <span class="v5-badge" style="background:#fee2e2;color:#b91c1c;font-size:.78rem;padding:.4rem .85rem;">
+                &#9888; <span data-i18n="maintenance.active_warning_badge">MAINTENANCE ACTIVE</span>
+            </span>
+            <span style="color:#9f1239;font-size:.82rem;font-weight:700;" data-i18n-params='{"count":<?= $active_count ?>}'>
+                <?= $active_count === 1
+                    ? '1 zone is currently active. The POS may be in a restricted state.'
+                    : $active_count . ' zones are currently active. The POS may be in a restricted state.' ?>
+            </span>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <section class="v5-panel">
         <div class="v5-panel__head">
-            <h2><?= $edit_category ? 'Edit Maintenance Category' : 'Add Maintenance Category' ?></h2>
-            <?php if ($edit_category): ?><a class="v5-btn-ghost" href="index.php?page=maintenance">Cancel edit</a><?php endif; ?>
+            <h2><?= $edit_category
+                ? '<span data-i18n="maintenance.edit_title">Edit Maintenance Zone</span>'
+                : '<span data-i18n="maintenance.add_title">Add Maintenance Zone</span>' ?></h2>
+            <?php if ($edit_category): ?>
+            <a class="v5-btn-ghost" href="index.php?page=maintenance" data-i18n="Cancel edit">Cancel edit</a>
+            <?php endif; ?>
         </div>
         <div class="v5-panel__body">
             <form action="index.php?page=maintenance" method="POST">
                 <?= csrf_input() ?>
-                <?php if ($edit_category): ?><input type="hidden" name="id" value="<?= (int)$edit_category['id'] ?>"><?php endif; ?>
+                <?php if ($edit_category): ?>
+                <input type="hidden" name="id" value="<?= (int)$edit_category['id'] ?>">
+                <?php endif; ?>
                 <div class="v5-filter-grid">
                     <div class="v5-field v5-field--wide">
-                        <label for="maintenance-name">Category name</label>
-                        <input id="maintenance-name" type="text" name="name" maxlength="120" placeholder="e.g. Exchange rate synchronization" value="<?= htmlspecialchars($edit_category['name'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
+                        <label for="maintenance-name" data-i18n="Zone name">Zone name</label>
+                        <input id="maintenance-name" type="text" name="name" maxlength="120"
+                               placeholder="e.g. Exchange rate synchronization"
+                               value="<?= htmlspecialchars($edit_category['name'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                               required>
                     </div>
                     <div class="v5-field v5-field--action">
-                        <button type="submit" class="btn w-full"><?= $edit_category ? 'Save Changes' : 'Add Category' ?></button>
+                        <button type="submit" class="btn w-full"
+                                data-i18n="<?= $edit_category ? 'Save Changes' : 'Add Zone' ?>">
+                            <?= $edit_category ? 'Save Changes' : 'Add Zone' ?>
+                        </button>
                     </div>
                 </div>
             </form>
@@ -115,36 +147,64 @@ include_template('header', ['page' => 'maintenance']);
     </section>
 
     <section class="v5-panel">
-        <div class="v5-panel__head"><h2>Operational Categories</h2><span class="v5-count">Live controls</span></div>
+        <div class="v5-panel__head">
+            <h2 data-i18n="Maintenance Zones">Maintenance Zones</h2>
+            <span class="v5-count" data-i18n="Live controls">Live controls</span>
+        </div>
         <div class="v5-panel__body">
             <?php if (empty($categories)): ?>
-                <div class="v5-empty"><span class="v5-empty__icon">⚙</span><strong>No maintenance categories configured</strong><p>Add the first category above.</p></div>
+            <div class="v5-empty">
+                <span class="v5-empty__icon">&#9881;</span>
+                <strong data-i18n="maintenance.empty_title">No maintenance zones configured</strong>
+                <p data-i18n="maintenance.empty_hint">Add the first zone using the form above.</p>
+            </div>
             <?php else: ?>
-                <div class="v5-record-list">
-                    <?php foreach ($categories as $cat): ?>
-                        <article class="v5-record-row">
-                            <div class="v5-record-row__main">
-                                <strong><?= htmlspecialchars($cat['name'], ENT_QUOTES, 'UTF-8') ?></strong>
-                                <span>Category ID #<?= (int)$cat['id'] ?></span>
-                            </div>
-                            <div class="v5-record-row__actions">
-                                <span class="v5-status-dot <?= $cat['is_active'] ? 'v5-status-dot--on' : 'v5-status-dot--off' ?>"><?= $cat['is_active'] ? 'Active' : 'Inactive' ?></span>
-                                <form action="index.php?page=maintenance" method="POST">
-                                    <?= csrf_input() ?><input type="hidden" name="toggle_id" value="<?= (int)$cat['id'] ?>"><input type="hidden" name="current_status" value="<?= (int)$cat['is_active'] ?>">
-                                    <button type="submit" class="<?= $cat['is_active'] ? 'v5-btn-success' : 'v5-btn-ghost' ?>"><?= $cat['is_active'] ? 'Deactivate' : 'Activate' ?></button>
-                                </form>
-                                <a href="index.php?page=maintenance&action=edit&id=<?= (int)$cat['id'] ?>" class="v5-btn-ghost">Edit</a>
-                                <form method="POST" action="index.php?page=maintenance" onsubmit="return confirm('Delete this maintenance category?');">
-                                    <?= csrf_input() ?><input type="hidden" name="delete_id" value="<?= (int)$cat['id'] ?>">
-                                    <button type="submit" class="v5-btn-danger">Delete</button>
-                                </form>
-                            </div>
-                        </article>
-                    <?php endforeach; ?>
-                </div>
+            <div class="v5-record-list">
+                <?php foreach ($categories as $cat): ?>
+                <article class="v5-record-row">
+                    <div class="v5-record-row__main">
+                        <strong><?= htmlspecialchars($cat['name'], ENT_QUOTES, 'UTF-8') ?></strong>
+                        <span data-i18n="Zone ID">Zone ID</span> #<?= (int)$cat['id'] ?>
+                    </div>
+                    <div class="v5-record-row__actions">
+                        <?php if ($cat['is_active']): ?>
+                        <span class="v5-badge" style="background:#fee2e2;color:#b91c1c;" data-i18n="Active">
+                            &#9888; Active
+                        </span>
+                        <?php else: ?>
+                        <span class="v5-badge" style="background:#f1f5f9;color:#64748b;" data-i18n="Inactive">
+                            Inactive
+                        </span>
+                        <?php endif; ?>
+
+                        <form action="index.php?page=maintenance" method="POST">
+                            <?= csrf_input() ?>
+                            <input type="hidden" name="toggle_id" value="<?= (int)$cat['id'] ?>">
+                            <input type="hidden" name="current_status" value="<?= (int)$cat['is_active'] ?>">
+                            <button type="submit"
+                                    class="<?= $cat['is_active'] ? 'v5-btn-ghost' : 'v5-btn-success' ?>"
+                                    data-i18n="<?= $cat['is_active'] ? 'Deactivate' : 'Activate' ?>">
+                                <?= $cat['is_active'] ? 'Deactivate' : 'Activate' ?>
+                            </button>
+                        </form>
+
+                        <a href="index.php?page=maintenance&action=edit&id=<?= (int)$cat['id'] ?>"
+                           class="v5-btn-ghost" data-i18n="Edit">Edit</a>
+
+                        <form method="POST" action="index.php?page=maintenance"
+                              onsubmit="return confirm('Delete this maintenance zone?');">
+                            <?= csrf_input() ?>
+                            <input type="hidden" name="delete_id" value="<?= (int)$cat['id'] ?>">
+                            <button type="submit" class="v5-btn-danger" data-i18n="Delete">Delete</button>
+                        </form>
+                    </div>
+                </article>
+                <?php endforeach; ?>
+            </div>
             <?php endif; ?>
         </div>
     </section>
-</div>
+
+</div><!-- /.v5-page -->
 
 <?php include_template('footer'); ?>

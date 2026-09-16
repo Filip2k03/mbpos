@@ -322,6 +322,8 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 .previewbar{display:flex;justify-content:space-between;align-items:center;padding:2px 5px 12px}
 .paper{background:#fff;border:1px solid #d8e2ed;box-shadow:0 12px 30px rgba(35,65,100,.12);padding:18px;min-height:600px;border-radius:8px}
 .phead{display:flex;justify-content:space-between;border-bottom:2px solid #1595ef;padding-bottom:10px}
+.pbrand{display:flex;align-items:center;gap:9px}
+.pbrand-logo{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid #dce5ef;background:#fff}
 .phead strong{color:#126bd3;font-size:17px;display:block;font-weight:900}
 .phead small{font-size:8px;font-weight:700;color:#64748b;text-align:right}
 .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
@@ -334,6 +336,9 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 .paper th{background:#f1f5f9;color:#475569;font-weight:800}
 .paper-total{display:flex;justify-content:space-between;padding:10px 0;font-size:9px;font-weight:900}
 .paper-total strong{font-size:14px;color:#126bd3}
+.legacy-print-notes{margin-top:10px;padding:9px 11px;border:1px solid #ffe1e1;border-radius:6px;background:#fff8f8;color:#7f1d1d;font-size:7px;line-height:1.45}
+.legacy-print-notes b{display:block;margin-bottom:4px;color:#dc2626;font-size:8px}
+.legacy-print-notes ol{margin:0;padding-left:15px}
 .loading{opacity:.65;pointer-events:none}
 .spinner{display:inline-block;width:10px;height:10px;border:2px solid #cfe4fb;border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:4px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -348,6 +353,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 @media(max-width:1200px){.workspace{grid-template-columns:1fr}.right{grid-template-columns:1fr 1fr}.preview{grid-column:1/-1}}
 @media(max-width:850px){.app{display:block}.sidebar{display:none}.top{padding:12px 16px}.content{padding:16px}.grid,.routegrid{grid-template-columns:1fr}.route,.full{grid-column:auto}.right{grid-template-columns:1fr}.delivery{grid-template-columns:1fr}.head{align-items:start;flex-direction:column}.steps{overflow-x:auto;-webkit-overflow-scrolling:touch}.step{min-width:100px}.search{max-width:none}}
 @media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   body{background:#fff!important;padding:0!important;margin:0!important}
   .sidebar,.top,.alert,.head,.steps,.grid,.summary,.tracking,.previewbar,#voucher-form,.seg-pill,.add,.actions,.request-status{display:none!important}
   .content,.workspace,.right,.preview{display:block!important;padding:0!important;margin:0!important;width:100%!important;max-width:none!important}
@@ -647,11 +653,14 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
               </div>
               <div class="paper" id="paper">
                 <div class="phead">
-                  <div>
-                    <strong>MBLOGISTICS</strong>
-                    <div style="font-size:7px;color:#64748b;font-weight:700">FAST · SAFE · GLOBAL</div>
+                  <div class="pbrand">
+                    <img class="pbrand-logo" src="bg.jpg" alt="MB Logistics logo">
+                    <div>
+                      <strong>MBLOGISTICS</strong>
+                      <div style="font-size:7px;color:#64748b;font-weight:700">FAST · SAFE · GLOBAL</div>
+                    </div>
                   </div>
-                  <small>LOGISTICS DELIVERY VOUCHER<br><b style="color:var(--blue)">V5 ENTERPRISE</b></small>
+                  <small>SHIPMENT VOUCHER<br><b style="color:var(--blue)">V5 · ORIGINAL PRINT STYLE</b></small>
                 </div>
                 <div style="display:flex;justify-content:space-between;font-size:7px;margin-top:9px;color:#64748b">
                   <span>Voucher: <b id="pno" style="color:#0f172a"><?= htmlspecialchars($preview_voucher_code) ?></b></span>
@@ -699,6 +708,15 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
                   <span>Total Weight: <span id="pweight">0.00 kg</span></span>
                   <span>Grand Total: <strong id="ptotal">0 MMK</strong></span>
                 </div>
+
+                <div class="legacy-print-notes">
+                  <b>Important Notes</b>
+                  <ol>
+                    <li>ဥပဒေနှင့်မလွတ်ကင်းသောပစ္စည်းများ လုံးဝ လက်မခံပါ။</li>
+                    <li>ပစ္စည်းအမျိုးအစားကို မှန်ကန်စွာကြေညာပြီး လုံခြုံရေးစစ်ဆေးမှုကို လက်ခံရပါမည်။</li>
+                    <li>အစားအသောက်နှင့် ပျက်စီးလွယ်သောပစ္စည်းများကို သတ်မှတ်ချက်အတိုင်း ထုပ်ပိုးရပါမည်။</li>
+                  </ol>
+                </div>
                 
                 <div style="border-top:1px solid #dce5ef;padding-top:8px;font-size:7px;color:#64748b;line-height:1.4">
                   Keep this voucher for tracking and enquiry support. Delivery timing may vary by destination. Operational notes are visible to authorized logistics personnel only.
@@ -724,18 +742,25 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 
 <script>
 // Data injected from backend database
-const categories = <?= json_encode($item_types_list) ?>;
-const allBranches = <?= json_encode($all_branches) ?>;
-const allRegions = <?= json_encode($all_regions) ?>;
+const categories = <?= json_encode(array_values($item_types_list), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+const allBranches = <?= json_encode(array_values($all_branches), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+const allRegions = <?= json_encode(array_values($all_regions), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 
-let currency = "<?= htmlspecialchars($currencies[0] ?? 'MMK') ?>";
+let currency = <?= json_encode((string) ($currencies[0] ?? 'MMK'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 let rowId = 0;
 
-const $ = id => document.getElementById(id);
+const byId = id => document.getElementById(id);
 const money = n => Number(n || 0).toLocaleString() + " " + currency;
 const safeText = s => String(s ?? "").replace(/[<>]/g, "");
+const escapeHtml = s => String(s ?? "").replace(/[&<>"']/g, character => ({
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#039;"
+})[character]);
 const toast = t => {
-  const x = $("toast");
+  const x = byId("toast");
   x.textContent = t;
   x.classList.add("show");
   setTimeout(() => x.classList.remove("show"), 2500);
@@ -749,7 +774,7 @@ function addRow(data = {category: (categories[0] || "Document"), weight: 1, pric
     <td class="num"></td>
     <td>
       <select class="category" name="item_type[]">
-        ${categories.map(c => `<option value="${safeText(c)}" ${c === data.category ? "selected" : ""}>${safeText(c)}</option>`).join("")}
+        ${categories.map(c => `<option value="${escapeHtml(c)}" ${c === data.category ? "selected" : ""}>${escapeHtml(c)}</option>`).join("")}
       </select>
     </td>
     <td>
@@ -761,7 +786,7 @@ function addRow(data = {category: (categories[0] || "Document"), weight: 1, pric
     <td class="lineTotal" style="font-weight:700;color:#1e293b;text-align:right">0</td>
     <td><button type="button" class="remove" title="Remove Item">×</button></td>
   `;
-  $("rows").appendChild(tr);
+  byId("rows").appendChild(tr);
   
   tr.querySelectorAll("input,select").forEach(el => el.addEventListener("input", update));
   tr.querySelector(".remove").onclick = () => {
@@ -788,63 +813,63 @@ function update() {
     subtotal += line;
     totalWeight += w;
     tr.querySelector(".lineTotal").textContent = Number(line).toLocaleString();
-    prows.push(`<tr><td>${safeText(tr.querySelector(".category").value)}</td><td>${w.toFixed(2)} kg</td><td>${Number(p).toLocaleString()}</td><td>${Number(line).toLocaleString()}</td></tr>`);
+    prows.push(`<tr><td>${escapeHtml(tr.querySelector(".category").value)}</td><td>${w.toFixed(2)} kg</td><td>${Number(p).toLocaleString()}</td><td>${Number(line).toLocaleString()}</td></tr>`);
   });
 
-  const extra = Math.max(0, +$("extra").value || 0);
+  const extra = Math.max(0, +byId("extra").value || 0);
   const grand = subtotal + extra;
 
   // Order summary & form totals
-  $("subtotal").textContent = money(subtotal);
-  $("deliveryCharge").textContent = money(0);
-  $("extraSum").textContent = money(extra);
-  $("grandTotal").textContent = money(grand);
-  $("grand2").textContent = money(grand);
-  $("weightTotal").textContent = totalWeight.toFixed(2) + " kg";
+  byId("subtotal").textContent = money(subtotal);
+  byId("deliveryCharge").textContent = money(0);
+  byId("extraSum").textContent = money(extra);
+  byId("grandTotal").textContent = money(grand);
+  byId("grand2").textContent = money(grand);
+  byId("weightTotal").textContent = totalWeight.toFixed(2) + " kg";
 
   // Paper preview
-  $("pweight").textContent = totalWeight.toFixed(2) + " kg";
-  $("ptotal").textContent = money(grand);
-  $("prows").innerHTML = prows.join("") || `<tr><td colspan="4" style="text-align:center;color:#94a3b8">No items added</td></tr>`;
+  byId("pweight").textContent = totalWeight.toFixed(2) + " kg";
+  byId("ptotal").textContent = money(grand);
+  byId("prows").innerHTML = prows.join("") || `<tr><td colspan="4" style="text-align:center;color:#94a3b8">No items added</td></tr>`;
 
-  $("psender").textContent = safeText($("sender").value) || "Not entered";
-  $("psphone").textContent = safeText($("senderPhone").value) || "Not entered";
-  $("preceiver").textContent = safeText($("receiver").value) || "Not entered";
-  $("prphone").textContent = safeText($("receiverPhone").value) || "Not entered";
-  $("paddress").textContent = safeText($("address").value) || "Not entered";
-  $("porigin").textContent = safeText($("origin").value) || "Myanmar → Yangon";
+  byId("psender").textContent = safeText(byId("sender").value) || "Not entered";
+  byId("psphone").textContent = safeText(byId("senderPhone").value) || "Not entered";
+  byId("preceiver").textContent = safeText(byId("receiver").value) || "Not entered";
+  byId("prphone").textContent = safeText(byId("receiverPhone").value) || "Not entered";
+  byId("paddress").textContent = safeText(byId("address").value) || "Not entered";
+  byId("porigin").textContent = safeText(byId("origin").value) || "Myanmar → Yangon";
 
-  const regSel = $("region");
+  const regSel = byId("region");
   const regText = regSel.selectedIndex >= 0 && regSel.options[regSel.selectedIndex] ? regSel.options[regSel.selectedIndex].text : "Select destination";
-  $("pregion").textContent = regText;
+  byId("pregion").textContent = regText;
 
-  const branchSel = $("branch");
+  const branchSel = byId("branch");
   const branchText = branchSel.selectedIndex >= 0 && branchSel.options[branchSel.selectedIndex] ? branchSel.options[branchSel.selectedIndex].text : "Select branch";
-  $("pbranch").textContent = branchText;
+  byId("pbranch").textContent = branchText;
 
-  $("pcurrency").textContent = currency;
+  byId("pcurrency").textContent = currency;
   const deliveryChecked = document.querySelector('input[name="delivery_type"]:checked');
-  $("pdelivery").textContent = deliveryChecked ? deliveryChecked.value : "ကားဂိတ်တင်";
+  byId("pdelivery").textContent = deliveryChecked ? deliveryChecked.value : "ကားဂိတ်တင်";
 
   // Step state tracking
   updateSteps();
 }
 
 function updateSteps() {
-  const hasCustomer = ($("sender").value.trim() && $("receiver").value.trim() && $("address").value.trim());
-  const hasRouting = ($("region").value && $("branch").value);
+  const hasCustomer = (byId("sender").value.trim() && byId("receiver").value.trim() && byId("address").value.trim());
+  const hasRouting = (byId("region").value && byId("branch").value);
   const hasItems = document.querySelectorAll("#rows tr").length > 0;
 
-  $("st-1").className = "step " + (hasCustomer ? "active" : "");
-  $("st-2").className = "step " + (hasRouting ? "active" : "");
-  $("st-3").className = "step " + (hasItems ? "active" : "");
-  $("st-4").className = "step " + (hasCustomer && hasRouting && hasItems ? "active" : "");
+  byId("st-1").className = "step " + (hasCustomer ? "active" : "");
+  byId("st-2").className = "step " + (hasRouting ? "active" : "");
+  byId("st-3").className = "step " + (hasItems ? "active" : "");
+  byId("st-4").className = "step " + (hasCustomer && hasRouting && hasItems ? "active" : "");
 }
 
 // Load branches dynamically based on region selection
 function loadBranches(regionId) {
-  const select = $("branch");
-  select.innerHTML = "<option value="">Select branch</option>";
+  const select = byId("branch");
+  select.innerHTML = '<option value="">Select branch</option>';
   if (!regionId) return;
 
   const filtered = allBranches.filter(b => b.region_id == regionId);
@@ -863,15 +888,15 @@ function loadBranches(regionId) {
   }
 
   // Update dynamic voucher preview number based on region sequence
-  const regSel = $("region");
+  const regSel = byId("region");
   const opt = regSel.options[regSel.selectedIndex];
   if (opt && opt.dataset.prefix) {
     const prefix = opt.dataset.prefix;
     const seq = (parseInt(opt.dataset.seq, 10) || 0) + 1;
     const code = `${prefix}-${new Date().getFullYear()}-${String(seq).padStart(6, "0")}`;
-    $("voucherNo").textContent = code;
-    $("pvoucher").textContent = code;
-    $("pno").textContent = code;
+    byId("voucherNo").textContent = code;
+    byId("pvoucher").textContent = code;
+    byId("pno").textContent = code;
   }
 }
 
@@ -882,7 +907,7 @@ function bindCurrencies() {
       document.querySelectorAll("[data-currency]").forEach(x => x.classList.remove("active"));
       b.classList.add("active");
       currency = b.dataset.currency;
-      $("currency_input").value = currency;
+      byId("currency_input").value = currency;
       update();
     };
   });
@@ -901,7 +926,7 @@ function validate() {
   ];
 
   for (const [id, label] of required) {
-    const el = $(id);
+    const el = byId(id);
     if (!el || !el.value.trim()) {
       toast(label + " is required");
       if (el) el.focus();
@@ -933,25 +958,25 @@ document.getElementById("voucher-form").addEventListener("submit", function(e) {
     e.preventDefault();
     return false;
   }
-  const btn = $("create");
+  const btn = byId("create");
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Creating Ledger Entry…';
-  $("requestStatus").className = "request-status ok";
-  $("requestStatus").textContent = "Submitting secure voucher transaction…";
+  byId("requestStatus").className = "request-status ok";
+  byId("requestStatus").textContent = "Submitting secure voucher transaction…";
 });
 
 // Draft Save & Restore
-$("draft").onclick = () => {
+byId("draft").onclick = () => {
   const draftData = {
-    sender: $("sender").value,
-    senderPhone: $("senderPhone").value,
-    receiver: $("receiver").value,
-    receiverPhone: $("receiverPhone").value,
-    address: $("address").value,
-    region: $("region").value,
-    branch: $("branch").value,
-    extra: $("extra").value,
-    notes: $("notes").value,
+    sender: byId("sender").value,
+    senderPhone: byId("senderPhone").value,
+    receiver: byId("receiver").value,
+    receiverPhone: byId("receiverPhone").value,
+    address: byId("address").value,
+    region: byId("region").value,
+    branch: byId("branch").value,
+    extra: byId("extra").value,
+    notes: byId("notes").value,
     currency: currency,
     items: [...document.querySelectorAll("#rows tr")].map(tr => ({
       category: tr.querySelector(".category").value,
@@ -968,8 +993,8 @@ $("draft").onclick = () => {
 };
 
 // Print handlers
-$("print").onclick = () => window.print();
-$("print2").onclick = () => window.print();
+byId("print").onclick = () => window.print();
+byId("print2").onclick = () => window.print();
 
 // Customer Existing / New Toggle Pill
 document.querySelectorAll(".seg-pill button").forEach(btn => {
@@ -978,37 +1003,41 @@ document.querySelectorAll(".seg-pill button").forEach(btn => {
     const val = this.dataset.val;
     this.parentElement.querySelectorAll("button").forEach(b => b.classList.remove("active"));
     this.classList.add("active");
-    $(toggle + "_type").value = val;
+    byId(toggle + "_type").value = val;
 
-    const wrap = $( "existing_" + toggle + "_wrap" );
+    const wrap = byId("existing_" + toggle + "_wrap");
     if (val === "existing") {
       wrap.style.display = "block";
     } else {
       wrap.style.display = "none";
-      $(`#${toggle}_customer_id`).val(null).trigger("change");
+      if (window.jQuery) {
+        window.jQuery(`#${toggle}_customer_id`).val(null).trigger("change");
+      }
     }
   };
 });
 
 // Setup Event Listeners
-$("extra").addEventListener("input", update);
+byId("addRow").addEventListener("click", () => addRow());
+byId("extra").addEventListener("input", update);
 ["sender", "senderPhone", "receiver", "receiverPhone", "address", "notes", "origin"].forEach(id => {
-  const el = $(id);
+  const el = byId(id);
   if (el) el.addEventListener("input", update);
 });
 
-$("region").addEventListener("change", function() {
+byId("region").addEventListener("change", function() {
   loadBranches(this.value);
   update();
 });
-$("branch").addEventListener("change", update);
+byId("branch").addEventListener("change", update);
 document.addEventListener("change", e => {
   if (e.target.name === "delivery_type") update();
 });
 
 // jQuery Select2 for Customer Search
-$(document).ready(function() {
-  $(".customer-search").select2({
+if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
+  window.jQuery(function($) {
+    $(".customer-search").select2({
     ajax: {
       url: "index.php?page=ajax_search_customers",
       dataType: "json",
@@ -1021,30 +1050,31 @@ $(document).ready(function() {
     width: "100%"
   });
 
-  $("#sender_customer_id").on("select2:select", function(e) {
-    const data = e.params.data;
-    if (data) {
-      $("#sender").val(data.text ? data.text.split(" (")[0] : "");
-      $("#senderPhone").val(data.phone || "");
-      update();
-    }
-  });
+    $("#sender_customer_id").on("select2:select", function(e) {
+      const data = e.params.data;
+      if (data) {
+        $("#sender").val(data.text ? data.text.split(" (")[0] : "");
+        $("#senderPhone").val(data.phone || "");
+        update();
+      }
+    });
 
-  $("#receiver_customer_id").on("select2:select", function(e) {
-    const data = e.params.data;
-    if (data) {
-      $("#receiver").val(data.text ? data.text.split(" (")[0] : "");
-      $("#receiverPhone").val(data.phone || "");
-      if (data.address) $("#address").val(data.address);
-      update();
-    }
+    $("#receiver_customer_id").on("select2:select", function(e) {
+      const data = e.params.data;
+      if (data) {
+        $("#receiver").val(data.text ? data.text.split(" (")[0] : "");
+        $("#receiverPhone").val(data.phone || "");
+        if (data.address) $("#address").val(data.address);
+        update();
+      }
+    });
   });
-});
+}
 
 // Initialize Defaults
 bindCurrencies();
 if (allRegions.length > 0) {
-  $("region").value = allRegions[0].id;
+  byId("region").value = allRegions[0].id;
   loadBranches(allRegions[0].id);
 }
 addRow({category: "Laptop", weight: 2.5, price: 12000});

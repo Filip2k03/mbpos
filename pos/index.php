@@ -118,10 +118,9 @@ switch ($page) {
         include 'customer_voucher_view.php';
         break;
     case 'customer_register':
-        include 'customer_register.php';
-        break;
     case 'customer_list':
-        include 'customer_list.php';
+        flash_message('info', 'Customer management screens have been retired in POS V5. Voucher entry uses manual New Sender and New Receiver fields.');
+        redirect('index.php?page=dashboard');
         break;
     case 'fetch_notifications':
         include 'fetch_notifications.php';
@@ -130,8 +129,9 @@ switch ($page) {
         include 'maintenance.php';
         break;
     case 'ajax_search_customers':
-        include 'ajax_search_customers.php';
-        break;
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([]);
+        exit();
     default:
         // Optional: A 404 page
         // header("HTTP/1.0 404 Not Found");

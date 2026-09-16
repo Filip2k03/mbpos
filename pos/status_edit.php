@@ -169,7 +169,7 @@ include_template('header', ['page' => 'status_edit']);
 
             <div class="space-y-1.5">
                 <label for="notes" class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1" data-i18n="Operational Notes">Operational Notes (Optional)</label>
-                <textarea id="notes" name="notes" rows="3" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" placeholder="Enter remarks or delivery updates..."><?= htmlspecialchars($voucher['notes'] ?? ''); ?></textarea>
+                <textarea id="notes" name="notes" rows="3" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" placeholder="Enter remarks or delivery updates..." data-i18n-placeholder="Enter remarks or delivery updates..."><?= htmlspecialchars($voucher['notes'] ?? ''); ?></textarea>
             </div>
 
             <div class="pt-3 flex items-center justify-between gap-4">

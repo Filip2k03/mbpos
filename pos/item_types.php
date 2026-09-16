@@ -122,7 +122,7 @@ include_template('header', ['page' => 'item_types']);
 
                         <div class="v5-field">
                             <label for="name" class="v5-field-label" data-i18n="Category Name">Category Name</label>
-                            <input type="text" id="name" name="name" class="v5-input" placeholder="e.g. Document / စာရွက်စာတမ်း" value="<?= e($edit_item['name'] ?? '') ?>" required autofocus>
+                            <input type="text" id="name" name="name" class="v5-input" placeholder="Category name" data-i18n-placeholder="Category name" value="<?= e($edit_item['name'] ?? '') ?>" required autofocus>
                             <p class="v5-field-hint" data-i18n="Supports English and Myanmar (Unicode)">Supports English and Myanmar (Unicode)</p>
                         </div>
 
@@ -176,7 +176,7 @@ include_template('header', ['page' => 'item_types']);
                                                     <a href="index.php?page=item_types&action=edit&id=<?= (int)$item['id'] ?>" class="btn-ghost btn-sm" title="Edit" data-i18n="Edit">
                                                         Edit
                                                     </a>
-                                                    <form method="POST" action="index.php?page=item_types" class="inline" onsubmit="return confirm('Delete this category?');">
+                                                    <form method="POST" action="index.php?page=item_types" class="inline" onsubmit="return confirm('Delete category ' + <?= json_encode($item['name']) ?> + '?');">
                                                         <?= csrf_input() ?>
                                                         <input type="hidden" name="delete_id" value="<?= (int)$item['id'] ?>">
                                                         <button type="submit" class="btn-ghost btn-sm text-danger hover:bg-red-50" title="Delete" data-i18n="Delete">

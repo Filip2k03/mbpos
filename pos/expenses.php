@@ -137,7 +137,7 @@ include_template('header', ['page' => 'expenses']);
 
                 <div class="v5-field v5-field--wide">
                     <label for="description" data-i18n="Description">Description</label>
-                    <textarea id="description" name="description" rows="2" placeholder="e.g. Office Supplies / ရုံးသုံးပစ္စည်း" required><?= htmlspecialchars($edit_expense['description'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+                    <textarea id="description" name="description" rows="2" placeholder="Expense description" data-i18n-placeholder="Expense description" required><?= htmlspecialchars($edit_expense['description'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
                 </div>
 
                 <div class="v5-field">

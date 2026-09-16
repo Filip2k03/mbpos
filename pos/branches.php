@@ -131,7 +131,7 @@ include_template('header', ['page' => 'branches']);
 
                         <div class="v5-field">
                             <label for="branch_name" class="v5-field-label" data-i18n="Branch Name">Branch Name</label>
-                            <input type="text" id="branch_name" name="branch_name" class="v5-input" placeholder="e.g. Downtown Hub" value="<?= e($edit_branch['branch_name'] ?? '') ?>" required autofocus>
+                            <input type="text" id="branch_name" name="branch_name" class="v5-input" placeholder="Branch name" data-i18n-placeholder="Branch name" value="<?= e($edit_branch['branch_name'] ?? '') ?>" required autofocus>
                         </div>
 
                         <div class="v5-field">
@@ -202,7 +202,7 @@ include_template('header', ['page' => 'branches']);
                                                     <a href="index.php?page=branches&action=edit&id=<?= (int)$branch['id'] ?>" class="btn-ghost btn-sm" title="Edit" data-i18n="Edit">
                                                         Edit
                                                     </a>
-                                                    <form method="POST" action="index.php?page=branches" class="inline" onsubmit="return confirm('Delete this branch?');">
+                                                    <form method="POST" action="index.php?page=branches" class="inline" onsubmit="return confirm('Delete branch ' + <?= json_encode($branch['branch_name']) ?> + '?');">
                                                         <?= csrf_input() ?>
                                                         <input type="hidden" name="delete_id" value="<?= (int)$branch['id'] ?>">
                                                         <button type="submit" class="btn-ghost btn-sm text-danger hover:bg-red-50" title="Delete" data-i18n="Delete">

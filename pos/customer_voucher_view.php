@@ -43,10 +43,11 @@ if ($voucher_id <= 0) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MBLOGISTICS V5 • Track Voucher <?= htmlspecialchars($voucher_data['voucher_code'] ?? '') ?></title>
     <meta name="theme-color" content="#0b6ff5">
-    <link rel="icon" type="image/png" href="https://img.icons8.com/ios-filled/50/000000/shipping-container.png">
+    <link rel="icon" type="image/svg+xml" href="assets/icons/mbpos.svg">
+    <link rel="apple-touch-icon" href="assets/icons/mbpos.svg">
     <link rel="stylesheet" href="assets/css/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>

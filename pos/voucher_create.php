@@ -1524,7 +1524,7 @@ include_template('header', ['page' => 'voucher_create']);
                       <option value="" data-i18n="Select origin branch">Select origin branch</option>
                       <?php if (!empty($all_branches)): ?>
                         <?php foreach ($all_branches as $b): ?>
-                          <option value="<?= htmlspecialchars($b['branch_name']) ?>" <?= ($b['id'] == ($user_info['branch_id'] ?? 0)) ? 'selected' : '' ?>>Myanmar → <?= htmlspecialchars($b['branch_name']) ?></option>
+                          <option value="<?= htmlspecialchars($b['branch_name']) ?>" <?= ($duplicate_voucher && ($duplicate_voucher['origin_point'] ?? '') === $b['branch_name']) ? 'selected' : '' ?>>Myanmar → <?= htmlspecialchars($b['branch_name']) ?></option>
                         <?php endforeach; ?>
                       <?php endif; ?>
                     </select>

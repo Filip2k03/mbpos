@@ -123,13 +123,13 @@ include_template('header', ['page' => 'currencies']);
 
                         <div class="v5-field">
                             <label for="code" class="v5-field-label" data-i18n="Currency Code">Currency Code</label>
-                            <input type="text" id="code" name="code" class="v5-input font-mono font-bold uppercase" placeholder="e.g. USD" value="<?= e($edit_currency['code'] ?? '') ?>" required maxlength="10" autofocus>
+                            <input type="text" id="code" name="code" class="v5-input font-mono font-bold uppercase" placeholder="Currency code" data-i18n-placeholder="Currency code" value="<?= e($edit_currency['code'] ?? '') ?>" required maxlength="10" autofocus>
                             <p class="v5-field-hint" data-i18n="Short identifier used in ledgers (e.g. USD, MMK, MYR, SGD)">Short identifier used in ledgers (e.g. USD, MMK, MYR, SGD)</p>
                         </div>
 
                         <div class="v5-field">
                             <label for="name" class="v5-field-label" data-i18n="Currency Name">Currency Name</label>
-                            <input type="text" id="name" name="name" class="v5-input" placeholder="e.g. US Dollar" value="<?= e($edit_currency['name'] ?? '') ?>" required>
+                            <input type="text" id="name" name="name" class="v5-input" placeholder="Currency name" data-i18n-placeholder="Currency name" value="<?= e($edit_currency['name'] ?? '') ?>" required>
                         </div>
 
                         <div class="pt-2">
@@ -186,7 +186,7 @@ include_template('header', ['page' => 'currencies']);
                                                     <a href="index.php?page=currencies&action=edit&id=<?= (int)$curr['id'] ?>" class="btn-ghost btn-sm" title="Edit" data-i18n="Edit">
                                                         Edit
                                                     </a>
-                                                    <form method="POST" action="index.php?page=currencies" class="inline" onsubmit="return confirm('Delete this currency?');">
+                                                    <form method="POST" action="index.php?page=currencies" class="inline" onsubmit="return confirm('Delete currency ' + <?= json_encode($curr['code']) ?> + '?');">
                                                         <?= csrf_input() ?>
                                                         <input type="hidden" name="delete_id" value="<?= (int)$curr['id'] ?>">
                                                         <button type="submit" class="btn-ghost btn-sm text-danger hover:bg-red-50" title="Delete" data-i18n="Delete">

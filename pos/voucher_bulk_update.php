@@ -3,6 +3,8 @@
 
 require_once 'config.php';
 require_once 'includes/functions.php';
+require_once 'includes/cache.php';
+require_once 'includes/voucher_query.php';
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -19,7 +21,6 @@ $user_branch_id = get_user_branch_id();
 
 // --- Define possible statuses and search columns ---
 $possible_statuses = ['Pending', 'In Transit', 'Delivered', 'Received', 'Cancelled', 'Returned', 'Maintenance'];
-$allowed_search_columns = ['voucher_code', 'sender_name', 'receiver_name', 'receiver_phone'];
 
 // --- Handle POST request for bulk status update ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -47,109 +48,98 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $update_values[] = $user_branch_id;
         }
         $stmt = mysqli_prepare($connection, $update_query);
-        mysqli_stmt_bind_param($stmt, $types, ...$update_values);
-
-        if (mysqli_stmt_execute($stmt)) {
-            $count = mysqli_stmt_affected_rows($stmt);
-            flash_message('success', "$count vouchers were successfully updated to '" . htmlspecialchars($new_status) . "'.");
+        if (!$stmt) {
+            error_log('MBPOS bulk voucher update prepare failed: ' . mysqli_error($connection));
+            flash_message('error', 'Unable to prepare the voucher update. Please try again.');
         } else {
-            flash_message('error', 'Failed to update vouchers: ' . mysqli_stmt_error($stmt));
+            mysqli_stmt_bind_param($stmt, $types, ...$update_values);
+            if (mysqli_stmt_execute($stmt)) {
+                $count = mysqli_stmt_affected_rows($stmt);
+                flash_message('success', "$count vouchers were successfully updated to '" . e($new_status) . "'.");
+            } else {
+                error_log('MBPOS bulk voucher update execute failed: ' . mysqli_stmt_error($stmt));
+                flash_message('error', 'Unable to update the selected vouchers. Please try again.');
+            }
+            mysqli_stmt_close($stmt);
         }
-        mysqli_stmt_close($stmt);
     }
     // Redirect back to the same page with filters preserved to see the result
-    redirect('index.php?page=voucher_bulk_update&' . http_build_query($_GET));
+    $return_params = $_GET;
+    unset($return_params['page']);
+    $return_query = http_build_query($return_params);
+    redirect('index.php?page=voucher_bulk_update' . ($return_query !== '' ? '&' . $return_query : ''));
 }
 
 // --- Fetch Data for Filters and Display ---
-$regions = [];
 $vouchers = [];
-$region_result = mysqli_query($connection, "SELECT id, region_name FROM regions ORDER BY region_name");
-if ($region_result) {
-    while ($row = mysqli_fetch_assoc($region_result)) {
-        $regions[] = $row;
-    }
-}
+$regions = mbpos_cache_remember('lookup-regions', 'all', 300, function () use ($connection) {
+    $rows = [];
+    $regionResult = mysqli_query($connection, 'SELECT id, region_name FROM regions ORDER BY region_name');
+    if ($regionResult) while ($row = mysqli_fetch_assoc($regionResult)) $rows[] = $row;
+    return $rows;
+});
 
 // Get filter parameters from GET request
-$start_date = $_GET['start_date'] ?? '';
-$end_date = $_GET['end_date'] ?? '';
-$filter_origin_region_id = $_GET['origin_region_id'] ?? 'All';
-$filter_destination_region_id = $_GET['destination_region_id'] ?? 'All';
-$filter_status = $_GET['status'] ?? '';
-$search_term = trim($_GET['search'] ?? '');
-$search_column = $_GET['search_column'] ?? 'voucher_code';
+$filters = mbpos_normalize_voucher_filters($_GET, $possible_statuses);
+$start_date = $filters['start_date'];
+$end_date = $filters['end_date'];
+$filter_origin_region_id = $filters['origin_region_id'];
+$filter_destination_region_id = $filters['destination_region_id'];
+$filter_status = $filters['status'];
+$search_term = $filters['search'];
+$search_column = $filters['search_column'];
+$limit = 50;
+$page = isset($_GET['p']) ? max(1, (int)$_GET['p']) : 1;
+$queryFilter = mbpos_build_voucher_filter_sql($filters, (int)$user_branch_id, is_staff());
+$where_sql = $queryFilter['where_sql'];
+$bind_params = $queryFilter['types'];
+$bind_values = $queryFilter['values'];
 
-// Build the main query
+// Count without lookup joins, then constrain the requested page to a real range.
+$total_vouchers = 0;
+$count_stmt = mysqli_prepare($connection, 'SELECT COUNT(*) FROM vouchers v' . $where_sql);
+if ($count_stmt) {
+    if ($bind_params !== '') mysqli_stmt_bind_param($count_stmt, $bind_params, ...$bind_values);
+    if (mysqli_stmt_execute($count_stmt)) {
+        $count_result = mysqli_stmt_get_result($count_stmt);
+        $total_vouchers = (int)(mysqli_fetch_row($count_result)[0] ?? 0);
+    } else {
+        error_log('MBPOS bulk voucher count execute failed: ' . mysqli_stmt_error($count_stmt));
+    }
+    mysqli_stmt_close($count_stmt);
+} else {
+    error_log('MBPOS bulk voucher count prepare failed: ' . mysqli_error($connection));
+}
+$total_pages = max(1, (int)ceil($total_vouchers / $limit));
+$page = min($page, $total_pages);
+$offset = ($page - 1) * $limit;
+
+// Paginate voucher IDs first; lookup joins enrich only the current 50 rows.
 $query = "SELECT v.id, v.voucher_code, v.sender_name, v.receiver_name, v.status, v.created_at,
                  r_origin.region_name AS origin_region,
                  b_origin.branch_name AS origin_branch,
                  r_dest.region_name AS destination_region,
                  b_dest.branch_name AS destination_branch
-          FROM vouchers v
+          FROM (SELECT v.id FROM vouchers v" . $where_sql . "
+                ORDER BY v.created_at DESC, v.id DESC LIMIT ? OFFSET ?) page_rows
+          INNER JOIN vouchers v ON v.id = page_rows.id
           LEFT JOIN regions r_origin ON v.region_id = r_origin.id
           LEFT JOIN branches b_origin ON v.origin_branch_id = b_origin.id
           LEFT JOIN regions r_dest ON v.destination_region_id = r_dest.id
-          LEFT JOIN branches b_dest ON v.destination_branch_id = b_dest.id";
-
-$where_clauses = [];
-$bind_params = '';
-$bind_values = [];
-
-// Apply Branch and Role-Based Security Filter
-if (is_staff() && $user_branch_id) {
-    $where_clauses[] = "(v.origin_branch_id = ? OR (v.destination_branch_id = ? AND v.status != 'Pending'))";
-    $bind_params .= 'ii';
-    $bind_values[] = $user_branch_id;
-    $bind_values[] = $user_branch_id;
-}
-
-// Apply User-Selected Filters
-if (!empty($start_date)) {
-    $where_clauses[] = "DATE(v.created_at) >= ?";
-    $bind_params .= 's';
-    $bind_values[] = $start_date;
-}
-if (!empty($end_date)) {
-    $where_clauses[] = "DATE(v.created_at) <= ?";
-    $bind_params .= 's';
-    $bind_values[] = $end_date;
-}
-if ($filter_origin_region_id !== 'All' && is_numeric($filter_origin_region_id)) {
-    $where_clauses[] = "v.region_id = ?";
-    $bind_params .= 'i';
-    $bind_values[] = intval($filter_origin_region_id);
-}
-if ($filter_destination_region_id !== 'All' && is_numeric($filter_destination_region_id)) {
-    $where_clauses[] = "v.destination_region_id = ?";
-    $bind_params .= 'i';
-    $bind_values[] = intval($filter_destination_region_id);
-}
-if (!empty($filter_status)) {
-    $where_clauses[] = "v.status = ?";
-    $bind_params .= 's';
-    $bind_values[] = $filter_status;
-}
-if (!empty($search_term) && in_array($search_column, $allowed_search_columns)) {
-    $where_clauses[] = "v.$search_column LIKE ?";
-    $bind_params .= 's';
-    $bind_values[] = '%' . $search_term . '%';
-}
-
-if (!empty($where_clauses)) {
-    $query .= " WHERE " . implode(' AND ', $where_clauses);
-}
-$query .= " ORDER BY v.created_at DESC LIMIT 500";
+          LEFT JOIN branches b_dest ON v.destination_branch_id = b_dest.id
+          ORDER BY v.created_at DESC, v.id DESC";
+$page_bind_params = $bind_params . 'ii';
+$page_bind_values = array_merge($bind_values, [$limit, $offset]);
 
 $stmt = mysqli_prepare($connection, $query);
 if ($stmt) {
-    if (!empty($bind_params)) {
-        mysqli_stmt_bind_param($stmt, $bind_params, ...$bind_values);
-    }
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-    while ($row = mysqli_fetch_assoc($result)) {
-        $vouchers[] = $row;
+    mysqli_stmt_bind_param($stmt, $page_bind_params, ...$page_bind_values);
+    if (mysqli_stmt_execute($stmt)) {
+        $result = mysqli_stmt_get_result($stmt);
+        while ($row = mysqli_fetch_assoc($result)) $vouchers[] = $row;
+    } else {
+        error_log('MBPOS bulk voucher fetch execute failed: ' . mysqli_stmt_error($stmt));
+        flash_message('error', 'Unable to load vouchers right now. Please try again.');
     }
     mysqli_stmt_close($stmt);
 } else {
@@ -159,9 +149,11 @@ if ($stmt) {
 
 // --- Prepare Export Link ---
 $export_params = $_GET;
-unset($export_params['page']);
+unset($export_params['page'], $export_params['p']);
 $export_query_string = http_build_query($export_params);
-$export_url = 'index.php?page=export_vouchers&' . $export_query_string;
+$export_url = 'index.php?page=export_vouchers' . ($export_query_string !== '' ? '&' . $export_query_string : '');
+$pagination_query_string = $export_query_string;
+$pagination_suffix = $pagination_query_string !== '' ? '&' . $pagination_query_string : '';
 
 include_template('header', ['page' => 'voucher_bulk_update']);
 ?>
@@ -171,11 +163,11 @@ include_template('header', ['page' => 'voucher_bulk_update']);
         <div class="v5-page-head__copy">
             <span class="v5-kicker" data-i18n="Ledger Operations">Ledger Operations</span>
             <h1 data-i18n="Bulk Voucher Update">Bulk Voucher Update</h1>
-            <p data-i18n="Filter up to 500 ledger records and apply controlled shipment-status changes.">Filter up to 500 ledger records and apply controlled shipment-status changes.</p>
+            <p data-i18n="Filter ledger records and apply controlled shipment-status changes.">Filter ledger records and apply controlled shipment-status changes.</p>
         </div>
         <div class="v5-page-actions flex items-center gap-3">
             <a href="<?= e($export_url) ?>" class="btn-secondary btn-sm" data-i18n="Export CSV">Export CSV</a>
-            <span class="v5-count"><?= count($vouchers) ?> <span data-i18n="records loaded">records loaded</span></span>
+            <span class="v5-count"><?= number_format($total_vouchers) ?> <span data-i18n="total entries">total entries</span></span>
         </div>
     </div>
 
@@ -240,7 +232,7 @@ include_template('header', ['page' => 'voucher_bulk_update']);
                             <option value="receiver_name" <?= $search_column === 'receiver_name' ? 'selected' : '' ?> data-i18n="Receiver">Receiver</option>
                             <option value="receiver_phone" <?= $search_column === 'receiver_phone' ? 'selected' : '' ?> data-i18n="Receiver Phone">Receiver Phone</option>
                         </select>
-                        <input id="search_term" type="search" name="search" class="v5-input flex-1" placeholder="Search ledger records..." value="<?= e($search_term) ?>">
+                        <input id="search_term" type="search" name="search" class="v5-input flex-1" placeholder="Search ledger records..." data-i18n-placeholder="Search ledger records..." value="<?= e($search_term) ?>">
                     </div>
                 </div>
 
@@ -252,7 +244,7 @@ include_template('header', ['page' => 'voucher_bulk_update']);
     </section>
 
     <!-- Bulk Action Form & Table -->
-    <form action="index.php?page=voucher_bulk_update&<?= e(http_build_query($_GET)) ?>" method="POST" id="bulk-update-form" class="v5-panel">
+    <form action="index.php?page=voucher_bulk_update<?= e($pagination_suffix) ?><?= $page > 1 ? '&amp;p=' . $page : '' ?>" method="POST" id="bulk-update-form" class="v5-panel">
         <?= csrf_input() ?>
 
         <div class="v5-panel__head flex-wrap gap-4">
@@ -337,6 +329,24 @@ include_template('header', ['page' => 'voucher_bulk_update']);
                 </table>
             </div>
         </div>
+
+        <?php if ($total_pages > 1): ?>
+            <div class="v5-panel__head border-t border-slate-100 flex items-center justify-between">
+                <div>
+                    <?php if ($page > 1): ?>
+                        <a href="index.php?page=voucher_bulk_update&amp;p=<?= $page - 1 ?><?= e($pagination_suffix) ?>" class="btn-secondary btn-sm" data-i18n="Previous">Previous</a>
+                    <?php endif; ?>
+                </div>
+                <div class="text-xs font-bold text-muted">
+                    <span data-i18n="Page">Page</span> <?= $page ?> <span data-i18n="of">of</span> <?= $total_pages ?>
+                </div>
+                <div>
+                    <?php if ($page < $total_pages): ?>
+                        <a href="index.php?page=voucher_bulk_update&amp;p=<?= $page + 1 ?><?= e($pagination_suffix) ?>" class="btn-secondary btn-sm" data-i18n="Next">Next</a>
+                    <?php endif; ?>
+                </div>
+            </div>
+        <?php endif; ?>
     </form>
 </div>
 
@@ -350,7 +360,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const checkedCount = document.querySelectorAll('.voucher-checkbox:checked').length;
         if (counter) {
             if (checkedCount > 0) {
-                counter.textContent = checkedCount + ' selected';
+                const label = typeof window.mbposT === 'function' ? window.mbposT('selected') : 'selected';
+                counter.textContent = checkedCount + ' ' + label;
                 counter.classList.remove('hidden');
             } else {
                 counter.classList.add('hidden');

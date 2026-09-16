@@ -126,7 +126,7 @@ include_template('header', ['page' => 'register']);
 
                 <div class="v5-field v5-field--wide">
                     <label for="username" data-i18n="Username">Username</label>
-                    <input type="text" id="username" name="username" placeholder="e.g. jdoe_staff" required>
+                    <input type="text" id="username" name="username" placeholder="Username" data-i18n-placeholder="Username" required>
                 </div>
 
                 <div class="v5-field v5-field--wide">
@@ -162,12 +162,12 @@ include_template('header', ['page' => 'register']);
 
                 <div class="v5-field v5-field--wide">
                     <label for="password" data-i18n="Password">Password</label>
-                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                    <input type="password" id="password" name="password" placeholder="Password" data-i18n-placeholder="Password" required>
                 </div>
 
                 <div class="v5-field v5-field--wide">
                     <label for="confirm_password" data-i18n="Confirm Password">Confirm Password</label>
-                    <input type="password" id="confirm_password" name="confirm_password" placeholder="••••••••" required>
+                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm Password" data-i18n-placeholder="Confirm Password" required>
                 </div>
 
                 <div class="v5-field">

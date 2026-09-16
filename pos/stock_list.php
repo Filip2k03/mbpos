@@ -241,7 +241,7 @@ include_template('header', ['page' => 'stock_list']);
                             <option value="receiver_name" <?= $search_column === 'receiver_name' ? 'selected' : '' ?> data-i18n="Receiver">Receiver</option>
                             <option value="receiver_phone" <?= $search_column === 'receiver_phone' ? 'selected' : '' ?> data-i18n="Receiver Phone">Receiver Phone</option>
                         </select>
-                        <input id="search_term" type="search" name="search" class="v5-input flex-1" placeholder="Search shipment records..." value="<?= e($search_term) ?>">
+                        <input id="search_term" type="search" name="search" class="v5-input flex-1" placeholder="Search shipment records..." data-i18n-placeholder="Search shipment records..." value="<?= e($search_term) ?>">
                     </div>
                 </div>
 
@@ -358,7 +358,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const checkedCount = document.querySelectorAll('.stock-checkbox:checked').length;
         if (counter) {
             if (checkedCount > 0) {
-                counter.textContent = checkedCount + ' selected';
+                const label = typeof window.mbposT === 'function' ? window.mbposT('selected') : 'selected';
+                counter.textContent = checkedCount + ' ' + label;
                 counter.classList.remove('hidden');
             } else {
                 counter.classList.add('hidden');

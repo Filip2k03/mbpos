@@ -122,7 +122,7 @@ include_template('header', ['page' => 'delivery_types']);
 
                         <div class="v5-field">
                             <label for="name" class="v5-field-label" data-i18n="Service Name">Service Name</label>
-                            <input type="text" id="name" name="name" class="v5-input" placeholder="e.g. Express / အမြန်" value="<?= e($edit_type['name'] ?? '') ?>" required autofocus>
+                            <input type="text" id="name" name="name" class="v5-input" placeholder="Service name" data-i18n-placeholder="Service name" value="<?= e($edit_type['name'] ?? '') ?>" required autofocus>
                             <p class="v5-field-hint" data-i18n="Supports English and Myanmar (Unicode)">Supports English and Myanmar (Unicode)</p>
                         </div>
 
@@ -176,7 +176,7 @@ include_template('header', ['page' => 'delivery_types']);
                                                     <a href="index.php?page=delivery_types&action=edit&id=<?= (int)$type['id'] ?>" class="btn-ghost btn-sm" title="Edit" data-i18n="Edit">
                                                         Edit
                                                     </a>
-                                                    <form method="POST" action="index.php?page=delivery_types" class="inline" onsubmit="return confirm('Delete this delivery service?');">
+                                                    <form method="POST" action="index.php?page=delivery_types" class="inline" onsubmit="return confirm('Delete delivery service ' + <?= json_encode($type['name']) ?> + '?');">
                                                         <?= csrf_input() ?>
                                                         <input type="hidden" name="delete_id" value="<?= (int)$type['id'] ?>">
                                                         <button type="submit" class="btn-ghost btn-sm text-danger hover:bg-red-50" title="Delete" data-i18n="Delete">

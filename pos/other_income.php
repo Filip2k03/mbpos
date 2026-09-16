@@ -155,6 +155,7 @@ include_template('header', ['page' => 'other_income']);
                             <label for="description" data-i18n="Description">Description</label>
                             <input type="text" id="description" name="description" maxlength="255"
                                    placeholder="Describe the income source"
+                                   data-i18n-placeholder="Describe the income source"
                                    value="<?= htmlspecialchars($edit_income['description'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
                                    required>
                         </div>

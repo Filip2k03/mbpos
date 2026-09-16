@@ -162,7 +162,7 @@ $nav_groups = [
 ];
 ?>
 <!DOCTYPE html>
-<html lang="en" data-app-version="5.1.0">
+<html lang="en" data-app-version="<?= defined('APP_VERSION') ? htmlspecialchars(APP_VERSION, ENT_QUOTES, 'UTF-8') : '5.2.8' ?>">
 <head>
     <meta charset="UTF-8" />
     <script>
@@ -174,7 +174,8 @@ $nav_groups = [
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title><?= htmlspecialchars($page_title, ENT_QUOTES, 'UTF-8') ?></title>
-    <link rel="icon" type="image/png" href="https://img.icons8.com/ios-filled/50/000000/shipping-container.png">
+    <link rel="icon" type="image/svg+xml" href="assets/icons/mbpos.svg">
+    <link rel="apple-touch-icon" href="assets/icons/mbpos.svg">
     <meta name="theme-color" content="#0b6ff5">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -185,9 +186,6 @@ $nav_groups = [
     <!-- Shared Assets -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="assets/css/style.css?v=<?= $asset_version ?>">
-    <?php if (in_array($current_page, ['dashboard', 'admin_dashboard', 'developer_dashboard', 'profit_loss'], true)): ?>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-    <?php endif; ?>
     <script src="https://cdn.tailwindcss.com"></script>
     <?php if (function_exists('load_assets')) load_assets($current_page); ?>
 </head>
@@ -319,6 +317,13 @@ $nav_groups = [
                         </div>
                         <span class="mbpos-cmd-item-badge">Operations</span>
                     </a>
+                    <a href="index.php?page=voucher_bulk_update" class="mbpos-cmd-item" data-jump="bulk">
+                        <div class="mbpos-cmd-item-left">
+                            <span class="mbpos-cmd-item-icon"><?= mbpos_icon('voucher_list', 'w-4 h-4') ?></span>
+                            <span data-i18n="Bulk Voucher Update">Bulk Voucher Update</span>
+                        </div>
+                        <span class="mbpos-cmd-item-badge">Operations</span>
+                    </a>
                     <?php if ($is_user_admin || $is_user_developer): ?>
                     <a href="index.php?page=profit_loss" class="mbpos-cmd-item" data-jump="profit">
                         <div class="mbpos-cmd-item-left">
@@ -334,10 +339,38 @@ $nav_groups = [
                         </div>
                         <span class="mbpos-cmd-item-badge">Finance</span>
                     </a>
+                    <a href="index.php?page=other_income" class="mbpos-cmd-item" data-jump="income">
+                        <div class="mbpos-cmd-item-left">
+                            <span class="mbpos-cmd-item-icon"><?= mbpos_icon('other_income', 'w-4 h-4') ?></span>
+                            <span data-i18n="Other Income">Other Income</span>
+                        </div>
+                        <span class="mbpos-cmd-item-badge">Finance</span>
+                    </a>
                     <a href="index.php?page=branches" class="mbpos-cmd-item" data-jump="branches">
                         <div class="mbpos-cmd-item-left">
                             <span class="mbpos-cmd-item-icon"><?= mbpos_icon('branches', 'w-4 h-4') ?></span>
                             <span data-i18n="Branches">Branches</span>
+                        </div>
+                        <span class="mbpos-cmd-item-badge">Config</span>
+                    </a>
+                    <a href="index.php?page=currencies" class="mbpos-cmd-item" data-jump="currencies">
+                        <div class="mbpos-cmd-item-left">
+                            <span class="mbpos-cmd-item-icon"><?= mbpos_icon('currencies', 'w-4 h-4') ?></span>
+                            <span data-i18n="Currencies">Currencies</span>
+                        </div>
+                        <span class="mbpos-cmd-item-badge">Config</span>
+                    </a>
+                    <a href="index.php?page=delivery_types" class="mbpos-cmd-item" data-jump="delivery">
+                        <div class="mbpos-cmd-item-left">
+                            <span class="mbpos-cmd-item-icon"><?= mbpos_icon('delivery_types', 'w-4 h-4') ?></span>
+                            <span data-i18n="Delivery Types">Delivery Types</span>
+                        </div>
+                        <span class="mbpos-cmd-item-badge">Config</span>
+                    </a>
+                    <a href="index.php?page=item_types" class="mbpos-cmd-item" data-jump="items">
+                        <div class="mbpos-cmd-item-left">
+                            <span class="mbpos-cmd-item-icon"><?= mbpos_icon('item_types', 'w-4 h-4') ?></span>
+                            <span data-i18n="Item Types">Item Types</span>
                         </div>
                         <span class="mbpos-cmd-item-badge">Config</span>
                     </a>
@@ -348,12 +381,26 @@ $nav_groups = [
                         </div>
                         <span class="mbpos-cmd-item-badge">Admin</span>
                     </a>
+                    <a href="index.php?page=admin_dashboard" class="mbpos-cmd-item" data-jump="admin">
+                        <div class="mbpos-cmd-item-left">
+                            <span class="mbpos-cmd-item-icon"><?= mbpos_icon('admin_dashboard', 'w-4 h-4') ?></span>
+                            <span data-i18n="Admin Control Center">Admin Control Center</span>
+                        </div>
+                        <span class="mbpos-cmd-item-badge">Admin</span>
+                    </a>
                     <?php endif; ?>
                     <?php if ($is_user_developer): ?>
                     <a href="index.php?page=developer_dashboard" class="mbpos-cmd-item" data-jump="dev">
                         <div class="mbpos-cmd-item-left">
                             <span class="mbpos-cmd-item-icon"><?= mbpos_icon('developer_dashboard', 'w-4 h-4') ?></span>
                             <span data-i18n="Dev Center">Dev Center</span>
+                        </div>
+                        <span class="mbpos-cmd-item-badge">Developer</span>
+                    </a>
+                    <a href="index.php?page=maintenance" class="mbpos-cmd-item" data-jump="maintenance">
+                        <div class="mbpos-cmd-item-left">
+                            <span class="mbpos-cmd-item-icon"><?= mbpos_icon('maintenance', 'w-4 h-4') ?></span>
+                            <span data-i18n="Maintenance Zones">Maintenance Zones</span>
                         </div>
                         <span class="mbpos-cmd-item-badge">Developer</span>
                     </a>

@@ -468,6 +468,7 @@ document.addEventListener('DOMContentLoaded', function () {
         "You are offline. Saved pages remain available; live records require a connection.": "အင်တာနက်ချိတ်ဆက်မှု မရှိပါ။ သိမ်းထားသောစာမျက်နှာများကို အသုံးပြုနိုင်သော်လည်း တိုက်ရိုက်မှတ်တမ်းများအတွက် ချိတ်ဆက်မှုလိုအပ်ပါသည်။",
         "Search customer, tracking number, or voucher...": "ဖောက်သည်၊ ခြေရာခံနံပါတ် သို့မဟုတ် ဘောက်ချာ ရှာရန်...",
         "No records found": "မှတ်တမ်းမတွေ့ရှိပါ",
+        "Authenticating...": "စစ်ဆေးနေပါသည်...",
         "System Restored Online": "စနစ်အင်တာနက် ပြန်လည်ရရှိပါပြီ"
     };
 

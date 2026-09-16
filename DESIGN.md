@@ -24,6 +24,31 @@ The experience should feel designed by people who understand operators:
 7. **Accessible by default:** keyboard, touch, zoom, Myanmar text, and reduced motion are core requirements.
 8. **Blank means blank:** a new operational record begins with no invented person, destination, amount, status, date, or item data.
 9. **Mobile is a first-class product:** mobile is designed as an application workflow, not a compressed desktop screenshot.
+10. **Local is not complete:** offline drafts are visibly local until the server returns an authoritative voucher receipt.
+
+## Offline draft and synchronization experience
+
+Follow `OFFLINE_SYNC_SPEC.md` for storage, security, state, and server contracts. The interface must make these states visually and verbally distinct:
+
+- editing and saved locally;
+- queued by the operator;
+- synchronizing with visible progress;
+- needs review because the session, permission, reference data, or calculation changed;
+- rejected with field-level recovery;
+- synchronized with the real voucher identifier.
+
+Use one persistent inline status region near the primary voucher action. Toasts may supplement a state change but must not be the only record of it. Offline and review states use plain recovery language, never developer terms such as queue flush, payload, HTTP status, IndexedDB, or idempotency key.
+
+Recommended English copy:
+
+- **Offline — work is saved on this device.**
+- **Saved locally at {time}. No voucher has been created.**
+- **Create when online**
+- **Connection restored. Checking your queued voucher…**
+- **Review required before this voucher can be created.**
+- **Voucher {code} was created and synchronized.**
+
+Provide equivalent human-written Myanmar copy, including accessibility announcements. Status color supports the text but never replaces it. Do not use celebratory animation for synchronization.
 
 ## Visual foundation
 

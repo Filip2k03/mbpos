@@ -11,7 +11,8 @@ Before editing, read these files completely:
 1. `AGENTS.md`
 2. `DESIGN.md`
 3. `FRONTEND_PLAN.md`
-4. `QA_MATRIX.md`
+4. `OFFLINE_SYNC_SPEC.md`
+5. `QA_MATRIX.md`
 
 Then inspect the dirty worktree and preserve all existing user changes. Audit the router, shared templates, CSS, JavaScript, role helpers, PWA files, and every routed PHP screen before deciding implementation boundaries.
 
@@ -35,6 +36,9 @@ Build until every active route satisfies the documentation and QA gates. Do not 
 - Preserve the production database connection, schema, historical data, voucher calculations, numbering, status rules, and authorization boundaries.
 - Preserve `voucher_print.php` visual and data output exactly.
 - Never cache authenticated/dynamic records in the service worker.
+- Implement offline voucher drafts and reconnect synchronization only as specified in `OFFLINE_SYNC_SPEC.md`. Complete payloads belong in versioned, expiring, user-scoped IndexedDB, not `localStorage` or Cache API.
+- Never replay the ordinary voucher form POST as an offline queue. Require the dedicated authenticated endpoint, atomic idempotency, current CSRF/session checks, authoritative server validation/calculation, explicit operator queue consent, and recoverable conflict states.
+- A local or queued draft is not an operational voucher. Do not generate codes, tracking numbers, statuses, timestamps, ledger entries, or success messages before the server receipt.
 - Never fabricate operational data, tracking, status, totals, audit events, cache behavior, success, or errors.
 - Do not deploy, delete data/schema, or mutate production records without explicit user authorization.
 
@@ -48,8 +52,9 @@ Build until every active route satisfies the documentation and QA gates. Do not 
 6. Modernize all operational routes, then finance, configuration, administration, login, offline, and notification states.
 7. Remove default/sample data from every create/add form; retain legitimate values only for edit forms, filters, hidden security/protocol fields, and real records.
 8. Complete explicit i18n, accessibility, PWA install/update/offline behavior, pagination, loading/error/empty states, and performance work.
-9. Re-audit the whole repository for partially migrated routes, duplicate headers, customer/portal UI, emoji/glyph icons, copied components, fake values, and dead code.
-10. Run all checks and device/role/language scenarios, fix findings, and repeat until acceptance passes.
+9. Implement the staged offline draft/outbox workstream from `OFFLINE_SYNC_SPEC.md`: server idempotency contract first, local drafts second, explicit queue/review UX third, and foreground reconnect synchronization last. Keep it feature-flagged until every offline test passes.
+10. Re-audit the whole repository for partially migrated routes, duplicate headers, customer/portal UI, emoji/glyph icons, copied components, fake values, and dead code.
+11. Run all checks and device/role/language scenarios, fix findings, and repeat until acceptance passes.
 
 ## Mobile quality bar
 
@@ -67,6 +72,7 @@ Implement only when backed by real contracts and data:
 
 - server pagination and shareable filters;
 - draft recovery and unsaved-work protection;
+- explicit offline voucher outbox with atomic idempotent foreground synchronization after the server contract exists;
 - scanning into search using available camera/barcode capabilities;
 - status history with actor/time when schema support exists;
 - scoped alerts and notification noise controls;
@@ -89,7 +95,7 @@ node --check pos/sw.js
 git diff --check
 ```
 
-Execute `QA_MATRIX.md` across roles, languages, browsers, viewports, online/offline states, and installed PWA modes. Search for emoji, hard-coded defaults/examples, customer/portal UI, duplicate shell markup, and inaccessible icon controls. Compare voucher print output to the baseline.
+Execute `QA_MATRIX.md` across roles, languages, browsers, viewports, online/offline states, and installed PWA modes. Complete every scenario in the offline voucher matrix, including 20-request replay, browser termination, multiple tabs, session expiry, account switching, stale reference data, update migration, storage failure, and transaction rollback. Search for emoji, hard-coded defaults/examples, customer/portal UI, duplicate shell markup, and inaccessible icon controls. Compare voucher print output to the baseline.
 
 ## Completion response
 

@@ -145,11 +145,41 @@ Test online, slow connection, request timeout, offline, reconnect, service-worke
 - Authenticated PHP and API responses are not stored in Cache API.
 - Static assets use the current version and old caches are removed safely.
 - Offline navigation shows the neutral offline page, never a stale private record.
-- State-changing actions are unavailable or clearly blocked offline.
-- Reconnect does not auto-submit stale forms.
+- Server state-changing actions are unavailable or clearly blocked offline. Local draft and explicit queue intent may follow `OFFLINE_SYNC_SPEC.md` without claiming server success.
+- Reconnect does not auto-submit an ordinary stale form. Only a draft that the operator explicitly moved to `queued` may enter the idempotent foreground sync flow.
 - A service-worker update does not discard unsaved voucher work.
 - Redis failure falls back to the database without exposing an error to the operator or reporting a false cache success.
 - Notification polling pauses while hidden and does not replay historical events as fresh alerts.
+
+### Offline voucher draft and outbox matrix
+
+Run these scenarios only in an approved non-production environment until the feature is explicitly authorized for production.
+
+| Scenario | Required result |
+| --- | --- |
+| Connection drops during entry | Meaningful input persists as a clearly labelled local draft; no voucher/code/status is created |
+| Refresh, browser restart, PWA relaunch | Correct user can recover an unexpired compatible draft without losing fields |
+| Operator selects Create when online | Immutable queued snapshot and unique idempotency key are stored; editable draft remains distinguishable |
+| Reconnect with valid session | One foreground worker synchronizes and displays the authoritative receipt |
+| Same request replayed 20 times | Exactly one voucher exists and every response resolves to the same receipt |
+| Browser closes during request | Relaunch resolves through idempotency without a duplicate or false failure |
+| Two tabs open | One tab owns synchronization; the other reflects state without a second request |
+| Session expires | Queue pauses, asks for sign-in, and does not lose or submit the draft |
+| User logs out or account changes | Personal payload is cleared or securely quarantined according to policy and never shown to the next user |
+| Role/branch scope changes | Record becomes needs-review and is not retried automatically |
+| Branch/currency/type is inactive | Server returns a safe field conflict; operator can correct the preserved draft |
+| Server total differs | UI shows the difference and requires review under the documented calculation policy |
+| Validation fails | Field-level errors are bilingual, accessible, and preserve safe input |
+| `429` or `5xx` | Bounded retry with jitter; no toast loop, request storm, duplicate, or fake success |
+| IndexedDB unavailable/quota full | Honest storage error; online form still works; no claim that work was saved |
+| Draft expires | Operator receives a clear notice and private payload is removed |
+| App/service worker updates | Compatible drafts migrate; incompatible drafts require review and are never silently dropped |
+| Offline Cache API inspection | No authenticated page, API response, voucher payload, receipt, or personal data is present |
+| `localStorage` inspection | No names, phones, addresses, notes, item payloads, tokens, or complete voucher JSON is present |
+| Myanmar language | Draft, queue, review, error, reconnect, receipt, and accessibility text is fully translated |
+| 325/375/425 px plus keyboard | Sync status and actions remain readable, reachable, and non-overlapping |
+
+Also test kill-switch behavior, schema migration forward/backward compatibility, clock skew, storage cleanup, offline-to-online flapping, slow responses, request abort, and server transaction rollback.
 
 ## Page-level smoke checks
 

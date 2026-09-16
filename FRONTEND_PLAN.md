@@ -209,12 +209,27 @@ For each route, confirm:
 9. Run static checks and inspect console/network output.
 10. Fix findings, then re-run the route gate before moving on.
 
+## Offline voucher draft and sync workstream
+
+Treat `OFFLINE_SYNC_SPEC.md` as the source of truth. This workstream is blocked from production until its dedicated server contract and idempotency storage exist.
+
+1. Audit the current voucher form, CSRF lifecycle, session expiry behavior, lookup/reference queries, transaction boundary, and duplicate-creation risks.
+2. Define the authenticated JSON sync endpoint and atomic idempotency persistence without changing existing online form behavior.
+3. Add a versioned IndexedDB adapter with user scoping, expiry, migration, quota handling, and deterministic cleanup. Keep private payloads out of `localStorage` and Cache API.
+4. Add idempotent `data-ui` hooks for local draft persistence, meaningful-dirty detection, outbox state, connectivity hints, foreground synchronization, and accessible announcements.
+5. Require an explicit **Create when online** decision before queueing. Do not silently convert an ordinary local draft into an operational write.
+6. Revalidate session, CSRF, authorization, branch/region scope, enums, lookup activity, amounts, weights, item limits, and server totals on every synchronization attempt.
+7. Implement review/recovery for expired sessions, changed permissions, stale references, calculation differences, storage failures, rejected records, and application updates.
+8. Add complete English/Myanmar copy and responsive mobile outbox/review UI.
+9. Run the offline matrix in `QA_MATRIX.md`, including repeated replay, multiple tabs, browser termination, update migration, account switching, and rollback.
+10. Release behind a kill switch, pilot in an approved non-production/staging path, and enable production only after explicit authorization.
+
 ## Explicit non-goals without separate approval
 
 - Database redesign or customer-table deletion.
 - Replacing PHP/MySQL with a new framework.
 - Changing voucher numbering, calculations, statuses, or print format.
-- Adding fake live tracking, fake success, or offline write synchronization.
+- Adding fake live tracking, fake success, or offline write synchronization that does not satisfy `OFFLINE_SYNC_SPEC.md`.
 - Reintroducing public website, CMS, customer portal, or old POS controls.
 - Deploying production simply because implementation checks pass.
 - Adding framework-only abstractions, React-style hooks, or a client-side router without a separately approved architecture migration.

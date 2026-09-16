@@ -4,7 +4,7 @@
 
 Build `mbpos.online` into a focused, dependable logistics POS used by real operators under time pressure. The product must feel calm, fast, human, and consistent on desktop, tablet, and installed mobile PWA surfaces.
 
-Read this file, `DESIGN.md`, `FRONTEND_PLAN.md`, and `QA_MATRIX.md` completely before changing code. Inspect the current worktree and preserve user changes.
+Read this file, `DESIGN.md`, `FRONTEND_PLAN.md`, `OFFLINE_SYNC_SPEC.md`, and `QA_MATRIX.md` completely before changing code. Inspect the current worktree and preserve user changes.
 
 `AGY_BUILD_PROMPT.md` is the execution brief for the next implementation agent. Treat its ordered work loop and acceptance gates as mandatory, not aspirational.
 
@@ -120,7 +120,11 @@ Exclude Customers and all external/legacy portals from the target sidebar.
 - Cache only versioned static assets and the neutral offline page.
 - Never cache authenticated PHP pages, API responses, voucher data, financial records, or personal information.
 - Offline UI must clearly say that live records and writes require connectivity.
-- Disable or guard state-changing actions while offline; never queue a write unless an explicit conflict-safe synchronization design exists.
+- Disable or guard state-changing actions while offline. Voucher draft/outbox work is allowed only when it implements `OFFLINE_SYNC_SPEC.md` completely; partial client-only replay is prohibited.
+- Keep complete voucher payloads out of `localStorage` and Cache API. Use versioned, expiring, user-scoped IndexedDB storage; reserve `localStorage` for non-sensitive preferences and draft pointers.
+- A local draft is not a voucher. Never assign a voucher code, tracking number, server timestamp, operational status, or success state before the authoritative server receipt.
+- Queueing requires explicit operator intent. Reconnect synchronization requires atomic server idempotency, current authorization/CSRF validation, reference-data revalidation, and recoverable conflict handling.
+- The first release synchronizes only while the app is open and visible. Do not use service-worker background creation until separately reviewed and approved.
 - Provide honest install guidance for iOS, Android, and desktop; hide install controls when installation is unavailable or the app is already standalone.
 
 ## UI implementation standards

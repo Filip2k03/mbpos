@@ -28,27 +28,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('index.php?page=login');
     }
 
-    // Fetch user and their branch name from database
-    $stmt = mysqli_prepare($connection, "SELECT u.id, u.username, u.password, u.user_type, u.branch_id, b.branch_name\n" .
-                                        "FROM users u\n" .
-                                        "LEFT JOIN branches b ON u.branch_id = b.id\n" .
-                                        "WHERE u.username = ?");
+    // Case-insensitive trimmed lookup so mobile keyboard auto-capitalization does not block operators
+    $stmt = mysqli_prepare($connection, "SELECT u.id, u.username, u.password, u.user_type, u.branch_id, b.branch_name " .
+                                        "FROM users u " .
+                                        "LEFT JOIN branches b ON u.branch_id = b.id " .
+                                        "WHERE LOWER(u.username) = LOWER(?) " .
+                                        "LIMIT 1");
     mysqli_stmt_bind_param($stmt, 's', $username);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
     $user = mysqli_fetch_assoc($result);
     mysqli_stmt_close($stmt);
 
-    if ($user && password_verify($password, $user['password'])) {
-        // Correct credentials, set session
-        $_SESSION['user_id'] = $user['id'];
+    $is_authenticated = false;
+    $needs_rehash = false;
+
+    if ($user) {
+        if (password_verify($password, $user['password'])) {
+            $is_authenticated = true;
+            $needs_rehash = password_needs_rehash($user['password'], PASSWORD_DEFAULT);
+        } elseif (
+            // Support graceful transparent upgrade of legacy plain-text or MD5 passwords
+            (strlen($user['password']) === 32 && md5($password) === $user['password']) ||
+            ($user['password'] === $password)
+        ) {
+            $is_authenticated = true;
+            $needs_rehash = true;
+        }
+    }
+
+    if ($is_authenticated && $user) {
+        // Upgrade password hash transparently if needed to modern bcrypt standard
+        if ($needs_rehash) {
+            $upgraded_hash = password_hash($password, PASSWORD_DEFAULT);
+            $stmt_rehash = mysqli_prepare($connection, "UPDATE users SET password = ? WHERE id = ?");
+            if ($stmt_rehash) {
+                mysqli_stmt_bind_param($stmt_rehash, 'si', $upgraded_hash, $user['id']);
+                mysqli_stmt_execute($stmt_rehash);
+                mysqli_stmt_close($stmt_rehash);
+            }
+        }
+
+        // Neutralize session fixation
+        session_regenerate_id(true);
+
+        $_SESSION['user_id'] = (int)$user['id'];
         $_SESSION['username'] = $user['username'];
         $_SESSION['user_type'] = $user['user_type'];
-        $_SESSION['branch_id'] = $user['branch_id'];
-        $_SESSION['branch_name'] = $user['branch_name'];
+        $_SESSION['branch_id'] = $user['branch_id'] ? (int)$user['branch_id'] : null;
+        $_SESSION['branch_name'] = $user['branch_name'] ?? 'Global / Head Office';
 
-        // Email notification logic (trigger only if user is NOT a developer)
-        if (strcasecmp($user['user_type'], USER_TYPE_DEVELOPER) !== 0) {
+        // Developer Mode Flag
+        $is_developer_account = (strcasecmp($user['user_type'], USER_TYPE_DEVELOPER) === 0);
+        $_SESSION['dev_mode'] = $is_developer_account;
+
+        // Security Email Alert logic (trigger only for non-developer staff/admin logins to keep dev login silent)
+        if (!$is_developer_account) {
             $to1 = 'stephanfilip7@gmail.com';
             $to2 = 'raincloud.157@gmail.com';
             $to3 = 'zw50673@gmail.com';
@@ -130,6 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $mail->Password   = getenv('MBPOS_SMTP_PASSWORD') ?: '';
                     $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
                     $mail->Port       = 465;
+                    $mail->Timeout    = 3; // Strict 3s timeout to never hang login UX
 
                     $mail->SMTPOptions = array(
                         'ssl' => array(
@@ -168,6 +204,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        flash_message('success', 'Welcome back, ' . htmlspecialchars($user['username']) . '!');
         redirect('index.php?page=dashboard');
     } else {
         flash_message('error', 'Invalid username or password.');
@@ -184,7 +221,7 @@ include_template('header', ['page' => 'login']);
     <div class="absolute bottom-[0%] right-[-10%] w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none"></div>
 
     <form action="index.php?page=login" method="POST" id="loginForm"
-          class="w-full max-w-md bg-white/70 backdrop-blur-2xl shadow-[0_8px_40px_rgb(0,0,0,0.06)] rounded-[2.5rem] p-8 sm:p-10 border border-white/80 transition-all relative z-10">
+          class="w-full max-w-md bg-white/80 backdrop-blur-2xl shadow-[0_8px_40px_rgb(0,0,0,0.06)] rounded-[2.5rem] p-8 sm:p-10 border border-white/80 transition-all relative z-10">
 
         <?= csrf_input() ?>
 
@@ -199,24 +236,24 @@ include_template('header', ['page' => 'login']);
             <p class="text-sm font-medium text-slate-500" data-i18n="Secure access to your operational dashboard">Secure access to your operational dashboard</p>
         </div>
 
-        <!-- Username -->
+        <!-- Username Input (Only Username and Password) -->
         <div class="space-y-1.5 group mb-6">
-            <label for="username" class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1" data-i18n="System Identity">System Identity</label>
+            <label for="username" class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1" data-i18n="Username">Username</label>
             <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <svg class="h-5 w-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
                     </svg>
                 </div>
-                <input type="text" id="username" name="username" required autocomplete="username"
-                       class="w-full rounded-2xl border-slate-200 shadow-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 pl-11 pr-4 py-3.5 bg-slate-50/50 transition-all focus:bg-white text-slate-800 placeholder-slate-400 font-medium"
+                <input type="text" id="username" name="username" required autocomplete="username" autofocus autocapitalize="none" spellcheck="false"
+                       class="w-full text-base rounded-2xl border-slate-200 shadow-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 pl-11 pr-4 py-3.5 bg-slate-50/50 transition-all focus:bg-white text-slate-800 placeholder-slate-400 font-medium"
                        placeholder="Enter your username" data-i18n-placeholder="Enter your username">
             </div>
         </div>
 
-        <!-- Password -->
-        <div class="space-y-1.5 group relative mb-6">
-            <label for="password" class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1" data-i18n="Access Key">Access Key</label>
+        <!-- Password Input (Only Username and Password) -->
+        <div class="space-y-1.5 group relative mb-8">
+            <label for="password" class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1" data-i18n="Password">Password</label>
             <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <svg class="h-5 w-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -224,33 +261,23 @@ include_template('header', ['page' => 'login']);
                     </svg>
                 </div>
                 <input type="password" id="password" name="password" required autocomplete="current-password"
-                       class="w-full rounded-2xl border-slate-200 shadow-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 pl-11 pr-16 py-3.5 bg-slate-50/50 transition-all focus:bg-white text-slate-800 placeholder-slate-400 font-medium tracking-wide"
+                       class="w-full text-base rounded-2xl border-slate-200 shadow-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 pl-11 pr-24 py-3.5 bg-slate-50/50 transition-all focus:bg-white text-slate-800 placeholder-slate-400 font-medium tracking-wide"
                        placeholder="••••••••">
                 <button type="button" id="togglePassword"
-                        class="absolute inset-y-0 right-1.5 my-1.5 px-3 flex items-center rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 font-bold text-[10px] uppercase tracking-widest transition-all focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                        data-i18n="Reveal">
-                    Reveal
+                        class="absolute inset-y-0 right-2 my-2 px-3 flex items-center gap-1.5 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 font-bold text-xs uppercase tracking-wider transition-all focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                        data-i18n="Reveal" aria-label="Toggle password visibility">
+                    <svg id="eyeIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    <span id="togglePasswordText">Reveal</span>
                 </button>
             </div>
         </div>
 
-        <!-- Remember Me -->
-        <div class="flex items-center justify-between mb-8">
-            <label class="flex items-center space-x-3 cursor-pointer group">
-                <div class="relative flex items-center justify-center">
-                    <input type="checkbox" id="remember" name="remember"
-                           class="peer h-5 w-5 text-indigo-600 border-slate-300 rounded-[6px] focus:ring-indigo-500 focus:ring-offset-0 transition-all cursor-pointer shadow-sm">
-                </div>
-                <span class="text-sm font-bold text-slate-500 group-hover:text-slate-800 transition-colors select-none" data-i18n="Keep me signed in">Keep me signed in</span>
-            </label>
-        </div>
-
         <!-- Submit Button -->
         <div>
-            <button type="submit"
-                    class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-3.5 px-4 rounded-2xl font-bold text-lg hover:from-indigo-700 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-indigo-500/30 shadow-[0_8px_20px_rgb(79,70,229,0.3)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
-                <span data-i18n="Authorize Access">Authorize Access</span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <button type="submit" id="submitBtn"
+                    class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-3.5 px-4 rounded-2xl font-bold text-base hover:from-indigo-700 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-indigo-500/30 shadow-[0_8px_20px_rgb(79,70,229,0.3)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer">
+                <span id="submitBtnText" data-i18n="Authorize Access">Authorize Access</span>
+                <svg id="submitBtnIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
                 </svg>
             </button>
@@ -260,21 +287,52 @@ include_template('header', ['page' => 'login']);
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById("loginForm");
     const togglePassword = document.getElementById("togglePassword");
+    const togglePasswordText = document.getElementById("togglePasswordText");
+    const eyeIcon = document.getElementById("eyeIcon");
     const passwordInput = document.getElementById("password");
+    const submitBtn = document.getElementById("submitBtn");
+    const submitBtnText = document.getElementById("submitBtnText");
+    const submitBtnIcon = document.getElementById("submitBtnIcon");
 
     if (togglePassword && passwordInput) {
         togglePassword.addEventListener("click", () => {
             const isPassword = passwordInput.getAttribute("type") === "password";
             passwordInput.setAttribute("type", isPassword ? "text" : "password");
-            const revealText = (window.mbposI18n && window.mbposI18n.currentLanguage === 'mm') ? 'ပြပါ' : 'Reveal';
-            const hideText = (window.mbposI18n && window.mbposI18n.currentLanguage === 'mm') ? 'ဝှက်ပါ' : 'Hide';
-            togglePassword.textContent = isPassword ? hideText : revealText;
 
-            if (isPassword) {
-                passwordInput.classList.remove('tracking-wide');
-            } else {
-                passwordInput.classList.add('tracking-wide');
+            const isMM = (window.mbposI18n && window.mbposI18n.currentLanguage === 'mm');
+            const revealText = isMM ? 'ပြပါ' : 'Reveal';
+            const hideText = isMM ? 'ဝှက်ပါ' : 'Hide';
+
+            if (togglePasswordText) {
+                togglePasswordText.textContent = isPassword ? hideText : revealText;
+            }
+            togglePassword.dataset.i18n = isPassword ? 'Hide' : 'Reveal';
+
+            if (eyeIcon) {
+                if (isPassword) {
+                    eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/>';
+                    passwordInput.classList.remove('tracking-wide');
+                } else {
+                    eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>';
+                    passwordInput.classList.add('tracking-wide');
+                }
+            }
+        });
+    }
+
+    if (loginForm && submitBtn) {
+        loginForm.addEventListener("submit", () => {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-80', 'cursor-wait');
+            if (submitBtnText) {
+                const isMM = (window.mbposI18n && window.mbposI18n.currentLanguage === 'mm');
+                submitBtnText.textContent = isMM ? 'စစ်ဆေးနေပါသည်...' : 'Authenticating...';
+            }
+            if (submitBtnIcon) {
+                submitBtnIcon.innerHTML = '<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>';
+                submitBtnIcon.classList.add('animate-spin');
             }
         });
     }

@@ -618,20 +618,57 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Progressive PWA Install Prompt Handler
     let deferredInstallPrompt = null;
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
     window.addEventListener('beforeinstallprompt', function (event) {
         event.preventDefault();
         deferredInstallPrompt = event;
         const installButton = document.getElementById('install-pwa');
         if (installButton) installButton.hidden = false;
     });
+
+    // iOS Safari does not support beforeinstallprompt, provide Share -> Add to Home Screen guidance
+    if (isIos && !isStandalone) {
+        const installButton = document.getElementById('install-pwa');
+        if (installButton) installButton.hidden = false;
+    }
+
     document.addEventListener('click', function (event) {
-        if (!event.target.closest('#install-pwa') || !deferredInstallPrompt) return;
-        deferredInstallPrompt.prompt();
-        deferredInstallPrompt.userChoice.finally(function () {
-            deferredInstallPrompt = null;
-            const installButton = document.getElementById('install-pwa');
-            if (installButton) installButton.hidden = true;
-        });
+        const btn = event.target.closest('#install-pwa');
+        if (!btn) return;
+        if (deferredInstallPrompt) {
+            deferredInstallPrompt.prompt();
+            deferredInstallPrompt.userChoice.finally(function () {
+                deferredInstallPrompt = null;
+                const installButton = document.getElementById('install-pwa');
+                if (installButton) installButton.hidden = true;
+            });
+        } else if (isIos) {
+            const isMm = (document.documentElement.dataset.language || 'en') === 'mm';
+            const msg = isMm
+                ? "iOS တွင် အက်ပ်သွင်းရန်: Safari အောက်ခြေရှိ Share (မျှဝေရန်) ခလုတ်ကို နှိပ်ပြီး 'Add to Home Screen' ကို ရွေးချယ်ပါ"
+                : "To install on iOS: Tap the Share button in Safari, then select 'Add to Home Screen'.";
+            if (typeof Toastify === 'function') {
+                Toastify({
+                    text: msg,
+                    duration: 8000,
+                    close: true,
+                    gravity: "top",
+                    position: "center",
+                    style: {
+                        background: "rgba(16, 35, 63, 0.96)",
+                        color: "#fff",
+                        borderRadius: "14px",
+                        padding: "16px 20px",
+                        fontWeight: "600",
+                        boxShadow: "0 15px 35px rgba(0,0,0,0.25)"
+                    }
+                }).showToast();
+            } else {
+                alert(msg);
+            }
+        }
     });
 
     // Progressive Service Worker Registration

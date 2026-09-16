@@ -55,13 +55,13 @@ $is_developer_user = function_exists('is_developer') && is_developer();
                                 <?= htmlspecialchars($shift_greeting) ?>! <?= htmlspecialchars($_SESSION['username'] ?? 'User') ?>
                             </h3>
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold <?= $pos_diagnostics['maintenance_active'] ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-amber-100 text-amber-800 border border-amber-200' ?>">
-                                <?= $pos_diagnostics['maintenance_active'] ? '🛠️ Maintenance Active' : '⚡ High Operational Load' ?>
+                                <?= $pos_diagnostics['maintenance_active'] ? 'Maintenance Active' : 'High Operational Load' ?>
                             </span>
                         </div>
                         <p class="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5 flex items-center gap-2 flex-wrap">
                             <span class="text-indigo-600 font-bold"><?= htmlspecialchars($shift_name) ?></span>
                             <span class="text-slate-300">•</span>
-                            <span class="font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md text-[11px] font-bold">🕒 <?= htmlspecialchars($gmt_time) ?></span>
+                            <span class="font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md text-[11px] font-bold"><?= htmlspecialchars($gmt_time) ?></span>
                         </p>
                     </div>
                 </div>
@@ -244,7 +244,7 @@ $is_developer_user = function_exists('is_developer') && is_developer();
                                     <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 hover:bg-slate-100/70 transition-colors">
                                         <div class="flex items-center gap-2.5 truncate">
                                             <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold shrink-0">
-                                                📦
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                                             </div>
                                             <span class="text-xs font-bold text-slate-800 truncate"><?= $item['item_type'] ?></span>
                                         </div>
@@ -280,7 +280,9 @@ $is_developer_user = function_exists('is_developer') && is_developer();
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                         <!-- Direct Telegram/Chat -->
                         <a href="https://techyyfilip.vercel.app" target="_blank" class="bg-white/10 hover:bg-white/20 p-3 rounded-xl border border-white/10 transition-all flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-300 flex items-center justify-center font-bold text-sm">🌐</div>
+                            <div class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-300 flex items-center justify-center font-bold text-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                            </div>
                             <div>
                                 <span class="text-xs font-bold text-white block">Tech Portal</span>
                                 <span class="text-[10px] text-slate-300">techyyfilip.vercel.app</span>
@@ -289,7 +291,9 @@ $is_developer_user = function_exists('is_developer') && is_developer();
 
                         <!-- Ecosystem Hub -->
                         <a href="https://payvia.space" target="_blank" class="bg-white/10 hover:bg-white/20 p-3 rounded-xl border border-white/10 transition-all flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-bold text-sm">⚡</div>
+                            <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-bold text-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                            </div>
                             <div>
                                 <span class="text-xs font-bold text-white block">Payvia Cloud</span>
                                 <span class="text-[10px] text-slate-300">payvia.space</span>
@@ -298,7 +302,9 @@ $is_developer_user = function_exists('is_developer') && is_developer();
 
                         <!-- Email Support -->
                         <a href="mailto:support@payvia.space?subject=MBPOS%20High%20Load%20Support%20Request%20Token%20<?= $token ?>" class="bg-white/10 hover:bg-white/20 p-3 rounded-xl border border-white/10 transition-all flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 flex items-center justify-center font-bold text-sm">✉️</div>
+                            <div class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 flex items-center justify-center font-bold text-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            </div>
                             <div>
                                 <span class="text-xs font-bold text-white block">Support Desk</span>
                                 <span class="text-[10px] text-slate-300">support@payvia.space</span>
@@ -330,7 +336,7 @@ $is_developer_user = function_exists('is_developer') && is_developer();
                     <!-- Developer Quick Access Button strictly for Developer Role only -->
                     <?php if ($is_developer_user): ?>
                         <a href="index.php?page=maintenance" class="p-3 rounded-2xl bg-slate-200/80 hover:bg-slate-300 text-slate-700 font-bold text-xs transition-colors flex items-center gap-1.5" title="Dev Center Maintenance Mode">
-                            <span>🛠️</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
                             <span class="hidden sm:inline">Dev Mode</span>
                         </a>
                     <?php endif; ?>

@@ -77,11 +77,9 @@ if (empty($delivery_types)) {
     $delivery_types = ['ကားဂိတ်တင်', 'စင်တာမှ လွှဲပို့', 'စာတိုက်တင်', 'မလပးကွား ပို့ဆောင်', 'မော်လမြိုင် ရုံးထုတ်', 'ရန်ကုန် ရုံးထုတ်', 'အထူးဘိုင့်'];
 }
 
-// Generate preliminary draft voucher code & tracking number for live preview
-$default_dest_prefix = !empty($all_regions) ? ($all_regions[0]['prefix'] ?? 'MBV') : 'MBV';
-$default_dest_seq = !empty($all_regions) ? (($all_regions[0]['current_sequence'] ?? 841) + 1) : 842;
-$preview_voucher_code = 'MBV-' . date('Y') . '-' . str_pad($default_dest_seq, 6, '0', STR_PAD_LEFT);
-$preview_tracking_no = 'MBT-' . date('Y') . '-' . rand(100000, 999999);
+// Draft preview values (authoritative codes generated securely upon transaction commit)
+$preview_voucher_code = 'Pending Save';
+$preview_tracking_no = 'Pending Save';
 $preview_date_time = date('Y-m-d H:i');
 
 // --- Voucher Duplication Feature ---
@@ -252,149 +250,209 @@ include_template('header', ['page' => 'voucher_create']);
 ?>
 
 <style>
-:root{
-  --bg:#f3f7fc;--surface:rgba(255,255,255,.88);--white:#fff;--text:#10233f;
-  --muted:#718198;--line:#dce7f3;--blue:#1677ff;--cyan:#20b8f5;--green:#12b981;
-  --amber:#f59e0b;--red:#ef4444;--shadow:0 18px 55px rgba(32,75,125,.11);--r:20px
+.voucher-create-page{
+  --vc-bg:#f4f7fb;--vc-surface:#fff;--vc-text:#14243a;--vc-muted:#64748b;--vc-line:#dce5f0;
+  --vc-primary:#1769e0;--vc-primary-strong:#0b4fb7;--vc-soft:#edf5ff;--vc-success:#087f5b;
+  --vc-danger:#c92a2a;--vc-shadow:0 12px 34px rgba(30,64,110,.09);--vc-radius:18px;
+  min-height:100vh;display:grid;grid-template-columns:244px minmax(0,1fr);color:var(--vc-text);
+  background:linear-gradient(180deg,#f8fbff 0,#f3f7fc 55%,#eef4fa 100%);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
 }
-*{box-sizing:border-box}html{scroll-behavior:smooth}
-body{margin:0;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 78% -5%,#d9f2ff 0,transparent 30%),radial-gradient(circle at -5% 55%,#e7efff 0,transparent 32%),var(--bg)!important;padding-bottom:0!important}
-button,input,select,textarea{font:inherit}button{cursor:pointer}
-.app{min-height:100vh;display:grid;grid-template-columns:232px 1fr}
-.sidebar{position:sticky;top:0;height:100vh;padding:20px 15px;background:rgba(255,255,255,.72);backdrop-filter:blur(25px);border-right:1px solid var(--line);z-index:30}
-.brand{display:flex;gap:10px;align-items:center;padding:3px 10px 25px}.mark{width:38px;height:30px;position:relative}
-.mark:before,.mark:after{content:"";position:absolute;transform:skew(-28deg);border-radius:4px}
-.mark:before{left:2px;top:2px;width:13px;height:27px;background:linear-gradient(160deg,#096ff0,#79dcff)}
-.mark:after{left:17px;top:7px;width:13px;height:22px;background:linear-gradient(160deg,#1167d8,#bdefff)}
-.brand b{font-size:15px;line-height:1.2;color:#10233f;display:block}.brand small{display:block;color:var(--blue);font-size:9px;font-weight:900;letter-spacing:0.5px}
-.nav{display:grid;gap:6px}
-.nav a,.nav button{border:0;background:transparent;text-align:left;color:#56677e;padding:11px 13px;border-radius:13px;font-size:12px;font-weight:700;display:flex;align-items:center;text-decoration:none;transition:all .2s ease;cursor:pointer}
-.nav a:hover,.nav button:hover{background:rgba(22,119,255,0.06);color:var(--blue)}
-.nav a.active,.nav button.active{color:#fff!important;background:linear-gradient(135deg,#126ff4,#1cb8fa)!important;box-shadow:0 11px 25px rgba(22,119,255,.24)!important}
-.side-health{position:absolute;bottom:18px;left:15px;right:15px;padding:14px;border:1px solid var(--line);border-radius:17px;background:linear-gradient(145deg,#fff,#edf7ff);cursor:pointer;transition:transform .2s ease}
-.side-health:hover{transform:translateY(-2px)}
-.pulse{display:inline-block;width:8px;height:8px;border-radius:50%;background:#14c995;box-shadow:0 0 0 5px #e0faf2;margin-right:7px;animation:pulse-ring 2s infinite}
-@keyframes pulse-ring{0%{box-shadow:0 0 0 0 rgba(20,201,149,.4)}70%{box-shadow:0 0 0 8px rgba(20,201,149,0)}100%{box-shadow:0 0 0 0 rgba(20,201,149,0)}}
-.main{min-width:0}
-.top{height:74px;display:flex;align-items:center;gap:16px;padding:13px 27px;position:sticky;top:0;z-index:20;background:rgba(255,255,255,.67);backdrop-filter:blur(20px);border-bottom:1px solid var(--line)}
-.search{height:44px;flex:1;max-width:600px;border:1px solid var(--line);border-radius:14px;background:#fff;padding:0 15px;outline:0;box-shadow:0 5px 20px rgba(45,90,140,.05);font-size:12px;color:var(--text)}
-.search:focus{border-color:#65b8ff;box-shadow:0 0 0 3px #e7f5ff}
-.operator{margin-left:auto;display:flex;align-items:center;gap:9px}
-.avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:900;background:linear-gradient(135deg,#132c4d,#6696c9);box-shadow:0 4px 10px rgba(19,44,77,.15)}
-.content{max-width:1650px;margin:auto;padding:25px}
-.alert{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:12px 18px;margin-bottom:18px;border:1px solid #f6dca4;border-radius:15px;background:linear-gradient(100deg,#fffaf0,#fff);box-shadow:0 8px 25px rgba(120,80,15,.06);transition:all .2s ease}
-.alert:hover{box-shadow:0 10px 30px rgba(120,80,15,.1)}
-.alert strong{font-size:12px;color:#92400e}.alert span{font-size:11px;color:#8a6a28}
-.loadbar{width:170px;height:7px;border-radius:10px;background:#f1eadb;overflow:hidden}.loadbar i{display:block;width:95%;height:100%;background:linear-gradient(90deg,#f6b31a,#ef6d35);border-radius:inherit;animation:load-shimmer 2.5s infinite}
-@keyframes load-shimmer{0%,100%{opacity:1}50%{opacity:0.8}}
-.head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:18px}.head h1{margin:0;font-size:26px;font-weight:900;letter-spacing:-0.5px}.head p{margin:5px 0 0;color:var(--muted);font-size:12px}
-.chip{display:inline-flex;padding:3px 9px;border-radius:8px;background:#e7f2ff;color:var(--blue);font-size:11px;font-weight:900;vertical-align:middle;margin-left:6px}
-.workspace{display:grid;grid-template-columns:minmax(0,1fr) 410px;gap:18px}
-.glass{background:var(--surface);border:1px solid rgba(211,225,240,.95);border-radius:var(--r);box-shadow:var(--shadow);backdrop-filter:blur(18px)}
-.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:9px;margin-bottom:18px}
-.step{text-align:center;padding:9px;color:#8190a5;font-size:10px;border-radius:11px;transition:all .2s ease;user-select:none}
-.step b{display:grid;place-items:center;width:24px;height:24px;margin:0 auto 5px;border-radius:50%;background:#edf2f7;color:#64748b;font-size:10px;transition:all .2s ease}
-.step.active{background:#edf7ff;color:var(--blue);font-weight:900}
-.step.active b{color:#fff;background:linear-gradient(135deg,#1676ff,#23b8f6);box-shadow:0 4px 10px rgba(22,118,255,.25)}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.card{padding:18px}
-.card h3{margin:0 0 15px;font-size:14px;font-weight:800;display:flex;justify-content:space-between;align-items:center}
-.card h3 small{font-weight:500;color:var(--muted);font-size:11px}
-.field{margin-bottom:12px}
-.field label{display:block;margin-bottom:6px;font-size:10px;font-weight:800;color:#596a82;text-transform:uppercase;letter-spacing:0.4px}
-.field input,.field select,.field textarea{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--text);outline:0;font-size:12px;transition:border-color .2s,box-shadow .2s}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:#65b8ff;box-shadow:0 0 0 3px #e7f5ff}
-.field textarea{min-height:80px;resize:vertical}
-.required{color:var(--red);font-weight:bold}
-.secure-hint{display:flex;gap:7px;align-items:center;color:#68809d;font-size:9px;margin-top:4px}
-.lock{color:var(--green);font-size:10px}
-.route{grid-column:1/-1}
-.routegrid{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:12px}
-.full{grid-column:1/-1}
-.delivery{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
-.radio{display:flex;gap:7px;align-items:center;border:1px solid var(--line);padding:8px 10px;border-radius:10px;background:#fff;font-size:10px;cursor:pointer;transition:all .2s ease}
-.radio:hover{border-color:#93c5fd;background:#f8faff}
-.radio input{accent-color:var(--blue);cursor:pointer}
-.currencies{display:flex;gap:6px}
-.currencies button{flex:1;border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 4px;font-size:10px;cursor:pointer;font-weight:700;color:#56677e;transition:all .2s ease}
-.currencies button:hover{background:#f8faff;border-color:#93c5fd}
-.currencies button.active{background:#eaf5ff;border-color:#7abfff;color:var(--blue);font-weight:900;box-shadow:0 2px 8px rgba(22,119,255,.15)}
-.items{margin-top:18px}
-.tablewrap{overflow:auto}
-.table{width:100%;border-collapse:separate;border-spacing:0 6px;min-width:620px;font-size:10px}
-.table th{color:#8491a4;text-align:left;padding:0 8px;font-size:9px;text-transform:uppercase;letter-spacing:0.5px}
-.table td{padding:8px;background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.table td:first-child{border-left:1px solid var(--line);border-radius:9px 0 0 9px;font-weight:700;color:#64748b;width:32px;text-align:center}
-.table td:last-child{border-right:1px solid var(--line);border-radius:0 9px 9px 0;width:40px;text-align:center}
-.table input,.table select{width:100%;border:0;outline:0;background:transparent;font-size:11px;font-weight:600;color:var(--text)}
-.table input:focus,.table select:focus{outline:2px solid #93c5fd;border-radius:6px;background:#f8faff}
-.remove{border:1px solid #ffd4d4;background:#fff4f4;color:#d33;padding:4px 8px;border-radius:8px;cursor:pointer;font-weight:bold;transition:all .2s ease}
-.remove:hover{background:#ffe2e2;color:#b91c1c}
-.add{margin-top:8px;border:1px dashed #86bfff;color:var(--blue);background:#f4faff;border-radius:10px;padding:9px 13px;font-size:10px;font-weight:900;cursor:pointer;transition:all .2s ease}
-.add:hover{background:#e8f4ff;border-color:#1677ff}
-.totals{display:flex;justify-content:flex-end;gap:30px;margin-top:14px;font-size:10px;color:var(--muted)}
-.totals strong{display:block;color:#126bd3;font-size:17px;margin-top:2px;font-weight:900}
-.right{display:grid;gap:18px;align-content:start}
-.summary,.tracking{padding:18px}
-.summary h3,.tracking h3{margin:0 0 13px;font-size:14px;font-weight:800;display:flex;justify-content:space-between;align-items:center}
-.status{float:right;background:#ddfaf1;color:#078f6c;border-radius:20px;padding:4px 9px;font-size:9px;font-weight:800}
-.sum{display:flex;justify-content:space-between;padding:7px 0;color:#697a91;font-size:11px;border-bottom:1px dashed #f1f5f9}
-.grand{display:flex;justify-content:space-between;align-items:center;margin:12px -3px 8px;padding:13px;border-radius:13px;background:linear-gradient(110deg,#eef7ff,#e7fbff);font-weight:900;border:1px solid #d0e8ff}
-.grand strong{color:#086cdb;font-size:20px}
-.actions{display:grid;gap:8px;margin-top:13px}
-.primary,.secondary{width:100%;padding:11px;border-radius:11px;font-size:11px;font-weight:900;cursor:pointer;transition:all .2s ease}
-.primary{border:0;color:#fff;background:linear-gradient(135deg,#1477ff,#19b6fa);box-shadow:0 10px 22px rgba(20,119,255,.22)}
-.primary:hover{opacity:0.95;transform:translateY(-1px);box-shadow:0 12px 25px rgba(20,119,255,.28)}
-.secondary{border:1px solid var(--line);background:#fff;color:#53647c}
-.secondary:hover{background:#f8fafc;border-color:#cbd5e1}
-.request-status{margin-top:10px;font-size:9px;color:var(--muted);min-height:15px}
-.request-status.ok{color:#07936e;font-weight:700}
-.request-status.err{color:#d33;font-weight:700}
-.tracking .line{font-size:9px;color:var(--muted);margin-top:8px}
-.tracking b{font-size:11px;color:#1e293b;letter-spacing:0.5px}
-.barcode{height:50px;margin:12px 0;background:repeating-linear-gradient(90deg,#182a43 0 2px,transparent 2px 4px,#182a43 4px 5px,transparent 5px 8px);border-radius:3px}
-.track-bottom{display:flex;justify-content:space-between;align-items:center}
-.qr{width:64px;height:64px;border:7px solid #fff;box-shadow:0 0 0 1px var(--line);background:repeating-conic-gradient(#15253b 0 8%,#fff 0 16%)}
-.preview{padding:14px}
-.previewbar{display:flex;justify-content:space-between;align-items:center;padding:2px 5px 12px}
-.paper{background:#fff;border:1px solid #d8e2ed;box-shadow:0 12px 30px rgba(35,65,100,.12);padding:18px;min-height:600px;border-radius:8px}
-.phead{display:flex;justify-content:space-between;border-bottom:2px solid #1595ef;padding-bottom:10px}
-.pbrand{display:flex;align-items:center;gap:9px}
-.pbrand-logo{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid #dce5ef;background:#fff}
-.phead strong{color:#126bd3;font-size:17px;display:block;font-weight:900}
-.phead small{font-size:8px;font-weight:700;color:#64748b;text-align:right}
-.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.pbox{border:1px solid #dce5ef;border-radius:6px;padding:8px;font-size:8px;min-height:48px;background:#fafcff}
-.pbox b{display:block;font-size:9px;margin-bottom:4px;color:#2b415e;font-weight:800}
-.pbox.full{grid-column:1/-1}
-.paper h4{font-size:9px;color:#126bd3;margin:13px 0 6px;font-weight:800;text-transform:uppercase;letter-spacing:0.3px}
-.paper table{width:100%;border-collapse:collapse;font-size:8px}
-.paper th,.paper td{border:1px solid #dce5ef;padding:5px 6px;text-align:left}
-.paper th{background:#f1f5f9;color:#475569;font-weight:800}
-.paper-total{display:flex;justify-content:space-between;padding:10px 0;font-size:9px;font-weight:900}
-.paper-total strong{font-size:14px;color:#126bd3}
-.legacy-print-notes{margin-top:10px;padding:9px 11px;border:1px solid #ffe1e1;border-radius:6px;background:#fff8f8;color:#7f1d1d;font-size:7px;line-height:1.45}
-.legacy-print-notes b{display:block;margin-bottom:4px;color:#dc2626;font-size:8px}
-.legacy-print-notes ol{margin:0;padding-left:15px}
-.loading{opacity:.65;pointer-events:none}
-.spinner{display:inline-block;width:10px;height:10px;border:2px solid #cfe4fb;border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:4px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.toast{position:fixed;right:20px;bottom:20px;padding:12px 16px;background:#10233f;color:#fff;border-radius:12px;box-shadow:var(--shadow);font-size:11px;font-weight:600;opacity:0;transform:translateY(10px);transition:.25s ease;z-index:9999;pointer-events:none}
-.toast.show{opacity:1;transform:none}
-@media(max-width:1200px){.workspace{grid-template-columns:1fr}.right{grid-template-columns:1fr 1fr}.preview{grid-column:1/-1}}
-@media(max-width:850px){.app{display:block}.sidebar{display:none}.top{padding:12px 16px}.content{padding:16px}.grid,.routegrid{grid-template-columns:1fr}.route,.full{grid-column:auto}.right{grid-template-columns:1fr}.delivery{grid-template-columns:1fr}.head{align-items:start;flex-direction:column}.steps{overflow-x:auto;-webkit-overflow-scrolling:touch}.step{min-width:100px}.search{max-width:none}}
+.voucher-create-page *{box-sizing:border-box}
+.voucher-create-page button,.voucher-create-page input,.voucher-create-page select,.voucher-create-page textarea{font:inherit}
+.voucher-create-page button{cursor:pointer}
+.voucher-create-page svg{width:20px;height:20px;display:block}
+.voucher-create-page .sidebar{position:sticky;top:0;height:100vh;padding:20px 14px;background:rgba(255,255,255,.94);border-right:1px solid var(--vc-line);z-index:40}
+.voucher-create-page .brand{display:flex;gap:11px;align-items:center;padding:4px 9px 24px}
+.voucher-create-page .mark{width:38px;height:32px;position:relative;flex:0 0 auto}
+.voucher-create-page .mark:before,.voucher-create-page .mark:after{content:"";position:absolute;transform:skew(-24deg);border-radius:4px}
+.voucher-create-page .mark:before{left:3px;top:2px;width:14px;height:28px;background:linear-gradient(160deg,#0967df,#5ed1ff)}
+.voucher-create-page .mark:after{left:20px;top:7px;width:14px;height:23px;background:linear-gradient(160deg,#124ead,#b7ebff)}
+.voucher-create-page .brand b{font-size:15px;line-height:1.2;color:var(--vc-text);display:block}
+.voucher-create-page .brand small{display:block;color:var(--vc-primary);font-size:9px;font-weight:800;letter-spacing:.06em}
+.voucher-create-page .nav{display:grid;gap:5px}
+.voucher-create-page .nav a{min-height:44px;color:#52657d;padding:10px 12px;border-radius:12px;font-size:12px;font-weight:700;display:flex;gap:11px;align-items:center;text-decoration:none;transition:background-color .18s,color .18s}
+.voucher-create-page .nav a:hover{background:var(--vc-soft);color:var(--vc-primary)}
+.voucher-create-page .nav a.active{color:#fff;background:linear-gradient(135deg,var(--vc-primary),#169fe9);box-shadow:0 8px 20px rgba(23,105,224,.22)}
+.voucher-create-page .side-health{position:absolute;bottom:18px;left:14px;right:14px;padding:13px;border:1px solid var(--vc-line);border-radius:15px;background:#f8fbff}
+.voucher-create-page .system-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#12a879;box-shadow:0 0 0 4px #dcf8ef;margin-right:7px}
+.voucher-create-page .main{min-width:0}
+.voucher-create-page .top{min-height:70px;display:flex;align-items:center;gap:12px;padding:12px 24px;position:sticky;top:0;z-index:30;background:rgba(248,251,255,.94);border-bottom:1px solid var(--vc-line);backdrop-filter:blur(16px)}
+.voucher-create-page .menu-toggle{display:none;width:44px;height:44px;border:1px solid var(--vc-line);border-radius:12px;background:#fff;color:var(--vc-text);align-items:center;justify-content:center}
+.voucher-create-page .search-wrap{position:relative;flex:1;max-width:560px}
+.voucher-create-page .search-wrap svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:17px;height:17px;color:#8190a4;pointer-events:none}
+.voucher-create-page .search{width:100%;height:44px;border:1px solid var(--vc-line);border-radius:12px;background:#fff;padding:0 14px 0 40px;outline:0;font-size:13px;color:var(--vc-text)}
+.voucher-create-page .search:focus{border-color:#75aef5;box-shadow:0 0 0 3px rgba(23,105,224,.12)}
+.voucher-create-page .operator{margin-left:auto;display:flex;align-items:center;gap:9px;min-width:0}
+.voucher-create-page .avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:800;background:linear-gradient(135deg,#173a67,#5386bd);flex:0 0 auto}
+.voucher-create-page .content{max-width:1580px;margin:auto;padding:24px;width:100%}
+.voucher-create-page .head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:16px}
+.voucher-create-page .head h1{margin:0;font-size:clamp(22px,2.1vw,30px);font-weight:850;letter-spacing:-.03em}
+.voucher-create-page .head p{margin:6px 0 0;color:var(--vc-muted);font-size:13px}
+.voucher-create-page .chip{display:inline-flex;padding:3px 8px;border-radius:7px;background:var(--vc-soft);color:var(--vc-primary);font-size:10px;font-weight:800;vertical-align:middle;margin-left:5px}
+.voucher-create-page .glass{background:var(--vc-surface);border:1px solid var(--vc-line);border-radius:var(--vc-radius);box-shadow:var(--vc-shadow)}
+.voucher-create-page .steps{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:8px;margin-bottom:18px}
+.voucher-create-page .step{text-align:center;padding:8px;color:#7d8ca1;font-size:11px;border-radius:11px;user-select:none}
+.voucher-create-page .step b{display:grid;place-items:center;width:26px;height:26px;margin:0 auto 5px;border-radius:50%;background:#edf1f6;color:#617187;font-size:11px}
+.voucher-create-page .step.active{background:var(--vc-soft);color:var(--vc-primary);font-weight:800}
+.voucher-create-page .step.active b{color:#fff;background:var(--vc-primary)}
+.voucher-create-page .workspace{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px;align-items:start}
+.voucher-create-page .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.voucher-create-page .card{padding:19px}
+.voucher-create-page .card h3,.voucher-create-page .summary h3,.voucher-create-page .tracking h3{margin:0 0 16px;font-size:15px;font-weight:800;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.voucher-create-page .card h3 small{font-weight:500;color:var(--vc-muted);font-size:11px;text-align:right}
+.voucher-create-page .section-title{display:flex;align-items:center;gap:9px}
+.voucher-create-page .section-number{display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:var(--vc-soft);color:var(--vc-primary);font-size:12px;flex:0 0 auto}
+.voucher-create-page .field{margin-bottom:13px}
+.voucher-create-page .field label{display:block;margin-bottom:6px;font-size:11px;font-weight:750;color:#4c6078}
+.voucher-create-page .field input,.voucher-create-page .field select,.voucher-create-page .field textarea{width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--vc-line);border-radius:11px;background:#fff;color:var(--vc-text);outline:0;font-size:16px;transition:border-color .18s,box-shadow .18s}
+.voucher-create-page .field input:focus,.voucher-create-page .field select:focus,.voucher-create-page .field textarea:focus{border-color:#75aef5;box-shadow:0 0 0 3px rgba(23,105,224,.12)}
+.voucher-create-page .field textarea{min-height:92px;resize:vertical}
+.voucher-create-page .required{color:var(--vc-danger)}
+.voucher-create-page .secure-hint{display:flex;gap:7px;align-items:flex-start;color:var(--vc-muted);font-size:10px;line-height:1.45;margin-top:3px}
+.voucher-create-page .secure-hint svg{width:14px;height:14px;color:var(--vc-success);flex:0 0 auto}
+.voucher-create-page .route{grid-column:1/-1}
+.voucher-create-page .routegrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.voucher-create-page .full{grid-column:1/-1}
+.voucher-create-page .delivery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.voucher-create-page .radio{display:flex;gap:8px;align-items:center;min-height:44px;border:1px solid var(--vc-line);padding:9px 10px;border-radius:10px;background:#fff;font-size:12px;cursor:pointer}
+.voucher-create-page .radio:has(input:checked){border-color:#75aef5;background:var(--vc-soft);color:var(--vc-primary);font-weight:700}
+.voucher-create-page .radio input{accent-color:var(--vc-primary);width:16px;height:16px}
+.voucher-create-page .currencies{display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));gap:6px}
+.voucher-create-page .currencies button{min-height:44px;border:1px solid var(--vc-line);background:#fff;border-radius:9px;padding:8px;font-size:12px;font-weight:750;color:#52657d}
+.voucher-create-page .currencies button.active{background:var(--vc-soft);border-color:#75aef5;color:var(--vc-primary);box-shadow:inset 0 0 0 1px #75aef5}
+.voucher-create-page .items{margin-top:18px}
+.voucher-create-page .tablewrap{overflow:auto;border:1px solid var(--vc-line);border-radius:12px}
+.voucher-create-page .table{width:100%;border-collapse:collapse;min-width:650px;font-size:12px}
+.voucher-create-page .table th{color:#617187;text-align:left;padding:10px;background:#f7f9fc;font-size:10px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--vc-line)}
+.voucher-create-page .table td{padding:8px 10px;background:#fff;border-bottom:1px solid #edf1f6}
+.voucher-create-page .table tr:last-child td{border-bottom:0}
+.voucher-create-page .table input,.voucher-create-page .table select{width:100%;min-height:40px;border:1px solid transparent;border-radius:8px;padding:8px;background:#f8fafc;font-size:14px;color:var(--vc-text);outline:0}
+.voucher-create-page .table input:focus,.voucher-create-page .table select:focus{border-color:#75aef5;background:#fff;box-shadow:0 0 0 3px rgba(23,105,224,.1)}
+.voucher-create-page .remove{width:44px;height:44px;display:grid;place-items:center;border:1px solid #ffd3d3;background:#fff7f7;color:var(--vc-danger);border-radius:9px}
+.voucher-create-page .remove svg{width:18px;height:18px}
+.voucher-create-page .add{min-height:44px;margin-top:12px;border:1px dashed #75aef5;color:var(--vc-primary);background:#f5f9ff;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:8px}
+.voucher-create-page .add svg{width:17px;height:17px}
+.voucher-create-page .totals{display:flex;justify-content:flex-end;gap:30px;margin-top:14px;font-size:11px;color:var(--vc-muted);text-align:right}
+.voucher-create-page .totals strong{display:block;color:var(--vc-primary-strong);font-size:18px;margin-top:2px}
+.voucher-create-page .right{display:grid;gap:18px;align-content:start}
+.voucher-create-page .summary,.voucher-create-page .tracking{padding:19px}
+.voucher-create-page .summary{position:sticky;top:88px}
+.voucher-create-page .status{background:#e3f8f0;color:var(--vc-success);border-radius:999px;padding:5px 9px;font-size:10px;font-weight:800}
+.voucher-create-page .sum{display:flex;justify-content:space-between;gap:18px;padding:9px 0;color:#617187;font-size:12px;border-bottom:1px solid #edf1f6}
+.voucher-create-page .grand{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:13px 0 8px;padding:14px;border-radius:12px;background:var(--vc-soft);font-weight:800;border:1px solid #d4e7ff}
+.voucher-create-page .grand strong{color:var(--vc-primary-strong);font-size:20px;text-align:right}
+.voucher-create-page .actions{display:grid;gap:8px;margin-top:14px}
+.voucher-create-page .primary,.voucher-create-page .secondary{width:100%;min-height:46px;padding:10px 12px;border-radius:11px;font-size:12px;font-weight:800;display:flex;justify-content:center;align-items:center;gap:8px}
+.voucher-create-page .primary svg,.voucher-create-page .secondary svg{width:17px;height:17px}
+.voucher-create-page .primary{border:0;color:#fff;background:linear-gradient(135deg,var(--vc-primary),#1598e6);box-shadow:0 9px 20px rgba(23,105,224,.2)}
+.voucher-create-page .primary:disabled{opacity:.65;cursor:wait}
+.voucher-create-page .secondary{border:1px solid var(--vc-line);background:#fff;color:#465b74}
+.voucher-create-page .request-status{margin-top:10px;font-size:10px;color:var(--vc-muted);min-height:15px}
+.voucher-create-page .request-status.ok{color:var(--vc-success);font-weight:700}
+.voucher-create-page .tracking .line{font-size:10px;color:var(--vc-muted);margin-top:9px}
+.voucher-create-page .tracking b{font-size:12px;color:#1e293b;overflow-wrap:anywhere}
+.voucher-create-page .barcode{height:48px;margin:12px 0;background:repeating-linear-gradient(90deg,#182a43 0 2px,transparent 2px 4px,#182a43 4px 5px,transparent 5px 8px);border-radius:3px}
+.voucher-create-page .track-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.voucher-create-page .status-list{display:grid;gap:6px;margin-top:9px;font-size:10px;color:#8090a4}
+.voucher-create-page .status-item{display:flex;align-items:center;gap:7px}
+.voucher-create-page .status-item:before{content:"";width:7px;height:7px;border-radius:50%;background:#cbd5e1;flex:0 0 auto}
+.voucher-create-page .status-item.current{color:var(--vc-success);font-weight:700}
+.voucher-create-page .status-item.current:before{background:#12a879;box-shadow:0 0 0 3px #dcf8ef}
+.voucher-create-page .qr{width:64px;height:64px;border:7px solid #fff;box-shadow:0 0 0 1px var(--vc-line);background:repeating-conic-gradient(#15253b 0 8%,#fff 0 16%);flex:0 0 auto}
+.voucher-create-page .preview{padding:14px}
+.voucher-create-page .previewbar{display:flex;justify-content:space-between;align-items:center;padding:2px 5px 12px}
+.voucher-create-page .previewbar .secondary{width:auto;min-height:38px;padding:7px 11px}
+.voucher-create-page .paper{background:#fff;border:1px solid #d8e2ed;box-shadow:0 12px 30px rgba(35,65,100,.12);padding:18px;min-height:600px;border-radius:8px}
+.voucher-create-page .phead{display:flex;justify-content:space-between;border-bottom:2px solid #1595ef;padding-bottom:10px}
+.voucher-create-page .pbrand{display:flex;align-items:center;gap:9px}
+.voucher-create-page .pbrand-logo{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid #dce5ef;background:#fff}
+.voucher-create-page .phead strong{color:#126bd3;font-size:17px;display:block;font-weight:900}
+.voucher-create-page .phead small{font-size:8px;font-weight:700;color:#64748b;text-align:right}
+.voucher-create-page .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.voucher-create-page .pbox{border:1px solid #dce5ef;border-radius:6px;padding:8px;font-size:8px;min-height:48px;background:#fafcff}
+.voucher-create-page .pbox b{display:block;font-size:9px;margin-bottom:4px;color:#2b415e;font-weight:800}
+.voucher-create-page .pbox.full{grid-column:1/-1}
+.voucher-create-page .paper h4{font-size:9px;color:#126bd3;margin:13px 0 6px;font-weight:800;text-transform:uppercase;letter-spacing:.3px}
+.voucher-create-page .paper table{width:100%;border-collapse:collapse;font-size:8px}
+.voucher-create-page .paper th,.voucher-create-page .paper td{border:1px solid #dce5ef;padding:5px 6px;text-align:left}
+.voucher-create-page .paper th{background:#f1f5f9;color:#475569;font-weight:800}
+.voucher-create-page .paper-total{display:flex;justify-content:space-between;padding:10px 0;font-size:9px;font-weight:900}
+.voucher-create-page .paper-total strong{font-size:14px;color:#126bd3}
+.voucher-create-page .legacy-print-notes{margin-top:10px;padding:9px 11px;border:1px solid #ffe1e1;border-radius:6px;background:#fff8f8;color:#7f1d1d;font-size:7px;line-height:1.45}
+.voucher-create-page .legacy-print-notes b{display:block;margin-bottom:4px;color:#dc2626;font-size:8px}
+.voucher-create-page .legacy-print-notes ol{margin:0;padding-left:15px}
+.voucher-create-page .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:vc-spin .7s linear infinite}
+@keyframes vc-spin{to{transform:rotate(360deg)}}
+.voucher-create-page .toast{position:fixed;right:20px;bottom:20px;max-width:min(360px,calc(100vw - 32px));padding:12px 16px;background:#14243a;color:#fff;border-radius:12px;box-shadow:var(--vc-shadow);font-size:12px;font-weight:650;opacity:0;transform:translateY(10px);transition:.2s ease;z-index:100;pointer-events:none}
+.voucher-create-page .toast.show{opacity:1;transform:none}
+.voucher-create-page .nav-scrim{display:none}
+@media(max-width:1260px){
+  .voucher-create-page .workspace{grid-template-columns:1fr}
+  .voucher-create-page .right{grid-template-columns:1fr 1fr}
+  .voucher-create-page .summary{position:static}
+  .voucher-create-page .preview{grid-column:1/-1}
+}
+@media(max-width:900px){
+  .voucher-create-page{display:block;padding-bottom:env(safe-area-inset-bottom)}
+  .voucher-create-page .sidebar{position:fixed;inset:0 auto 0 0;width:min(290px,86vw);height:100dvh;transform:translateX(-105%);transition:transform .2s ease;box-shadow:20px 0 45px rgba(15,35,65,.18)}
+  .voucher-create-page.nav-open .sidebar{transform:translateX(0)}
+  .voucher-create-page .nav-scrim{display:block;position:fixed;inset:0;background:rgba(15,35,65,.4);z-index:35;opacity:0;pointer-events:none;transition:opacity .2s}
+  .voucher-create-page.nav-open .nav-scrim{opacity:1;pointer-events:auto}
+  .voucher-create-page .menu-toggle{display:flex}
+  .voucher-create-page .top{padding:10px 14px;padding-top:max(10px,env(safe-area-inset-top))}
+  .voucher-create-page .operator-details{display:none}
+  .voucher-create-page .content{padding:18px 14px 24px}
+  .voucher-create-page .grid,.voucher-create-page .routegrid,.voucher-create-page .right{grid-template-columns:1fr}
+  .voucher-create-page .preview{grid-column:auto}
+  .voucher-create-page .route,.voucher-create-page .full{grid-column:auto}
+  .voucher-create-page .head{align-items:flex-start}
+}
+@media(max-width:600px){
+  .voucher-create-page .top{gap:8px}
+  .voucher-create-page .search-wrap{display:none}
+  .voucher-create-page .head{display:block}
+  .voucher-create-page .voucher-code{margin-top:12px;text-align:left!important;padding:10px 12px;background:#fff;border:1px solid var(--vc-line);border-radius:11px}
+  .voucher-create-page .steps{display:flex;overflow-x:auto;scroll-snap-type:x proximity;padding:7px;-webkit-overflow-scrolling:touch}
+  .voucher-create-page .step{min-width:98px;scroll-snap-align:start}
+  .voucher-create-page .card,.voucher-create-page .summary,.voucher-create-page .tracking{padding:15px}
+  .voucher-create-page .card h3{align-items:flex-start}
+  .voucher-create-page .delivery{grid-template-columns:1fr}
+  .voucher-create-page .tablewrap{overflow:visible;border:0}
+  .voucher-create-page .table{display:block;min-width:0}
+  .voucher-create-page .table thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .voucher-create-page .table tbody{display:grid;gap:10px}
+  .voucher-create-page .table tr{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px;border:1px solid var(--vc-line);border-radius:12px;background:#fff}
+  .voucher-create-page .table td{display:block;padding:0;border:0;background:transparent;min-width:0}
+  .voucher-create-page .table td:before{content:attr(data-label);display:block;margin-bottom:5px;color:#617187;font-size:10px;font-weight:750;text-transform:uppercase;letter-spacing:.04em}
+  .voucher-create-page .table td:first-child{grid-column:1/-1;font-weight:800;color:var(--vc-primary)}
+  .voucher-create-page .table td:nth-child(2){grid-column:1/-1}
+  .voucher-create-page .table td:nth-child(5){display:flex;flex-direction:column;justify-content:flex-end;font-size:15px}
+  .voucher-create-page .table td:last-child{display:flex;justify-content:flex-end;align-items:flex-end}
+  .voucher-create-page .totals{justify-content:space-between;gap:12px;text-align:left}
+  .voucher-create-page .totals strong{font-size:16px}
+  .voucher-create-page .preview{overflow:auto}
+  .voucher-create-page .paper{min-width:330px}
+  .voucher-create-page .toast{right:16px;bottom:calc(16px + env(safe-area-inset-bottom))}
+}
+@media(max-width:360px){
+  .voucher-create-page .content{padding-left:10px;padding-right:10px}
+  .voucher-create-page .card,.voucher-create-page .summary,.voucher-create-page .tracking{padding:13px}
+  .voucher-create-page .currencies{grid-template-columns:repeat(2,1fr)}
+  .voucher-create-page .totals{display:grid;grid-template-columns:1fr 1fr}
+}
+@media(prefers-reduced-motion:reduce){.voucher-create-page *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   body{background:#fff!important;padding:0!important;margin:0!important}
-  .sidebar,.top,.alert,.head,.steps,.grid,.summary,.tracking,.previewbar,#voucher-form,.add,.actions,.request-status{display:none!important}
-  .content,.workspace,.right,.preview{display:block!important;padding:0!important;margin:0!important;width:100%!important;max-width:none!important}
-  .paper{border:0!important;box-shadow:none!important;min-height:auto!important;padding:0!important;display:block!important}
+  .voucher-create-page .sidebar,.voucher-create-page .top,.voucher-create-page .head,.voucher-create-page .steps,.voucher-create-page .workspace>section,.voucher-create-page .summary,.voucher-create-page .tracking,.voucher-create-page .previewbar,.voucher-create-page .toast,.voucher-create-page .nav-scrim{display:none!important}
+  .voucher-create-page,.voucher-create-page .main,.voucher-create-page .content,.voucher-create-page #voucher-form,.voucher-create-page .workspace,.voucher-create-page .right,.voucher-create-page .preview{display:block!important;padding:0!important;margin:0!important;width:100%!important;max-width:none!important;background:#fff!important}
+  .voucher-create-page .paper{border:0!important;box-shadow:none!important;min-height:auto!important;padding:0!important;display:block!important}
 }
 </style>
 
-<div class="app">
+<div class="app voucher-create-page" id="voucher-page">
   <!-- Sidebar (Desktop Enterprise Nav) -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="voucher-sidebar">
     <div class="brand">
       <div class="mark"></div>
       <div>
@@ -403,39 +461,45 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
       </div>
     </div>
     
-    <nav class="nav">
-      <a href="index.php?page=dashboard">⌂ &nbsp; Dashboard</a>
-      <a href="index.php?page=voucher_create" class="active">▣ &nbsp; Create Voucher</a>
-      <a href="index.php?page=stock_list">◇ &nbsp; Shipments</a>
-      <a href="index.php?page=customer_list">♙ &nbsp; Customers</a>
-      <a href="index.php?page=voucher_list">▤ &nbsp; Ledger</a>
-      <a href="index.php?page=profit_loss">▥ &nbsp; Reports</a>
-      <a href="index.php?page=branches">⌂ &nbsp; Branches</a>
-      <a href="index.php?page=admin_dashboard">⚙ &nbsp; Settings</a>
+    <nav class="nav" aria-label="Primary navigation">
+      <a href="index.php?page=dashboard"><?= mbpos_icon('dashboard') ?><span data-i18n="Dashboard">Dashboard</span></a>
+      <a href="index.php?page=voucher_create" class="active" aria-current="page"><?= mbpos_icon('voucher_create') ?><span data-i18n="Create Voucher">Create Voucher</span></a>
+      <a href="index.php?page=stock_list"><?= mbpos_icon('stock_list') ?><span data-i18n="Shipments">Shipments</span></a>
+      <a href="index.php?page=voucher_list"><?= mbpos_icon('voucher_list') ?><span data-i18n="Voucher Ledger">Voucher Ledger</span></a>
+      <?php if (is_admin() || is_developer()): ?>
+        <a href="index.php?page=profit_loss"><?= mbpos_icon('profit_loss') ?><span data-i18n="Profit & Loss">Profit &amp; Loss</span></a>
+        <a href="index.php?page=branches"><?= mbpos_icon('branches') ?><span data-i18n="Branches">Branches</span></a>
+        <a href="index.php?page=admin_dashboard"><?= mbpos_icon('admin_dashboard') ?><span data-i18n="Administration">Administration</span></a>
+      <?php endif; ?>
     </nav>
     
     <div class="side-health" aria-label="System Online">
-      <span class="pulse"></span>
-      <b style="font-size:10px">System Online</b>
-      <div style="font-size:9px;color:var(--muted);margin-top:5px">API · DB · Cache health monitored</div>
+      <span class="system-dot"></span>
+      <b style="font-size:10px" data-i18n="Online">Online</b>
+      <div style="font-size:9px;color:var(--vc-muted);margin-top:5px" data-i18n="Live records available">Live records available</div>
     </div>
   </aside>
+  <button type="button" class="nav-scrim" id="nav-scrim" aria-label="Close menu"></button>
 
   <!-- Main Viewport -->
   <main class="main">
     <!-- Topbar Header -->
     <header class="top">
-      <input id="global-search" class="search" placeholder="⌕  Search customer, tracking number, or voucher..." data-i18n-placeholder="Search customer, tracking number, or voucher..." aria-label="Global search">
+      <button type="button" class="menu-toggle" id="nav-toggle" aria-controls="voucher-sidebar" aria-expanded="false" aria-label="Open menu"><?= mbpos_icon('menu') ?></button>
+      <div class="search-wrap">
+        <?= mbpos_icon('search') ?>
+        <input id="global-search" class="search" placeholder="Search tracking number or voucher" data-i18n-placeholder="Search tracking number or voucher" aria-label="Global search">
+      </div>
       <button type="button" id="language-toggle" class="language-toggle" aria-label="Switch language" title="Switch language">
         <span class="language-option language-option-en">EN</span>
         <span class="language-option language-option-mm">မြန်မာ</span>
       </button>
       <button type="button" id="install-pwa" class="pwa-install-button" hidden data-i18n="Install app">Install app</button>
       <div class="operator">
-        <div class="avatar"><?= strtoupper(substr($_SESSION['username'] ?? 'SF', 0, 2)) ?></div>
-        <div>
-          <b style="font-size:11px"><?= htmlspecialchars($_SESSION['username'] ?? 'Stephan Filip') ?></b>
-          <small style="display:block;color:var(--muted);font-size:9px"><?= htmlspecialchars(ucfirst($_SESSION['role'] ?? 'Operator')) ?> · <?= htmlspecialchars($user_info['branch_name'] ?? 'Yangon') ?></small>
+        <div class="avatar"><?= htmlspecialchars(strtoupper(substr($_SESSION['username'] ?? 'OP', 0, 2)), ENT_QUOTES, 'UTF-8') ?></div>
+        <div class="operator-details">
+          <b style="font-size:11px"><?= htmlspecialchars($_SESSION['username'] ?? 'Operator', ENT_QUOTES, 'UTF-8') ?></b>
+          <small style="display:block;color:var(--vc-muted);font-size:9px"><?= htmlspecialchars(ucfirst($_SESSION['role'] ?? 'Operator'), ENT_QUOTES, 'UTF-8') ?><?php if (!empty($user_info['branch_name'])): ?> · <?= htmlspecialchars($user_info['branch_name'], ENT_QUOTES, 'UTF-8') ?><?php endif; ?></small>
         </div>
       </div>
     </header>
@@ -444,12 +508,12 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
       <!-- Page Head -->
       <div class="head">
         <div>
-          <h1>Create Delivery Voucher <span class="chip">V5</span></h1>
-          <p>Create secure logistics shipment records and generate ledger entries in real time.</p>
+          <h1><span data-i18n="Create Delivery Voucher">Create Delivery Voucher</span> <span class="chip">V5</span></h1>
+          <p data-i18n="Enter shipment details and review totals before creating the voucher.">Enter shipment details and review totals before creating the voucher.</p>
         </div>
-        <div style="font-size:10px;color:var(--muted);text-align:right">
-          Voucher Code<br>
-          <b id="voucherNo" style="font-size:13px;color:var(--text)"><?= htmlspecialchars($preview_voucher_code) ?></b>
+        <div class="voucher-code" style="font-size:10px;color:var(--vc-muted);text-align:right">
+          <span data-i18n="Voucher Code">Voucher Code</span><br>
+          <b id="voucherNo" style="font-size:13px;color:var(--vc-text)"><?= htmlspecialchars($preview_voucher_code) ?></b>
         </div>
       </div>
 
@@ -473,53 +537,50 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
               
               <!-- Card 1: Sender Details -->
               <div class="card glass">
-                <h3><span>① New Sender Details</span><small>Manual entry</small></h3>
+                <h3><span class="section-title"><span class="section-number">1</span><span data-i18n="New Sender Details">New Sender Details</span></span><small data-i18n="Manual entry">Manual entry</small></h3>
 
                 <div class="field">
                   <label>Full Name <span class="required">*</span></label>
-                  <input id="sender" name="sender_name" maxlength="120" autocomplete="name" placeholder="Enter sender full name" value="<?= htmlspecialchars($duplicate_voucher['sender_name'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
+                  <input id="sender" name="sender_name" maxlength="120" autocomplete="name" placeholder="Sender full name" value="<?= htmlspecialchars($duplicate_voucher['sender_name'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
                 </div>
                 <div class="field">
                   <label>Phone Number <span class="required">*</span></label>
-                  <input id="senderPhone" name="sender_phone" maxlength="32" autocomplete="tel" inputmode="tel" placeholder="+95 9 123 456789" value="<?= htmlspecialchars($duplicate_voucher['sender_phone'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
+                  <input id="senderPhone" name="sender_phone" maxlength="32" autocomplete="tel" inputmode="tel" placeholder="Phone number" value="<?= htmlspecialchars($duplicate_voucher['sender_phone'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
                 </div>
-                <div class="secure-hint"><span class="lock">●</span> Validated before submission · server-side normalization required</div>
+                <div class="secure-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span data-i18n="Validated securely when submitted">Validated securely when submitted</span></div>
               </div>
 
               <!-- Card 2: Receiver Details -->
               <div class="card glass">
-                <h3><span>② New Receiver Details</span><small>Manual entry</small></h3>
+                <h3><span class="section-title"><span class="section-number">2</span><span data-i18n="New Receiver Details">New Receiver Details</span></span><small data-i18n="Manual entry">Manual entry</small></h3>
 
                 <div class="field">
                   <label>Full Name <span class="required">*</span></label>
-                  <input id="receiver" name="receiver_name" maxlength="120" autocomplete="name" placeholder="Enter receiver full name" value="<?= htmlspecialchars($duplicate_voucher['receiver_name'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
+                  <input id="receiver" name="receiver_name" maxlength="120" autocomplete="name" placeholder="Receiver full name" value="<?= htmlspecialchars($duplicate_voucher['receiver_name'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
                 </div>
                 <div class="field">
                   <label>Phone Number <span class="required">*</span></label>
-                  <input id="receiverPhone" name="receiver_phone" maxlength="32" autocomplete="tel" inputmode="tel" placeholder="+61 412 345 678" value="<?= htmlspecialchars($duplicate_voucher['receiver_phone'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
+                  <input id="receiverPhone" name="receiver_phone" maxlength="32" autocomplete="tel" inputmode="tel" placeholder="Phone number" value="<?= htmlspecialchars($duplicate_voucher['receiver_phone'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
                 </div>
                 <div class="field">
                   <label>Delivery Address <span class="required">*</span></label>
-                  <textarea id="address" name="receiver_address" maxlength="500" autocomplete="street-address" placeholder="Enter complete delivery address" required><?= htmlspecialchars($duplicate_voucher['receiver_address'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+                  <textarea id="address" name="receiver_address" maxlength="500" autocomplete="street-address" placeholder="Delivery address" required><?= htmlspecialchars($duplicate_voucher['receiver_address'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
                 </div>
               </div>
 
               <!-- Card 3: Routing & Logistics -->
               <div class="card glass route">
-                <h3>③ Routing & Logistics <small>Destination + service rules</small></h3>
+                <h3><span class="section-title"><span class="section-number">3</span><span data-i18n="Routing & Logistics">Routing &amp; Logistics</span></span><small data-i18n="Destination and service">Destination and service</small></h3>
                 <div class="routegrid">
                   
                   <div class="field">
                     <label>Origin Point</label>
                     <select id="origin" name="origin_point">
+                      <option value="">Select origin branch</option>
                       <?php if (!empty($all_branches)): ?>
                         <?php foreach ($all_branches as $b): ?>
                           <option value="<?= htmlspecialchars($b['branch_name']) ?>" <?= ($b['id'] == ($user_info['branch_id'] ?? 0)) ? 'selected' : '' ?>>Myanmar → <?= htmlspecialchars($b['branch_name']) ?></option>
                         <?php endforeach; ?>
-                      <?php else: ?>
-                        <option>Myanmar → Yangon</option>
-                        <option>Myanmar → Mandalay</option>
-                        <option>Myanmar → Mawlamyine</option>
                       <?php endif; ?>
                     </select>
                   </div>
@@ -548,7 +609,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
                     <div class="delivery">
                       <?php foreach ($delivery_types as $idx => $dt): ?>
                         <label class="radio">
-                          <input type="radio" name="delivery_type" value="<?= htmlspecialchars($dt) ?>" <?= ($duplicate_voucher ? (($duplicate_voucher['delivery_type'] ?? '') === $dt) : ($idx === 0)) ? 'checked' : '' ?>>
+                          <input type="radio" name="delivery_type" value="<?= htmlspecialchars($dt) ?>" <?= ($duplicate_voucher && ($duplicate_voucher['delivery_type'] ?? '') === $dt) ? 'checked' : '' ?> required>
                           <?= htmlspecialchars($dt) ?>
                         </label>
                       <?php endforeach; ?>
@@ -559,22 +620,22 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
                     <label>Currency <span class="required">*</span></label>
                     <div class="currencies">
                       <?php foreach ($currencies as $idx => $curr): ?>
-                        <button type="button" class="<?= ($duplicate_voucher ? (($duplicate_voucher['currency'] ?? 'MMK') === $curr) : ($idx === 0)) ? 'active' : '' ?>" data-currency="<?= htmlspecialchars($curr) ?>">
+                        <button type="button" class="<?= ($duplicate_voucher && ($duplicate_voucher['currency'] ?? '') === $curr) ? 'active' : '' ?>" data-currency="<?= htmlspecialchars($curr) ?>" aria-pressed="<?= ($duplicate_voucher && ($duplicate_voucher['currency'] ?? '') === $curr) ? 'true' : 'false' ?>">
                           <?= htmlspecialchars($curr) ?>
                         </button>
                       <?php endforeach; ?>
                     </div>
-                    <input type="hidden" name="currency" id="currency_input" value="<?= htmlspecialchars($duplicate_voucher['currency'] ?? $currencies[0] ?? 'MMK') ?>">
+                    <input type="hidden" name="currency" id="currency_input" value="<?= htmlspecialchars($duplicate_voucher['currency'] ?? '') ?>">
                   </div>
 
                   <div class="field">
                     <label>Additional Delivery Charge</label>
-                    <input id="extra" name="delivery_charge" type="number" min="0" max="999999999" step=".01" value="<?= htmlspecialchars($duplicate_voucher['delivery_charge'] ?? '0') ?>" inputmode="decimal">
+                    <input id="extra" name="delivery_charge" type="number" min="0" max="999999999" step=".01" value="<?= isset($duplicate_voucher['delivery_charge']) ? htmlspecialchars($duplicate_voucher['delivery_charge']) : '' ?>" placeholder="0.00" inputmode="decimal">
                   </div>
 
                   <div class="field full">
                     <label>Operational Notes</label>
-                    <textarea id="notes" name="notes" maxlength="500" placeholder="Fragile, special handling, internal operational note..."><?= htmlspecialchars($duplicate_voucher['notes'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+                    <textarea id="notes" name="notes" maxlength="500" placeholder="Operational notes (optional)..."><?= htmlspecialchars($duplicate_voucher['notes'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
                   </div>
 
                 </div>
@@ -584,7 +645,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 
             <!-- Card 4: Item Breakdown -->
             <div class="card glass items">
-              <h3>④ Item Breakdown <small>Dynamic package calculation</small></h3>
+              <h3><span class="section-title"><span class="section-number">4</span><span data-i18n="Item Breakdown">Item Breakdown</span></span><small data-i18n="Package calculation">Package calculation</small></h3>
               <div class="tablewrap">
                 <table class="table">
                   <thead>
@@ -600,7 +661,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
                   <tbody id="rows"></tbody>
                 </table>
               </div>
-              <button type="button" class="add" id="addRow">＋ Add Item</button>
+              <button type="button" class="add" id="addRow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="Add Item">Add Item</span></button>
               <div class="totals">
                 <span>Total Weight <strong id="weightTotal">0.00 kg</strong></span>
                 <span>Grand Total <strong id="grandTotal">0 MMK</strong></span>
@@ -616,17 +677,14 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
             <div class="summary glass">
               <h3>Order Summary <span class="status">Pending</span></h3>
               <div class="sum"><span>Subtotal</span><b id="subtotal">0 MMK</b></div>
-              <div class="sum"><span>Delivery Charge</span><b id="deliveryCharge">0 MMK</b></div>
-              <div class="sum"><span>Additional Charge</span><b id="extraSum">0 MMK</b></div>
-              <div class="sum"><span>Discount</span><b>0 MMK</b></div>
+              <div class="sum"><span data-i18n="Delivery Charge">Delivery Charge</span><b id="extraSum">0</b></div>
               <div class="grand">
                 <span>Grand Total</span>
                 <strong id="grand2">0 MMK</strong>
               </div>
               <div class="actions">
-                <button type="submit" class="primary" id="create">▣ Create Ledger Entry</button>
-                <button type="button" class="secondary" id="draft">▢ Save Draft</button>
-                <button type="button" class="secondary" id="print">◉ Preview / Print Voucher</button>
+                <button type="submit" class="primary" id="create"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="Create Ledger Entry">Create Ledger Entry</span></button>
+                <button type="button" class="secondary" id="print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg><span data-i18n="Preview and Print Voucher">Preview / Print Voucher</span></button>
               </div>
               <div id="requestStatus" class="request-status"></div>
             </div>
@@ -638,14 +696,14 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
               <b id="pvoucher"><?= htmlspecialchars($preview_voucher_code) ?></b>
               <div class="line">Tracking Number</div>
               <b id="tracking"><?= htmlspecialchars($preview_tracking_no) ?></b>
-              <div class="barcode"></div>
               <div class="track-bottom">
-                <div style="font-size:10px">
-                  <b>Shipment Status</b>
-                  <div style="margin-top:8px;color:#159c75">● Created</div>
-                  <div style="color:#a7b2c0">│ Picked Up<br>│ In Transit<br>│ Delivered</div>
+                <div>
+                  <b data-i18n="Shipment Status">Shipment Status</b>
+                  <div class="status-list">
+                    <div class="status-item current" data-i18n="Not created">Not created</div>
+                    <div class="status-item" data-i18n="Tracking begins after creation">Tracking begins after creation</div>
+                  </div>
                 </div>
-                <div class="qr"></div>
               </div>
             </div>
 
@@ -691,8 +749,8 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 
                 <h4>Routing & Logistics</h4>
                 <div class="pbox full">
-                  <span id="porigin">Myanmar → Yangon</span> · <span id="pregion">Select destination</span> · <span id="pbranch">Select branch</span><br>
-                  <span id="pdelivery" style="font-weight:700;color:var(--blue)">ကားဂိတ်တင်</span> · <span id="pcurrency" style="font-weight:700">MMK</span>
+                  <span id="porigin">Select origin</span> · <span id="pregion">Select destination</span> · <span id="pbranch">Select branch</span><br>
+                  <span id="pdelivery" style="font-weight:700;color:#126bd3">Select delivery type</span> · <span id="pcurrency" style="font-weight:700">Select currency</span>
                 </div>
 
                 <h4>Item Breakdown</h4>
@@ -746,11 +804,11 @@ const categories = <?= json_encode(array_values($item_types_list), JSON_HEX_TAG 
 const allBranches = <?= json_encode(array_values($all_branches), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 const allRegions = <?= json_encode(array_values($all_regions), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 
-let currency = <?= json_encode((string) ($currencies[0] ?? 'MMK'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+let currency = <?= json_encode((string) ($duplicate_voucher['currency'] ?? ''), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 let rowId = 0;
 
 const byId = id => document.getElementById(id);
-const money = n => Number(n || 0).toLocaleString() + " " + currency;
+const money = n => Number(n || 0).toLocaleString(undefined, {maximumFractionDigits: 2}) + (currency ? " " + currency : "");
 const safeText = s => String(s ?? "").replace(/[<>]/g, "");
 const escapeHtml = s => String(s ?? "").replace(/[&<>"']/g, character => ({
   "&": "&amp;",
@@ -767,24 +825,28 @@ const toast = t => {
 };
 
 // Add Item Row Function
-function addRow(data = {category: (categories[0] || "Document"), weight: 1, price: 5000}) {
+function addRow(data = {}) {
   const tr = document.createElement("tr");
   tr.dataset.row = ++rowId;
+  const selCategory = data.category || "";
+  const weightVal = (data.weight !== undefined && data.weight !== null && data.weight !== "") ? data.weight : "";
+  const priceVal = (data.price !== undefined && data.price !== null && data.price !== "") ? data.price : "";
   tr.innerHTML = `
-    <td class="num"></td>
-    <td>
-      <select class="category" name="item_type[]">
-        ${categories.map(c => `<option value="${escapeHtml(c)}" ${c === data.category ? "selected" : ""}>${escapeHtml(c)}</option>`).join("")}
+    <td class="num" data-label="Item"></td>
+    <td data-label="Item Category">
+      <select class="category" name="item_type[]" required aria-label="Item category">
+        <option value="">Select category</option>
+        ${categories.map(c => `<option value="${escapeHtml(c)}" ${c === selCategory ? "selected" : ""}>${escapeHtml(c)}</option>`).join("")}
       </select>
     </td>
-    <td>
-      <input class="weight" name="item_kg[]" type="number" min="0.01" max="99999" step="0.01" value="${data.weight}">
+    <td data-label="Weight (kg)">
+      <input class="weight" name="item_kg[]" type="number" min="0.01" max="99999" step="0.01" value="${weightVal}" placeholder="0.00" required inputmode="decimal" aria-label="Weight in kilograms">
     </td>
-    <td>
-      <input class="price" name="item_price_per_kg[]" type="number" min="0" max="999999999" step="0.01" value="${data.price}">
+    <td data-label="Price / kg">
+      <input class="price" name="item_price_per_kg[]" type="number" min="0" max="999999999" step="0.01" value="${priceVal}" placeholder="0.00" required inputmode="decimal" aria-label="Price per kilogram">
     </td>
-    <td class="lineTotal" style="font-weight:700;color:#1e293b;text-align:right">0</td>
-    <td><button type="button" class="remove" title="Remove Item">×</button></td>
+    <td class="lineTotal" data-label="Total" style="font-weight:700;color:#1e293b;text-align:right">0</td>
+    <td data-label="Action"><button type="button" class="remove" title="Remove item" aria-label="Remove item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15M10 10v7m4-7v7"/></svg></button></td>
   `;
   byId("rows").appendChild(tr);
   
@@ -821,7 +883,6 @@ function update() {
 
   // Order summary & form totals
   byId("subtotal").textContent = money(subtotal);
-  byId("deliveryCharge").textContent = money(0);
   byId("extraSum").textContent = money(extra);
   byId("grandTotal").textContent = money(grand);
   byId("grand2").textContent = money(grand);
@@ -837,7 +898,7 @@ function update() {
   byId("preceiver").textContent = safeText(byId("receiver").value) || "Not entered";
   byId("prphone").textContent = safeText(byId("receiverPhone").value) || "Not entered";
   byId("paddress").textContent = safeText(byId("address").value) || "Not entered";
-  byId("porigin").textContent = safeText(byId("origin").value) || "Myanmar → Yangon";
+  byId("porigin").textContent = safeText(byId("origin").value) || "Select origin";
 
   const regSel = byId("region");
   const regText = regSel.selectedIndex >= 0 && regSel.options[regSel.selectedIndex] ? regSel.options[regSel.selectedIndex].text : "Select destination";
@@ -847,9 +908,9 @@ function update() {
   const branchText = branchSel.selectedIndex >= 0 && branchSel.options[branchSel.selectedIndex] ? branchSel.options[branchSel.selectedIndex].text : "Select branch";
   byId("pbranch").textContent = branchText;
 
-  byId("pcurrency").textContent = currency;
+  byId("pcurrency").textContent = currency || "Select currency";
   const deliveryChecked = document.querySelector('input[name="delivery_type"]:checked');
-  byId("pdelivery").textContent = deliveryChecked ? deliveryChecked.value : "ကားဂိတ်တင်";
+  byId("pdelivery").textContent = deliveryChecked ? deliveryChecked.value : "Select delivery type";
 
   // Step state tracking
   updateSteps();
@@ -858,7 +919,9 @@ function update() {
 function updateSteps() {
   const hasCustomer = (byId("sender").value.trim() && byId("receiver").value.trim() && byId("address").value.trim());
   const hasRouting = (byId("region").value && byId("branch").value);
-  const hasItems = document.querySelectorAll("#rows tr").length > 0;
+  const hasItems = [...document.querySelectorAll("#rows tr")].some(tr =>
+    tr.querySelector(".category").value && Number(tr.querySelector(".weight").value) > 0
+  );
 
   byId("st-1").className = "step " + (hasCustomer ? "active" : "");
   byId("st-2").className = "step " + (hasRouting ? "active" : "");
@@ -882,21 +945,10 @@ function loadBranches(regionId) {
     });
   } else {
     const opt = document.createElement("option");
-    opt.value = "1";
-    opt.textContent = "Main Branch";
+    opt.value = "";
+    opt.textContent = "No branches available";
+    opt.disabled = true;
     select.appendChild(opt);
-  }
-
-  // Update dynamic voucher preview number based on region sequence
-  const regSel = byId("region");
-  const opt = regSel.options[regSel.selectedIndex];
-  if (opt && opt.dataset.prefix) {
-    const prefix = opt.dataset.prefix;
-    const seq = (parseInt(opt.dataset.seq, 10) || 0) + 1;
-    const code = `${prefix}-${new Date().getFullYear()}-${String(seq).padStart(6, "0")}`;
-    byId("voucherNo").textContent = code;
-    byId("pvoucher").textContent = code;
-    byId("pno").textContent = code;
   }
 }
 
@@ -905,7 +957,9 @@ function bindCurrencies() {
   document.querySelectorAll("[data-currency]").forEach(b => {
     b.onclick = () => {
       document.querySelectorAll("[data-currency]").forEach(x => x.classList.remove("active"));
+      document.querySelectorAll("[data-currency]").forEach(x => x.setAttribute("aria-pressed", "false"));
       b.classList.add("active");
+      b.setAttribute("aria-pressed", "true");
       currency = b.dataset.currency;
       byId("currency_input").value = currency;
       update();
@@ -934,6 +988,19 @@ function validate() {
     }
   }
 
+  if (!currency) {
+    toast("Select a currency");
+    document.querySelector("[data-currency]")?.focus();
+    return false;
+  }
+
+  const deliveryType = document.querySelector('input[name="delivery_type"]:checked');
+  if (!deliveryType) {
+    toast("Select a delivery type");
+    document.querySelector('input[name="delivery_type"]')?.focus();
+    return false;
+  }
+
   const rows = document.querySelectorAll("#rows tr");
   if (!rows.length) {
     toast("Add at least one item breakdown");
@@ -941,6 +1008,12 @@ function validate() {
   }
 
   for (const tr of rows) {
+    const category = tr.querySelector(".category");
+    if (!category.value) {
+      toast("Select an item category");
+      category.focus();
+      return false;
+    }
     const w = parseFloat(tr.querySelector(".weight").value) || 0;
     if (w <= 0) {
       toast("Each item requires a weight greater than 0 kg");
@@ -965,33 +1038,6 @@ document.getElementById("voucher-form").addEventListener("submit", function(e) {
   byId("requestStatus").textContent = "Submitting secure voucher transaction…";
 });
 
-// Draft Save & Restore
-byId("draft").onclick = () => {
-  const draftData = {
-    sender: byId("sender").value,
-    senderPhone: byId("senderPhone").value,
-    receiver: byId("receiver").value,
-    receiverPhone: byId("receiverPhone").value,
-    address: byId("address").value,
-    region: byId("region").value,
-    branch: byId("branch").value,
-    extra: byId("extra").value,
-    notes: byId("notes").value,
-    currency: currency,
-    items: [...document.querySelectorAll("#rows tr")].map(tr => ({
-      category: tr.querySelector(".category").value,
-      weight: tr.querySelector(".weight").value,
-      price: tr.querySelector(".price").value
-    }))
-  };
-  try {
-    localStorage.setItem("mbpos_v5_draft", JSON.stringify(draftData));
-    toast("Draft saved locally! You can resume anytime.");
-  } catch(e) {
-    toast("Could not save draft locally");
-  }
-};
-
 // Print handlers
 byId("print").onclick = () => window.print();
 byId("print2").onclick = () => window.print();
@@ -1013,6 +1059,20 @@ document.addEventListener("change", e => {
   if (e.target.name === "delivery_type") update();
 });
 
+const voucherPage = byId("voucher-page");
+const navToggle = byId("nav-toggle");
+const navScrim = byId("nav-scrim");
+const setNavigationOpen = open => {
+  voucherPage.classList.toggle("nav-open", open);
+  navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+  navToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+};
+navToggle.addEventListener("click", () => setNavigationOpen(!voucherPage.classList.contains("nav-open")));
+navScrim.addEventListener("click", () => setNavigationOpen(false));
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") setNavigationOpen(false);
+});
+
 // Initialize Defaults
 bindCurrencies();
 const duplicateItems = <?= json_encode($duplicate_items) ?>;
@@ -1024,9 +1084,6 @@ if (duplicateRegion) {
   byId("region").value = duplicateRegion;
   loadBranches(duplicateRegion);
   if (duplicateBranch) byId("branch").value = duplicateBranch;
-} else if (allRegions.length > 0) {
-  byId("region").value = allRegions[0].id;
-  loadBranches(allRegions[0].id);
 }
 
 if (duplicateCurrency) {
@@ -1041,7 +1098,7 @@ if (duplicateItems && duplicateItems.length > 0) {
   duplicateItems.forEach(item => addRow(item));
   toast("Loaded voucher data for duplication. Review and create new entry.");
 } else {
-  addRow({category: "Laptop", weight: 2.5, price: 12000});
+  addRow();
 }
 update();
 </script>

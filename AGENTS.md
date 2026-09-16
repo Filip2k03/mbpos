@@ -6,6 +6,8 @@ Build `mbpos.online` into a focused, dependable logistics POS used by real opera
 
 Read this file, `DESIGN.md`, `FRONTEND_PLAN.md`, and `QA_MATRIX.md` completely before changing code. Inspect the current worktree and preserve user changes.
 
+`AGY_BUILD_PROMPT.md` is the execution brief for the next implementation agent. Treat its ordered work loop and acceptance gates as mandatory, not aspirational.
+
 ## Product scope
 
 - `mbpos.online` is the POS application. Do not reintroduce a website preview, customer portal, CMS portal, old POS switcher, or system/site-management portal into the POS shell.
@@ -13,6 +15,9 @@ Read this file, `DESIGN.md`, `FRONTEND_PLAN.md`, and `QA_MATRIX.md` completely b
 - Customer screens and customer navigation are not part of the target V5 interface. Legacy customer tables or columns may still be referenced by old records; hide or retire UI routes safely, but never delete production data or schema without a separately approved migration and verified backup.
 - Existing voucher print content, dimensions, field order, background artwork, and print styling are protected. Interface work must not alter `voucher_print.php` output unless the user explicitly requests a print change.
 - Preserve the current production database connection and existing operational data.
+- New/create forms must begin operationally blank. Do not prefill sender, receiver, phone, address, routing, destination, branch, delivery type, item category, weight, price, charge, discount, notes, currency, payment state, or date with sample, guessed, previous, or convenient values.
+- Do not add dummy records, sample people, example addresses, demonstration totals, fake tracking activity, synthetic cache results, or placeholder business data anywhere in production UI.
+- Edit/view screens may display real persisted values. Security fields, route fields, record identifiers, and CSRF tokens may use hidden values because they are protocol data rather than operator-entered business data.
 
 ## Source of truth
 
@@ -36,6 +41,8 @@ Read this file, `DESIGN.md`, `FRONTEND_PLAN.md`, and `QA_MATRIX.md` completely b
 8. Do not perform schema deletion, data deletion, deployment, or production mutations unless the user explicitly authorizes that exact action.
 9. Bump `APP_VERSION` and the service-worker cache name together when deployed static assets change.
 10. Run the checks in this guide and visually inspect affected routes before handoff.
+11. Continue the audit → implement → verify → fix loop until every in-scope route passes its acceptance criteria. Do not stop after modernizing only the easiest page or after producing a plan.
+12. Do not introduce React or another frontend framework merely to obtain “components” or “hooks.” This project remains progressively enhanced PHP unless a separate migration is approved.
 
 ## Architecture rules
 
@@ -72,6 +79,16 @@ Target information architecture:
 
 Exclude Customers and all external/legacy portals from the target sidebar.
 
+### Reusable components and behavior hooks
+
+- Build server-rendered PHP UI primitives for navigation items, page headers, panels, toolbars, fields, status badges, tables, pagination, empty/error states, dialogs, and mobile action bars.
+- Use small, named client behavior modules initialized through stable `data-ui` and `data-action` attributes. These are the project’s behavior hooks.
+- Prefer event delegation so repeated rows and dynamically inserted item forms do not register unnecessary listeners.
+- Each behavior hook must be idempotent: initializing the shell or a component twice must not duplicate handlers, DOM, requests, or announcements.
+- Keep state ownership explicit. PHP owns authenticated records and permissions; the URL owns filters and pagination; the browser may own non-sensitive preferences such as language, sidebar state, and density.
+- Do not place business rules inside visual components. Totals and validation must use existing authoritative server rules, with client calculations treated only as immediate previews.
+- Define component contracts in code comments or a small component reference: accepted data, required markup, empty/loading/error behavior, accessibility behavior, and mobile transformation.
+
 ### Responsive behavior
 
 - Design mobile-first and test at 325, 375, and 425 CSS pixels.
@@ -81,6 +98,8 @@ Exclude Customers and all external/legacy portals from the target sidebar.
 - Interactive targets must be at least 44 × 44 CSS pixels.
 - Respect `env(safe-area-inset-*)` in installed iOS and Android PWAs.
 - Never disable user zoom. Remove `maximum-scale=1.0` and `user-scalable=no` during shell modernization.
+- At 425, 375, and 325 px, the interface must feel like an intentional mobile application: compact app bar, predictable back/menu behavior, thumb-reachable primary actions, native-feeling sheets/drawers, preserved form progress, and no desktop panel squeezed into a narrow viewport.
+- Account for dynamic mobile viewport units (`dvh`/`svh`), virtual keyboards, landscape mode, notches, home indicators, browser toolbars, coarse pointers, and standalone PWA mode.
 
 ### Platform behavior
 
@@ -111,10 +130,13 @@ Exclude Customers and all external/legacy portals from the target sidebar.
 - Avoid runtime dependence on Tailwind CDN for the final production shell. Migrate used utilities to maintained local CSS or a deliberate build artifact before removing the CDN.
 - Use semantic HTML: landmarks, one `h1`, ordered heading levels, real buttons for actions, links for navigation, labels tied to controls, and descriptive table headers.
 - Icons must come from one consistent local SVG/icon system. Do not mix emoji, text glyphs, remote icons, and unrelated icon libraries in primary navigation.
+- Emoji are prohibited in the production interface, including navigation, buttons, cards, empty states, status indicators, notifications, dashboard metrics, maintenance screens, and accessibility labels. Replace them with local SVG icons or text where an icon adds no meaning.
 - Motion must be subtle, useful, and disabled under `prefers-reduced-motion: reduce`.
 - Loading states use reserved-space skeletons or compact progress indicators. Empty, error, offline, unauthorized, and success states must be distinct.
 - Destructive actions require clear confirmation and must identify the affected record.
 - Preserve user input after validation errors whenever safe.
+- Creation forms render with blank operator data. Do not use a real-looking placeholder as visual decoration. Labels, short instructions, input modes, and validation explain what belongs in a field.
+- Select controls begin with a disabled empty instruction such as “Choose currency”; do not silently select the first database option. Checkboxes, radios, statuses, and dates begin unselected unless the underlying business rule makes a default mandatory and that rule is documented and confirmed.
 
 ## Performance rules
 
@@ -157,5 +179,7 @@ Then execute the route and device checks in `QA_MATRIX.md`. Test with real autho
 - English/Myanmar switching covers all changed UI.
 - Keyboard, touch, screen-reader, reduced-motion, offline, and PWA behavior is verified.
 - Existing voucher print output and production data remain unchanged.
+- New/create forms contain no prefilled operational values, fake examples, dummy data, or silent first-option selections.
+- No emoji or text-glyph icons remain in the production interface; the approved local SVG system is used consistently.
+- Shared PHP components and idempotent client behavior hooks power repeated patterns instead of copied markup and handlers.
 - PHP/JS checks pass, the worktree contains only intended changes, and the handoff lists exact tests and known limitations.
-

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0b6ff5">
   <title>MBLOGISTICS POS V5 — Offline / အင်တာနက်ပြတ်တောက်နေသည်</title>
   <style>
@@ -155,7 +155,7 @@
 
     <div class="btn-wrap">
       <button type="button" class="primary" onclick="retryConnection()">
-        <span id="btn-text">🔄 Reconnect / ပြန်လည်ချိတ်ဆက်ရန်</span>
+        <span id="btn-text">Reconnect / ပြန်လည်ချိတ်ဆက်ရန်</span>
       </button>
     </div>
 
@@ -172,7 +172,7 @@
         window.location.reload();
       } else {
         setTimeout(function() {
-          btnText.textContent = '🔄 Reconnect / ပြန်လည်ချိတ်ဆက်ရန်';
+          btnText.textContent = 'Reconnect / ပြန်လည်ချိတ်ဆက်ရန်';
           alert('Network is still offline. Please verify Wi-Fi or cellular data.');
         }, 1200);
       }
@@ -180,7 +180,7 @@
 
     // Auto-refresh when connection returns
     window.addEventListener('online', function() {
-      document.getElementById('status-hint').textContent = '✅ Connection detected! Reloading MBPOS…';
+      document.getElementById('status-hint').textContent = 'Connection detected! Reloading MBPOS…';
       setTimeout(function() {
         window.location.reload();
       }, 800);

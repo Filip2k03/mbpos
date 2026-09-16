@@ -53,7 +53,7 @@ if (!isset($_COOKIE['mbpos_csrf']) && !headers_sent()) {
 
 // Application Configuration
 define('APP_NAME', 'MBLOGISTICS POS');
-define('APP_VERSION', '5.1.0');
+define('APP_VERSION', '5.2.0');
 define('APP_URL', 'https://mbpos.online');
 
 // Voucher Code Configuration

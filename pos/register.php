@@ -195,7 +195,7 @@ include_template('header', ['page' => 'register']);
                         <tr>
                             <td colspan="3">
                                 <div class="v5-empty">
-                                    <span class="v5-empty__icon">👤</span>
+                                    <span class="v5-empty__icon"><?= mbpos_icon('register', 'w-8 h-8 text-slate-400') ?></span>
                                     <strong data-i18n="no_users_found">No users found.</strong>
                                     <p data-i18n="register_first_user">Register the first account using the form above.</p>
                                 </div>

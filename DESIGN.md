@@ -22,6 +22,8 @@ The experience should feel designed by people who understand operators:
 5. **Honest system state:** loading, offline, stale, failed, empty, and completed states look and read differently.
 6. **Forgiving input:** preserve safe user input, validate close to the field, and explain how to recover.
 7. **Accessible by default:** keyboard, touch, zoom, Myanmar text, and reduced motion are core requirements.
+8. **Blank means blank:** a new operational record begins with no invented person, destination, amount, status, date, or item data.
+9. **Mobile is a first-class product:** mobile is designed as an application workflow, not a compressed desktop screenshot.
 
 ## Visual foundation
 
@@ -69,6 +71,14 @@ Use semantic custom properties. Values may be tuned after contrast testing, but 
 - Use one subtle panel shadow and one floating-overlay shadow. Borders should carry most separation.
 - Glass blur is optional decoration, never required for readability. Provide an opaque fallback and avoid stacking multiple blurred surfaces.
 
+### Iconography
+
+- Use one local SVG icon set with a consistent 24 × 24 view box, 1.75–2 px stroke, round caps/joins, and `currentColor`.
+- Provide icons through reusable PHP/SVG helpers or an accessible local sprite. Never fetch core interface icons from third-party URLs.
+- Decorative SVGs use `aria-hidden="true"`. Icon-only controls require a translated accessible name and tooltip where discovery is not obvious.
+- Do not use emoji, Unicode symbols, ASCII arrows, letter icons, or mixed icon libraries as interface decoration. Use typographic arrows only inside ordinary prose where they communicate text rather than acting as a control icon.
+- An icon supports a label; it does not replace a label for unfamiliar logistics, financial, destructive, or administrative actions.
+
 ## Canonical application shell
 
 ### Desktop: 1280 px and wider
@@ -102,6 +112,19 @@ Use semantic custom properties. Values may be tuned after contrast testing, but 
 - Full menu drawer contains Finance, Configuration, Administration, language, install help, account, and logout according to role.
 - Reserve padding for bottom navigation plus `safe-area-inset-bottom`.
 - Page actions may use a sticky bottom action bar only when the page has a single clear primary action. Never stack it on top of the global bottom navigation without reserved space.
+
+### Mobile application behavior
+
+- Use `100dvh` with safe fallbacks for full-height drawers and sheets; never assume `100vh` matches the visible mobile viewport.
+- The top app bar remains compact and stable while the page content scrolls. It must not duplicate the page title unless the scrolled state intentionally promotes that title.
+- The system Back gesture/button follows browser history. Do not hijack it to perform an unrelated action or discard work.
+- Long forms preserve entered values across orientation changes and accidental route attempts. Warn before leaving only when meaningful unsaved work exists.
+- Place the primary action within thumb reach, but never cover the last field, validation message, totals, or bottom navigation.
+- Use bottom sheets for short contextual choices and full routes for complex forms. Sheets must support safe areas, focus management, drag-independent close controls, and keyboard resize.
+- Loading states reserve the expected layout. Do not replace an entire mobile screen with a centered spinner.
+- Mobile tables announce horizontal scrolling and retain visible row identity. Action-heavy datasets become labeled cards; comparison-heavy financial data stays tabular.
+- Use `overscroll-behavior`, scroll locking, and touch handling carefully so drawers do not move the background and nested tables still scroll naturally.
+- Support one-handed operation without making destructive actions easy to trigger accidentally.
 
 ## Dynamic sidebar specification
 
@@ -154,12 +177,18 @@ Avoid repeating the page title in multiple cards. Do not show internal diagnosti
 
 ### Forms
 
-- Labels stay visible above fields; placeholders are examples, never replacements for labels.
+- Labels stay visible above fields. Placeholders must not contain example people, addresses, phone numbers, prices, weights, dates, or other fake operational data, and must never replace labels.
 - Required fields use text or a legend, not only a red asterisk.
 - Inline help appears before an error; inline errors appear below the field and are linked with `aria-describedby`.
 - Group sender, receiver, routing, items, charges, and review by task.
 - On mobile, use suitable input modes (`tel`, `decimal`, `numeric`) and autocomplete attributes without forcing incorrect assumptions.
 - Voucher create retains New Sender and New Receiver only.
+- Every create/add form starts blank for operator-entered business data. A browser must not inherit stale values through accidental autocomplete where inappropriate; use correct `autocomplete` tokens rather than disabling password managers globally.
+- Text and textarea fields have no `value` or sample body text on a new record. Numeric fields have no value and must not use `0` to imply completion.
+- Dates are blank on creation unless a documented legal/business requirement mandates a server-generated value. A visual “Today” shortcut may fill the date only after the operator activates it.
+- Selects begin with a disabled empty option. Do not auto-select the first currency, route, branch, delivery type, category, status, or payment method.
+- Radio and checkbox groups begin unselected unless a confirmed invariant requires exactly one state. Never infer consent, payment, delivery, or maintenance state.
+- Edit forms populate only the real selected record. Filters may preserve explicit URL state, but first visits do not invent criteria.
 
 ### Tables and lists
 
@@ -188,6 +217,7 @@ Avoid repeating the page title in multiple cards. Do not show internal diagnosti
 
 - **Dashboard:** operational snapshot and shortcuts only. Remove greeting/shift/diagnostic/system-load clutter from the primary experience.
 - **Create Voucher:** focused entry flow, immediate totals, protected unsaved work warning, clear review step, and unchanged print output.
+- **Create Voucher blank state:** New Sender, New Receiver, route, destination, branch, delivery type, currency, charges, notes, and item rows contain no default operational values. Do not create an item row with fake category, weight, price, or total. If one empty row is necessary for usability, every control in it remains blank.
 - **Shipments:** high-signal filters, scoped results, status timeline access, and efficient bulk actions.
 - **Voucher Ledger:** server pagination, stable columns, quick view, export, and role-safe bulk status handling.
 - **Voucher View:** readable shipment story, sender/receiver, route, items, charges, payment, status history, and print action.
@@ -219,3 +249,22 @@ Avoid repeating the page title in multiple cards. Do not show internal diagnosti
 
 The voucher print artifact is not part of the shell redesign. Do not change its structure, dimensions, fonts, data mapping, background photo, barcode/QR placement, or print media rules as collateral work.
 
+## Recommended real-world capabilities
+
+These features are recommended only when they can use real existing data and authoritative backend behavior:
+
+- draft recovery stored per authenticated user without exposing another user’s data;
+- unsaved-change protection and explicit draft age;
+- barcode/QR scanning into existing search fields using device capability detection;
+- fast keyboard command palette for routes and permitted actions;
+- server-backed pagination, saved filters, and export jobs for large ledgers;
+- shipment status history with actor and timestamp when the existing schema supports it;
+- role-scoped operational alerts with read state and noise controls;
+- connection-quality indicator and retry controls without fabricated “system load” metrics;
+- accessible camera/file attachment workflow only after storage, authorization, retention, and privacy rules exist;
+- audit export for sensitive changes only when backed by a real immutable source;
+- install/update guidance tailored to browser capability;
+- optional compact/comfortable density preference on desktop;
+- mobile scan/search shortcut and recent-route shortcuts based on the current user’s real activity, never seeded examples.
+
+Do not build a capability with mock responses or UI-only success. If the backend contract does not exist, document the dependency and leave the feature absent rather than pretending it works.

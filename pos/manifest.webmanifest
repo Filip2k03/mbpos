@@ -21,5 +21,28 @@
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Create Voucher",
+      "short_name": "Create",
+      "description": "Create a new delivery voucher",
+      "url": "index.php?page=voucher_create",
+      "icons": [{ "src": "assets/icons/mbpos.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Voucher Ledger",
+      "short_name": "Ledger",
+      "description": "View and manage all vouchers",
+      "url": "index.php?page=voucher_list",
+      "icons": [{ "src": "assets/icons/mbpos.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Shipments",
+      "short_name": "Shipments",
+      "description": "Track active shipment stock",
+      "url": "index.php?page=stock_list",
+      "icons": [{ "src": "assets/icons/mbpos.svg", "sizes": "192x192" }]
+    }
   ]
 }

@@ -16,7 +16,7 @@ $is_user_staff = is_staff();
 // Page and shell variables
 $current_page = $_GET['page'] ?? ($page ?? 'dashboard');
 $page_title = $page_title ?? ((APP_NAME ?? 'MBLOGISTICS POS') . ' V5');
-$asset_version = defined('APP_VERSION') ? rawurlencode(APP_VERSION) : '5.1.0';
+$asset_version = defined('APP_VERSION') ? rawurlencode(APP_VERSION) : '5.2.0';
 $is_voucher_workspace = ($current_page === 'voucher_create');
 
 // Fetch unread notification count
@@ -41,7 +41,7 @@ $nav_groups = [
             'key' => 'dashboard',
             'label' => 'Dashboard',
             'route' => 'index.php?page=dashboard',
-            'icon' => '⌂',
+            'icon' => 'dashboard',
             'allowed' => true,
             'aliases' => ['dashboard'],
             'mobile_priority' => 1,
@@ -50,7 +50,7 @@ $nav_groups = [
             'key' => 'voucher_create',
             'label' => 'Create Voucher',
             'route' => 'index.php?page=voucher_create',
-            'icon' => '＋',
+            'icon' => 'voucher_create',
             'allowed' => ($is_user_staff || $is_user_admin || $is_user_developer),
             'aliases' => ['voucher_create'],
             'mobile_priority' => 2,
@@ -59,7 +59,7 @@ $nav_groups = [
             'key' => 'stock_list',
             'label' => 'Shipments',
             'route' => 'index.php?page=stock_list',
-            'icon' => '◇',
+            'icon' => 'stock_list',
             'allowed' => true,
             'aliases' => ['stock_list'],
             'mobile_priority' => 3,
@@ -68,7 +68,7 @@ $nav_groups = [
             'key' => 'voucher_list',
             'label' => 'Voucher Ledger',
             'route' => 'index.php?page=voucher_list',
-            'icon' => '▤',
+            'icon' => 'voucher_list',
             'allowed' => true,
             'aliases' => ['voucher_list', 'voucher_bulk_update', 'voucher_view'],
             'mobile_priority' => 4,
@@ -79,7 +79,7 @@ $nav_groups = [
             'key' => 'expenses',
             'label' => 'Expenses',
             'route' => 'index.php?page=expenses',
-            'icon' => '💳',
+            'icon' => 'expenses',
             'allowed' => ($is_user_admin || $is_user_developer),
             'aliases' => ['expenses'],
         ],
@@ -87,7 +87,7 @@ $nav_groups = [
             'key' => 'other_income',
             'label' => 'Other Income',
             'route' => 'index.php?page=other_income',
-            'icon' => '💰',
+            'icon' => 'other_income',
             'allowed' => ($is_user_admin || $is_user_developer),
             'aliases' => ['other_income'],
         ],
@@ -95,7 +95,7 @@ $nav_groups = [
             'key' => 'profit_loss',
             'label' => 'Profit & Loss',
             'route' => 'index.php?page=profit_loss',
-            'icon' => '▥',
+            'icon' => 'profit_loss',
             'allowed' => ($is_user_admin || $is_user_developer),
             'aliases' => ['profit_loss'],
         ],
@@ -105,7 +105,7 @@ $nav_groups = [
             'key' => 'branches',
             'label' => 'Branches',
             'route' => 'index.php?page=branches',
-            'icon' => '⌘',
+            'icon' => 'branches',
             'allowed' => ($is_user_admin || $is_user_developer),
             'aliases' => ['branches'],
         ],
@@ -113,7 +113,7 @@ $nav_groups = [
             'key' => 'currencies',
             'label' => 'Currencies',
             'route' => 'index.php?page=currencies',
-            'icon' => '💱',
+            'icon' => 'currencies',
             'allowed' => ($is_user_admin || $is_user_developer),
             'aliases' => ['currencies'],
         ],
@@ -121,7 +121,7 @@ $nav_groups = [
             'key' => 'delivery_types',
             'label' => 'Delivery Types',
             'route' => 'index.php?page=delivery_types',
-            'icon' => '🚚',
+            'icon' => 'delivery_types',
             'allowed' => ($is_user_admin || $is_user_developer),
             'aliases' => ['delivery_types'],
         ],
@@ -129,7 +129,7 @@ $nav_groups = [
             'key' => 'item_types',
             'label' => 'Item Types',
             'route' => 'index.php?page=item_types',
-            'icon' => '📦',
+            'icon' => 'item_types',
             'allowed' => ($is_user_admin || $is_user_developer),
             'aliases' => ['item_types'],
         ],
@@ -139,7 +139,7 @@ $nav_groups = [
             'key' => 'register',
             'label' => 'User Management',
             'route' => 'index.php?page=register',
-            'icon' => '👥',
+            'icon' => 'register',
             'allowed' => ($is_user_admin || $is_user_developer),
             'aliases' => ['register'],
         ],
@@ -147,7 +147,7 @@ $nav_groups = [
             'key' => 'admin_dashboard',
             'label' => 'Admin Control Center',
             'route' => 'index.php?page=admin_dashboard',
-            'icon' => '⚙',
+            'icon' => 'admin_dashboard',
             'allowed' => ($is_user_admin || $is_user_developer),
             'aliases' => ['admin_dashboard'],
         ],
@@ -155,7 +155,7 @@ $nav_groups = [
             'key' => 'developer_dashboard',
             'label' => 'Dev Center',
             'route' => 'index.php?page=developer_dashboard',
-            'icon' => '🛠',
+            'icon' => 'developer_dashboard',
             'allowed' => $is_user_developer,
             'aliases' => ['developer_dashboard'],
         ],
@@ -163,7 +163,7 @@ $nav_groups = [
             'key' => 'maintenance',
             'label' => 'Maintenance Zones',
             'route' => 'index.php?page=maintenance',
-            'icon' => '🛡',
+            'icon' => 'maintenance',
             'allowed' => $is_user_developer,
             'aliases' => ['maintenance'],
         ],
@@ -201,6 +201,7 @@ $nav_groups = [
     <?php if (function_exists('load_assets')) load_assets($current_page); ?>
 </head>
 <body class="bg-gray-50/50 text-gray-800 antialiased font-sans mbpos-v5-shell <?= $is_voucher_workspace ? 'is-voucher-create' : '' ?>" data-current-page="<?= htmlspecialchars($current_page, ENT_QUOTES, 'UTF-8') ?>">
+<a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:bg-blue-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:outline-none" data-i18n="Skip to main content">Skip to main content</a>
 
 <div id="offline-status" class="offline-status" role="status" aria-live="polite" hidden>
     <span class="offline-status-dot" aria-hidden="true"></span>
@@ -230,7 +231,7 @@ $nav_groups = [
                     <?php foreach ($visible_items as $item):
                         $is_active = in_array($current_page, $item['aliases'] ?? [$item['key']], true);
                     ?>
-                    <a href="<?= e($item['route']) ?>" class="<?= $is_active ? 'is-active' : '' ?>" data-nav-key="<?= e($item['key']) ?>">
+                    <a href="<?= e($item['route']) ?>" class="<?= $is_active ? 'is-active' : '' ?>" data-nav-key="<?= e($item['key']) ?>" <?= $is_active ? 'aria-current="page"' : '' ?>>
                         <span class="mbpos-nav-icon" aria-hidden="true"><?= mbpos_icon($item['key'], 'w-4 h-4') ?></span>
                         <span data-i18n="<?= e($item['label']) ?>"><?= e($item['label']) ?></span>
                     </a>
@@ -425,21 +426,21 @@ $nav_groups = [
         <!-- Mobile Bottom Navigation (4 High-Frequency Actions + Off-Canvas Menu) -->
         <?php if (is_logged_in()): ?>
         <nav class="mbpos-mobile-nav" aria-label="Mobile Navigation">
-            <a href="index.php?page=dashboard" class="mbpos-mobile-nav-item <?= $current_page === 'dashboard' ? 'is-active' : '' ?>">
+            <a href="index.php?page=dashboard" class="mbpos-mobile-nav-item <?= $current_page === 'dashboard' ? 'is-active' : '' ?>" <?= $current_page === 'dashboard' ? 'aria-current="page"' : '' ?>>
                 <span class="mbpos-mobile-icon" aria-hidden="true"><?= mbpos_icon('dashboard', 'w-5 h-5') ?></span>
                 <span data-i18n="Dashboard">Dashboard</span>
             </a>
             <?php if ($is_user_staff || $is_user_admin || $is_user_developer): ?>
-            <a href="index.php?page=voucher_create" class="mbpos-mobile-nav-item <?= $current_page === 'voucher_create' ? 'is-active' : '' ?>">
+            <a href="index.php?page=voucher_create" class="mbpos-mobile-nav-item <?= $current_page === 'voucher_create' ? 'is-active' : '' ?>" <?= $current_page === 'voucher_create' ? 'aria-current="page"' : '' ?>>
                 <span class="mbpos-mobile-icon" aria-hidden="true"><?= mbpos_icon('voucher_create', 'w-5 h-5') ?></span>
                 <span data-i18n="Create Voucher">Create</span>
             </a>
             <?php endif; ?>
-            <a href="index.php?page=stock_list" class="mbpos-mobile-nav-item <?= $current_page === 'stock_list' ? 'is-active' : '' ?>">
+            <a href="index.php?page=stock_list" class="mbpos-mobile-nav-item <?= $current_page === 'stock_list' ? 'is-active' : '' ?>" <?= $current_page === 'stock_list' ? 'aria-current="page"' : '' ?>>
                 <span class="mbpos-mobile-icon" aria-hidden="true"><?= mbpos_icon('stock_list', 'w-5 h-5') ?></span>
                 <span data-i18n="Shipments">Shipments</span>
             </a>
-            <a href="index.php?page=voucher_list" class="mbpos-mobile-nav-item <?= in_array($current_page, ['voucher_list', 'voucher_bulk_update', 'voucher_view'], true) ? 'is-active' : '' ?>">
+            <a href="index.php?page=voucher_list" class="mbpos-mobile-nav-item <?= in_array($current_page, ['voucher_list', 'voucher_bulk_update', 'voucher_view'], true) ? 'is-active' : '' ?>" <?= in_array($current_page, ['voucher_list', 'voucher_bulk_update', 'voucher_view'], true) ? 'aria-current="page"' : '' ?>>
                 <span class="mbpos-mobile-icon" aria-hidden="true"><?= mbpos_icon('voucher_list', 'w-5 h-5') ?></span>
                 <span data-i18n="Ledger">Ledger</span>
             </a>
@@ -450,7 +451,7 @@ $nav_groups = [
         </nav>
         <?php endif; ?>
 
-        <main class="mbpos-global-main container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 relative z-10" data-v5-page="<?= htmlspecialchars($current_page, ENT_QUOTES, 'UTF-8') ?>">
+        <main id="main-content" class="mbpos-global-main container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 relative z-10" data-v5-page="<?= htmlspecialchars($current_page, ENT_QUOTES, 'UTF-8') ?>">
             <?php display_flash_messages(); ?>
 <?php else: ?>
     <?php display_flash_messages(); ?>

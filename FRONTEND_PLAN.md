@@ -6,6 +6,8 @@ Deliver one production-quality responsive frontend across every active POS route
 
 This plan is sequenced so each phase can ship without breaking operations.
 
+The implementation agent must work through all phases and route gates. “Finished” means the route inventory is exhausted and the definition of done passes—not that one flagship screen looks modern.
+
 ## Phase 0 — Baseline and inventory
 
 - Record the current Git commit and dirty worktree.
@@ -14,6 +16,7 @@ This plan is sequenced so each phase can ship without breaking operations.
 - Identify orphaned routes and UI for customer features, portals, CMS, and old POS surfaces.
 - Record the current voucher print at representative data lengths for regression comparison.
 - Measure current asset count, transferred bytes, PHP response time, layout shifts, and accessibility issues.
+- Inventory all hard-coded `value`, `selected`, `checked`, sample placeholder, fake record, emoji, Unicode icon, duplicated component, and page-local behavior patterns.
 
 Deliverable: route inventory and before-state evidence attached to the implementation handoff. Do not mutate the database during baseline capture.
 
@@ -25,6 +28,7 @@ Deliverable: route inventory and before-state evidence attached to the implement
 - Consolidate to one top utility bar and remove legacy V3 inline shell styling after shared styles are complete.
 - Remove Customers and legacy portal links from the target shell.
 - Add a clear account menu and connection state.
+- Replace all shell emoji/text symbols with the approved local SVG icon system.
 - Keep route authorization server-side and test direct URL access by role.
 
 Acceptance:
@@ -42,6 +46,10 @@ Acceptance:
 - Move remaining template inline styles into versioned shared CSS.
 - Remove duplicate utility styling and document exceptions.
 - Plan removal of Tailwind CDN after equivalent local styles exist; do not remove it while pages still depend on it.
+- Create reusable PHP render helpers/partials with narrow contracts instead of copying long markup between routes.
+- Create idempotent client behavior modules initialized from `data-ui` hooks for drawer, dialog, disclosure, tabs, filter chips, form state, item rows, bulk selection, pagination enhancement, install guidance, and offline guards.
+- Use event delegation and `AbortController`; provide teardown when a behavior owns timers, observers, or requests.
+- Centralize icons, translations, shipment statuses, and component state names.
 
 Acceptance:
 
@@ -63,6 +71,9 @@ Modernize in this order:
 Requirements:
 
 - Keep New Sender and New Receiver only.
+- Remove every default/example/dummy operational value from voucher creation. Sender, receiver, routing, branch, delivery type, currency, charges, notes, item category, weight, and price must begin blank.
+- Do not auto-select the first database result. Every select has a disabled blank instruction and validation before submission.
+- An initial item row may be present only as a fully blank row. Do not add `0`, a category, a price, a weight, or a calculated-looking amount until the operator enters real values.
 - Preserve voucher calculations, identifiers, database writes, and print output.
 - Add unsaved-work protection to long forms.
 - Keep totals visible without obscuring fields on mobile.
@@ -92,6 +103,8 @@ Requirements:
 - Explain dependency conflicts before deletion.
 - Hide developer-only information from operational roles.
 - Eliminate raw logs, SQL errors, server paths, diagnostic tokens, and internal load metrics from normal UI.
+- Make every add/create form blank. Edit screens display only persisted record values. Never use sample amount, description, category, currency, branch, maintenance name, date, or status.
+- Replace remaining emoji and Unicode control icons on every route with the shared local SVG set.
 
 ## Phase 5 — Internationalization
 
@@ -112,6 +125,8 @@ Requirements:
 - Respect safe areas and virtual keyboard resizing.
 - Keep dynamic/authenticated data network-only and static assets versioned.
 - Provide a clear new-version refresh flow without discarding unsaved voucher work.
+- Build a native-feeling mobile shell for 425, 375, and 325 px with compact app bar, safe-area bottom navigation, focus-safe drawer/sheets, correct browser/system Back behavior, and virtual-keyboard-aware action placement.
+- Test Android predictive/system Back and iOS swipe-back without losing entered data or leaving an invisible overlay active.
 
 ## Phase 7 — Loading and performance
 
@@ -139,6 +154,16 @@ Targets on a representative mid-range mobile device and normal 4G:
 - Verify GET routes do not mutate state.
 - Verify all user content is escaped and validation errors do not expose internals.
 - Test database/Redis/network failure states without presenting false success.
+- Scan rendered routes for emoji, fake examples, default business values, silent first-option selections, duplicate IDs, missing labels, and inaccessible icon-only actions.
+
+## Phase 8.5 — Full route convergence
+
+- Re-run the route inventory and mark each active route complete, intentionally retired, or blocked by a documented backend dependency.
+- Apply the same shell, tokens, components, icons, blank-form policy, i18n, loading states, error handling, and mobile behavior to every active route.
+- Remove superseded markup, styles, handlers, and dead navigation only after the replacement is verified.
+- Search the full project for legacy V3 shell fragments, duplicate headers, emoji/icons, sample values, customer UI, portal links, and page-specific copies of shared patterns.
+- Re-test earlier routes after every shared component change. A later component refactor must not regress completed screens.
+- Continue until no active route remains partially modernized.
 
 ## Phase 9 — Release
 
@@ -166,6 +191,23 @@ For each route, confirm:
 - no stale/private PWA caching;
 - no print regression;
 - PHP/JS syntax checks.
+- local SVG icons only, with no emoji or text-glyph control icons;
+- new/create forms start blank with no dummy/example/default business data;
+- shared component and behavior-hook usage rather than duplicated implementations;
+- mobile app-like interaction at 425, 375, and 325 px, including keyboard and safe-area behavior.
+
+## Recommended implementation order inside each route
+
+1. Confirm authorization, data source, mutations, and real empty/error cases.
+2. Remove sample/default operational values and unsafe GET mutations.
+3. Replace route-local shell/navigation with the canonical shell.
+4. Rebuild with shared PHP components and `data-ui` behavior hooks.
+5. Add explicit English/Myanmar keys and accessible SVG icons.
+6. Implement loading, empty, error, offline, and success states.
+7. Verify desktop, tablet, 425, 375, and 325 px.
+8. Verify keyboard, touch, screen reader, zoom, reduced motion, and platform behavior.
+9. Run static checks and inspect console/network output.
+10. Fix findings, then re-run the route gate before moving on.
 
 ## Explicit non-goals without separate approval
 
@@ -175,4 +217,5 @@ For each route, confirm:
 - Adding fake live tracking, fake success, or offline write synchronization.
 - Reintroducing public website, CMS, customer portal, or old POS controls.
 - Deploying production simply because implementation checks pass.
-
+- Adding framework-only abstractions, React-style hooks, or a client-side router without a separately approved architecture migration.
+- Prefilling create forms to make screenshots look complete.

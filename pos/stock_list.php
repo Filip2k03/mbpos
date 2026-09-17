@@ -292,12 +292,13 @@ include_template('header', ['page' => 'stock_list']);
                             <th data-i18n="Origin">Origin</th>
                             <th data-i18n="Status">Status</th>
                             <th data-i18n="Last Updated">Last Updated</th>
+                            <th class="text-right" data-i18n="Action">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($stock_items)): ?>
                             <tr>
-                                <td colspan="<?= $can_bulk_update ? 6 : 5 ?>">
+                                <td colspan="<?= $can_bulk_update ? 7 : 6 ?>">
                                     <div class="v5-empty">
                                         <span class="v5-empty__icon"><?= mbpos_icon('shipments', 'w-8 h-8 text-slate-400') ?></span>
                                         <strong data-i18n="No shipments match these filters">No shipments match these filters</strong>
@@ -346,6 +347,16 @@ include_template('header', ['page' => 'stock_list']);
                                     <div class="flex items-center gap-1.5 text-slate-500 font-mono mt-0.5">
                                         <span><?= format_datetime_myanmar($item['updated_at'], 'time') ?></span>
                                         <span class="text-[10px] px-1.5 py-0.2 bg-slate-100 rounded text-slate-600 font-sans"><?= format_datetime_myanmar($item['updated_at'], 'relative') ?></span>
+                                    </div>
+                                </td>
+                                <td class="text-right">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <a href="index.php?page=voucher_view&id=<?= (int)($item['voucher_id'] ?? 0) ?>" class="btn-ghost btn-sm" data-i18n="Details">
+                                            Details
+                                        </a>
+                                        <a href="voucher_print.php?id=<?= (int)($item['voucher_id'] ?? 0) ?>" target="_blank" rel="noopener noreferrer" class="btn-ghost btn-sm text-slate-600 hover:text-blue-600 p-2" title="Print Waybill" aria-label="Print Waybill">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>

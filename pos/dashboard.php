@@ -173,7 +173,8 @@ include_template('header', ['page' => 'dashboard']);
                                                 </div>
                                             </td>
                                             <td>
-                                                <strong class="text-main"><?= e($voucher['receiver_name']) ?></strong>
+                                                <strong class="text-main block"><?= e($voucher['receiver_name']) ?></strong>
+                                                <span class="text-[11px] text-slate-400 font-mono"><?= format_datetime_myanmar($voucher['created_at'], 'compact') ?> (<?= format_datetime_myanmar($voucher['created_at'], 'relative') ?>)</span>
                                             </td>
                                             <td class="font-mono font-bold text-main">
                                                 <span class="text-xs text-muted"><?= e($voucher['currency']) ?></span> <?= number_format($voucher['total_amount'], 2) ?>
@@ -182,9 +183,17 @@ include_template('header', ['page' => 'dashboard']);
                                                 <span class="v5-badge <?= $status_class ?>"><?= e($voucher['status']) ?></span>
                                             </td>
                                             <td class="text-right">
-                                                <a href="index.php?page=voucher_view&id=<?= (int)$voucher['id'] ?>" class="btn-ghost btn-sm" data-i18n="Details">
-                                                    Details
-                                                </a>
+                                                <div class="flex items-center justify-end gap-1.5">
+                                                    <a href="index.php?page=voucher_view&id=<?= (int)$voucher['id'] ?>" class="btn-ghost btn-sm" data-i18n="Details">
+                                                        Details
+                                                    </a>
+                                                    <a href="voucher_print.php?id=<?= (int)$voucher['id'] ?>" target="_blank" rel="noopener noreferrer" class="btn-ghost btn-sm text-slate-600 hover:text-blue-600 p-1.5" title="Print Waybill" aria-label="Print Waybill">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                                    </a>
+                                                    <a href="index.php?page=voucher_create&duplicate_id=<?= (int)$voucher['id'] ?>" class="btn-ghost btn-sm text-slate-600 hover:text-blue-600 p-1.5" title="Duplicate as New" aria-label="Duplicate as New">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect width="13" height="13" x="9" y="9" rx="2" ry="2" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-width="2"/></svg>
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

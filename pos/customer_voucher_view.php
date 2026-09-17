@@ -126,7 +126,12 @@ if ($voucher_id <= 0) {
                     <div class="divide-y divide-slate-100 rounded-xl bg-slate-50/80 border border-slate-200/80 overflow-hidden">
                         <div class="p-3.5 flex justify-between items-center text-sm">
                             <span class="text-slate-500 font-semibold" data-i18n="Voucher Code">Voucher Code</span>
-                            <span class="font-mono font-bold text-blue-600"><?= htmlspecialchars($voucher_data['voucher_code']) ?></span>
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono font-bold text-blue-600"><?= htmlspecialchars($voucher_data['voucher_code']) ?></span>
+                                <button type="button" id="copyCodeBtn" class="text-slate-400 hover:text-blue-600 transition-colors p-1 rounded-md hover:bg-slate-100" title="Copy voucher code" aria-label="Copy voucher code">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-width="2"/></svg>
+                                </button>
+                            </div>
                         </div>
                         <div class="p-3.5 flex justify-between items-center text-sm">
                             <span class="text-slate-500 font-semibold" data-i18n="Origin Point">Origin</span>
@@ -159,5 +164,15 @@ if ($voucher_id <= 0) {
             </p>
         </div>
     </div>
+    <script>
+    document.getElementById('copyCodeBtn')?.addEventListener('click', function() {
+        const code = <?= json_encode($voucher_data['voucher_code'] ?? '') ?>;
+        if (!code) return;
+        navigator.clipboard.writeText(code).then(() => {
+            this.classList.add('text-emerald-600');
+            setTimeout(() => this.classList.remove('text-emerald-600'), 2000);
+        });
+    });
+    </script>
 </body>
 </html>

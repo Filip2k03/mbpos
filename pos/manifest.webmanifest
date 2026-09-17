@@ -10,16 +10,34 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "assets/icons/mbpos.svg",
+      "src": "assets/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "assets/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "assets/icons/mbpos.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ],
   "shortcuts": [
@@ -28,14 +46,14 @@
       "short_name": "Create",
       "description": "Create a new delivery voucher",
       "url": "index.php?page=voucher_create",
-      "icons": [{ "src": "assets/icons/mbpos.svg", "sizes": "192x192" }]
+      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Voucher Ledger",
       "short_name": "Ledger",
       "description": "View and manage all vouchers",
       "url": "index.php?page=voucher_list",
-      "icons": [{ "src": "assets/icons/mbpos.svg", "sizes": "192x192" }]
+      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

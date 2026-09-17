@@ -1205,3 +1205,137 @@ html[lang="my"] button, html[lang="my"] input, html[lang="my"] select, html[lang
 html[data-language="mm"] button, html[data-language="mm"] input, html[data-language="mm"] select, html[data-language="mm"] textarea {
   line-height: 1.5;
 }
+
+/* =========================================================================
+   V5 Top Micro Loading Bar & App Splash Screen
+   ========================================================================= */
+#mbpos-top-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 3px;
+  background: linear-gradient(90deg, #0b6ff5, #00d2ff, #10b981);
+  box-shadow: 0 0 12px rgba(0, 210, 255, 0.75);
+  z-index: 100000;
+  transition: width 0.25s ease-out, opacity 0.3s ease;
+  pointer-events: none;
+  opacity: 0;
+}
+#mbpos-top-loader.is-loading {
+  opacity: 1;
+}
+
+/* App Splash Screen */
+.mbpos-splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, #0f172a 0%, #060b18 100%);
+  color: #ffffff;
+  padding: 1.5rem;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s;
+}
+.mbpos-splash-screen.is-loaded {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.mbpos-splash-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 390px;
+  width: 100%;
+}
+.mbpos-splash-logo {
+  width: 76px;
+  height: 76px;
+  border-radius: 20px;
+  box-shadow: 0 0 35px rgba(11, 111, 245, 0.45);
+  margin-bottom: 1.25rem;
+  animation: mbposPulse 2s infinite ease-in-out;
+}
+@keyframes mbposPulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(11, 111, 245, 0.5)); }
+  50% { transform: scale(1.04); filter: drop-shadow(0 0 25px rgba(19, 183, 232, 0.8)); }
+}
+.mbpos-splash-title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: #f8fafc;
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.mbpos-splash-badge {
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(14, 165, 233, 0.18);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  margin-bottom: 1.5rem;
+}
+.mbpos-splash-progress-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 0.85rem;
+  position: relative;
+}
+.mbpos-splash-progress-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 0%;
+  background: linear-gradient(90deg, #0b6ff5, #38bdf8, #06b6d4);
+  border-radius: 999px;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
+  transition: width 0.3s ease-out;
+}
+.mbpos-splash-status {
+  font-size: 0.76rem;
+  color: #94a3b8;
+  font-weight: 600;
+  margin-bottom: 2rem;
+}
+.mbpos-splash-credit {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 1.25rem;
+  width: 100%;
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.mbpos-splash-credit a {
+  color: #38bdf8;
+  text-decoration: none;
+  font-weight: 700;
+  transition: color 0.15s ease;
+}
+.mbpos-splash-credit a:hover {
+  color: #7dd3fc;
+  text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mbpos-splash-logo { animation: none; }
+  .mbpos-splash-screen { transition: none; }
+  .mbpos-splash-progress-bar { transition: none; }
+  #mbpos-top-loader { transition: none; }
+}

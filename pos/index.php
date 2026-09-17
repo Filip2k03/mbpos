@@ -119,6 +119,7 @@ switch ($page) {
         break;
     case 'customer_register':
     case 'customer_list':
+    case 'ajax_search_customers':
         flash_message('info', 'Customer management screens have been retired in POS V5. Voucher entry uses manual New Sender and New Receiver fields.');
         redirect('index.php?page=dashboard');
         break;
@@ -127,9 +128,6 @@ switch ($page) {
         break;
     case 'maintenance':
         include 'maintenance.php';
-        break;
-    case 'ajax_search_customers':
-        include 'ajax_search_customers.php';
         break;
     default:
         // Optional: A 404 page

@@ -619,7 +619,9 @@ document.addEventListener('DOMContentLoaded', function () {
         "Currency code": "ငွေကြေး သင်္ကေတ",
         "Currency name": "ငွေကြေး အမည်",
         "Service name": "ဝန်ဆောင်မှု အမည်",
-        "Category name": "အမျိုးအစား အမည်"
+        "Category name": "အမျိုးအစား အမည်",
+        "Initializing secure logistics workspace...": "လုံခြုံသော ပို့ဆောင်ရေးစနစ်ကို စတင်ပြင်ဆင်နေပါသည်...",
+        "Independent Architecture & Engineering by": "လွတ်လပ်သော ဗိသုကာနှင့် အင်ဂျင်နီယာ ရေးဆွဲမှု -"
     };
 
     const english = Object.keys(translations).reduce((map, key) => {
@@ -996,6 +998,76 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 alert(msg);
             }
+        }
+    });
+
+    // =========================================================================
+    // V5 Global Micro Loading Bar & Tactile Feedback
+    // =========================================================================
+    let topLoaderTimer = null;
+    let currentLoaderPct = 0;
+
+    window.mbposLoader = {
+        start: function () {
+            const bar = document.getElementById('mbpos-top-loader');
+            if (!bar) return;
+            clearInterval(topLoaderTimer);
+            currentLoaderPct = 18;
+            bar.style.width = currentLoaderPct + '%';
+            bar.classList.add('is-loading');
+
+            topLoaderTimer = setInterval(function () {
+                if (currentLoaderPct < 85) {
+                    currentLoaderPct += Math.floor(Math.random() * 8) + 4;
+                    if (currentLoaderPct > 85) currentLoaderPct = 85;
+                    bar.style.width = currentLoaderPct + '%';
+                }
+            }, 80);
+        },
+        set: function (pct) {
+            const bar = document.getElementById('mbpos-top-loader');
+            if (!bar) return;
+            currentLoaderPct = Math.min(100, Math.max(0, pct));
+            bar.style.width = currentLoaderPct + '%';
+        },
+        finish: function () {
+            const bar = document.getElementById('mbpos-top-loader');
+            if (!bar) return;
+            clearInterval(topLoaderTimer);
+            bar.style.width = '100%';
+            setTimeout(function () {
+                bar.classList.remove('is-loading');
+                setTimeout(function () {
+                    bar.style.width = '0%';
+                }, 300);
+            }, 180);
+        }
+    };
+
+    // Tactile Navigation Hook: Show instant loader feedback on internal page link clicks
+    document.addEventListener('click', function (e) {
+        const link = e.target.closest('a[href]');
+        if (!link) return;
+        const href = link.getAttribute('href');
+        if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:') || link.target === '_blank' || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+            return;
+        }
+        if (href.includes('index.php') || href.startsWith('?page=')) {
+            window.mbposLoader.start();
+        }
+    });
+
+    // Form Submit Hook: Trigger loader and prevent double submission
+    document.addEventListener('submit', function (e) {
+        const form = e.target;
+        if (!form || form.getAttribute('data-no-loader') === 'true') return;
+        window.mbposLoader.start();
+        const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+        if (submitBtn && !submitBtn.disabled) {
+            setTimeout(function () {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-75', 'cursor-wait');
+            }, 50);
         }
     });
 

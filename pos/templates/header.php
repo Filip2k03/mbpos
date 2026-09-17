@@ -175,7 +175,8 @@ $nav_groups = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title><?= htmlspecialchars($page_title, ENT_QUOTES, 'UTF-8') ?></title>
     <link rel="icon" type="image/svg+xml" href="assets/icons/mbpos.svg">
-    <link rel="apple-touch-icon" href="assets/icons/mbpos.svg">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
     <meta name="theme-color" content="#0b6ff5">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -191,6 +192,61 @@ $nav_groups = [
 </head>
 <body class="bg-gray-50/50 text-gray-800 antialiased font-sans mbpos-v5-shell <?= $is_voucher_workspace ? 'is-voucher-create' : '' ?>" data-current-page="<?= htmlspecialchars($current_page, ENT_QUOTES, 'UTF-8') ?>">
 <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:bg-blue-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:outline-none" data-i18n="Skip to main content">Skip to main content</a>
+
+<!-- V5 Top Micro Progress Line -->
+<div id="mbpos-top-loader" aria-hidden="true"></div>
+
+<!-- V5 App Splash Screen -->
+<div id="mbpos-app-splash" class="mbpos-splash-screen" role="dialog" aria-modal="true" aria-label="Loading Application" style="position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#060b18;color:#fff;">
+    <div class="mbpos-splash-card">
+        <img src="assets/icons/mbpos.svg" class="mbpos-splash-logo" alt="MBLOGISTICS Logo" width="76" height="76">
+        <h1 class="mbpos-splash-title">MBLOGISTICS POS</h1>
+        <div class="mbpos-splash-badge">V5.3.0 Enterprise</div>
+
+        <div class="mbpos-splash-progress-track">
+            <div id="mbpos-splash-bar" class="mbpos-splash-progress-bar"></div>
+        </div>
+        <p id="mbpos-splash-text" class="mbpos-splash-status" data-i18n="Initializing secure logistics workspace...">Initializing secure logistics workspace...</p>
+
+        <div class="mbpos-splash-credit">
+            <span>Independent Architecture & Engineering by <a href="https://thuyakyaw.com" target="_blank" rel="noopener noreferrer">Thuya Kyaw</a></span>
+        </div>
+    </div>
+</div>
+<script>
+(function(){
+    var splash = document.getElementById('mbpos-app-splash');
+    var bar = document.getElementById('mbpos-splash-bar');
+    if (!splash || !bar) return;
+    var isAppLaunch = !sessionStorage.getItem('mbpos_session_active');
+    sessionStorage.setItem('mbpos_session_active', '1');
+    var progress = 14;
+    bar.style.width = progress + '%';
+    var interval = setInterval(function() {
+        if (progress < 85) {
+            progress += Math.floor(Math.random() * 15) + 6;
+            if (progress > 85) progress = 85;
+            bar.style.width = progress + '%';
+        }
+    }, 35);
+    function completeSplash() {
+        clearInterval(interval);
+        bar.style.width = '100%';
+        setTimeout(function() {
+            splash.classList.add('is-loaded');
+            setTimeout(function() {
+                if (splash.parentNode) splash.parentNode.removeChild(splash);
+            }, 450);
+        }, isAppLaunch ? 320 : 120);
+    }
+    if (document.readyState === 'complete') {
+        completeSplash();
+    } else {
+        window.addEventListener('load', completeSplash);
+        setTimeout(completeSplash, isAppLaunch ? 800 : 350);
+    }
+})();
+</script>
 
 <div id="offline-status" class="offline-status" role="status" aria-live="polite" hidden>
     <span class="offline-status-dot" aria-hidden="true"></span>

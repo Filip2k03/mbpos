@@ -45,9 +45,9 @@ if ($voucher_id <= 0) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MBLOGISTICS V5 • Track Voucher <?= htmlspecialchars($voucher_data['voucher_code'] ?? '') ?></title>
-    <meta name="theme-color" content="#0b6ff5">
     <link rel="icon" type="image/svg+xml" href="assets/icons/mbpos.svg">
-    <link rel="apple-touch-icon" href="assets/icons/mbpos.svg">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="assets/css/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -150,8 +150,13 @@ if ($voucher_id <= 0) {
             </div>
         <?php endif; ?>
 
-        <div class="text-center mt-6 text-xs font-semibold text-slate-400">
+        <div class="text-center mt-6 text-xs font-semibold text-slate-400 space-y-1">
             <p>&copy; <?= date('Y') ?> MBLOGISTICS POS V5 · All rights reserved.</p>
+            <p class="text-[11px] text-slate-400">
+                <span>Powered by <a href="https://payvia.asia" target="_blank" rel="noopener noreferrer" class="hover:text-blue-500 font-bold">Payvia.asia</a></span>
+                <span>&bull;</span>
+                <span>Engineered by <a href="https://thuyakyaw.com" target="_blank" rel="noopener noreferrer" class="hover:text-blue-500 font-bold" title="Thuya Kyaw — Lead Software Engineer & Architect">Thuya Kyaw</a></span>
+            </p>
         </div>
     </div>
 </body>

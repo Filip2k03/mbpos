@@ -1,9 +1,14 @@
-const CACHE_NAME = 'mbpos-v5-shell-2026-09-17-r14';
+const CACHE_NAME = 'mbpos-v5-shell-2026-09-17-r15';
 const APP_SHELL = [
   './offline.html',
   './assets/css/style.css',
   './assets/js/main.js',
   './assets/icons/mbpos.svg',
+  './assets/icons/icon-192.png',
+  './assets/icons/icon-512.png',
+  './assets/icons/icon-maskable-192.png',
+  './assets/icons/icon-maskable-512.png',
+  './assets/icons/apple-touch-icon.png',
   './manifest.webmanifest'
 ];
 

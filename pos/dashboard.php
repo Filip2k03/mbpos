@@ -163,9 +163,14 @@ include_template('header', ['page' => 'dashboard']);
                                     ?>
                                         <tr>
                                             <td>
-                                                <a class="font-mono font-bold text-primary hover:underline" href="index.php?page=voucher_view&id=<?= (int)$voucher['id'] ?>">
-                                                    <?= e($voucher['voucher_code']) ?>
-                                                </a>
+                                                <div class="flex items-center gap-2">
+                                                    <a class="font-mono font-bold text-primary hover:underline tracking-tight" href="index.php?page=voucher_view&id=<?= (int)$voucher['id'] ?>">
+                                                        <?= e($voucher['voucher_code']) ?>
+                                                    </a>
+                                                    <button type="button" class="text-slate-400 hover:text-blue-600 transition-colors p-1 rounded-md hover:bg-slate-100" title="Copy voucher code" data-copy="<?= e($voucher['voucher_code']) ?>" aria-label="Copy voucher code">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-width="2"/></svg>
+                                                    </button>
+                                                </div>
                                             </td>
                                             <td>
                                                 <strong class="text-main"><?= e($voucher['receiver_name']) ?></strong>
@@ -255,7 +260,7 @@ include_template('header', ['page' => 'dashboard']);
             </div>
 
             <div class="mt-5 text-center">
-                 <p class="text-xs font-medium text-slate-400">Lead Engineer & Architect: <a href="https://thuyakyaw.com" target="_blank" rel="noopener noreferrer" class="text-primary font-semibold hover:underline" title="Thuya Kyaw — Lead Software Engineer & Architect">Thuya Kyaw</a></p>
+                 <p class="text-xs font-medium text-slate-400">Freelance Project Developed by <a href="https://thuyakyaw.com" target="_blank" rel="noopener noreferrer" class="text-primary font-bold hover:underline" title="Thuya Kyaw — Lead Software Engineer & Architect">thuyakyaw.com</a></p>
             </div>
         </div>
     </div>

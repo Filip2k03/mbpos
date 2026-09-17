@@ -330,6 +330,8 @@ document.addEventListener('DOMContentLoaded', function () {
         // Data Fields
         "Voucher Code": "ဘောက်ချာကုဒ်",
         "Tracking Number": "ခြေရာခံနံပါတ်",
+        "Tracking Code": "ခြေရာခံကုဒ်",
+        "Created At": "ဖန်တီးချိန်",
         "Sender": "ပို့သူ",
         "Receiver": "လက်ခံသူ",
         "Destination": "ခရီးဆုံး",
@@ -341,6 +343,19 @@ document.addEventListener('DOMContentLoaded', function () {
         "Category": "အမျိုးအစား",
         "Price": "ဈေးနှုန်း",
         "Price / Kg": "၁ ကီလိုဈေးနှုန်း",
+        "Cargo Breakdown & Pricing": "ကုန်စည် အမျိုးအမည်နှင့် ဈေးနှုန်းတွက်ချက်မှု",
+        "Cargo / Item Type": "ကုန်စည် / ပစ္စည်းအမျိုးအစား",
+        "Rate / Price": "နှုန်းထား / ဈေးနှုန်း",
+        "Line Total": "ကျသင့်ငွေ",
+        "Items Subtotal": "ပစ္စည်းများကျသင့်ငွေပေါင်း",
+        "Delivery Charge": "ပို့ဆောင်ခ",
+        "Grand Total Due": "ကျသင့်ငွေစုစုပေါင်း",
+        "Consignment Summary": "ကုန်ပစ္စည်း အကျဉ်းချုပ်",
+        "Total Weight:": "စုစုပေါင်း အလေးချိန် -",
+        "Delivery Type:": "ပို့ဆောင်မှု အမျိုးအစား -",
+        "Total Amount:": "စုစုပေါင်း ကျသင့်ငွေ -",
+        "Freelance project developed by": "ဖန်တီးသူ (Freelance Developer)",
+        "item(s)": "ခု",
 
         // Finance & Reports
         "Revenue": "ဝင်ငွေ",

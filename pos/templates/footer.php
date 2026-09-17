@@ -49,10 +49,10 @@ $page = $_GET['page'] ?? ($page ?? 'home'); // fallback page name
 
             <!-- Right: Developer Signature -->
             <div class="flex items-center gap-2 mt-2 md:mt-0">
-                <span data-i18n="Engineered by" class="text-xs font-medium text-slate-400">Engineered by</span>
-                <a href="https://thuyakyaw.com" target="_blank" rel="noopener noreferrer" class="group flex items-center gap-2 bg-slate-900 px-3.5 py-2 rounded-xl hover:shadow-[0_0_18px_rgba(14,165,233,0.35)] transition-all hover:-translate-y-0.5 border border-slate-800" title="Thuya Kyaw — Lead Software Engineer & Architect">
+                <span data-i18n="Freelance project developed by" class="text-xs font-medium text-slate-400">Freelance project developed by</span>
+                <a href="https://thuyakyaw.com" target="_blank" rel="noopener noreferrer" class="group flex items-center gap-2 bg-slate-900 px-3.5 py-2 rounded-xl hover:shadow-[0_0_18px_rgba(14,165,233,0.35)] transition-all hover:-translate-y-0.5 border border-slate-800" title="Thuya Kyaw — Lead Software Engineer & Architect (thuyakyaw.com)">
                     <div class="w-2 h-2 rounded-full bg-cyan-400 group-hover:animate-ping shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
-                    <span class="text-xs font-bold text-white tracking-wide">Thuya Kyaw</span>
+                    <span class="text-xs font-bold text-white tracking-wide">thuyakyaw.com</span>
                 </a>
             </div>
             

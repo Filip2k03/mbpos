@@ -201,7 +201,7 @@ $nav_groups = [
     <div class="mbpos-splash-card">
         <img src="assets/icons/mbpos.svg" class="mbpos-splash-logo" alt="MBLOGISTICS Logo" width="76" height="76">
         <h1 class="mbpos-splash-title">MBLOGISTICS POS</h1>
-        <div class="mbpos-splash-badge">V5.3.0 Enterprise</div>
+        <div class="mbpos-splash-badge"><?= defined('APP_VERSION') ? 'V' . htmlspecialchars(APP_VERSION, ENT_QUOTES, 'UTF-8') . ' Enterprise' : 'V5 Enterprise' ?></div>
 
         <div class="mbpos-splash-progress-track">
             <div id="mbpos-splash-bar" class="mbpos-splash-progress-bar"></div>
@@ -209,7 +209,7 @@ $nav_groups = [
         <p id="mbpos-splash-text" class="mbpos-splash-status" data-i18n="Initializing secure logistics workspace...">Initializing secure logistics workspace...</p>
 
         <div class="mbpos-splash-credit">
-            <span>Independent Architecture & Engineering by <a href="https://thuyakyaw.com" target="_blank" rel="noopener noreferrer">Thuya Kyaw</a></span>
+            <span>Freelance Project Developed by <a href="https://thuyakyaw.com" target="_blank" rel="noopener noreferrer">thuyakyaw.com</a> · <a href="https://payvia.asia" target="_blank" rel="noopener noreferrer">Payvia.asia</a> &amp; <a href="https://payvia.cloud" target="_blank" rel="noopener noreferrer">Payvia.cloud</a></span>
         </div>
     </div>
 </div>

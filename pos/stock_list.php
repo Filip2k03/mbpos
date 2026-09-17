@@ -322,9 +322,14 @@ include_template('header', ['page' => 'stock_list']);
                                     </td>
                                 <?php endif; ?>
                                 <td>
-                                    <a class="font-mono font-bold text-primary hover:underline" href="index.php?page=voucher_view&id=<?= (int)($item['voucher_id'] ?? 0) ?>">
-                                        <?= e($item['voucher_code']) ?>
-                                    </a>
+                                    <div class="flex items-center gap-2">
+                                        <a class="font-mono font-bold text-primary hover:underline tracking-tight" href="index.php?page=voucher_view&id=<?= (int)($item['voucher_id'] ?? 0) ?>">
+                                            <?= e($item['voucher_code']) ?>
+                                        </a>
+                                        <button type="button" class="text-slate-400 hover:text-blue-600 transition-colors p-1 rounded-md hover:bg-slate-100" title="Copy voucher code" data-copy="<?= e($item['voucher_code']) ?>" aria-label="Copy voucher code">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-width="2"/></svg>
+                                        </button>
+                                    </div>
                                 </td>
                                 <td>
                                     <strong><?= e($item['sender_name']) ?></strong>
@@ -336,8 +341,12 @@ include_template('header', ['page' => 'stock_list']);
                                 <td>
                                     <span class="v5-badge <?= $status_class ?>"><?= e($item['status']) ?></span>
                                 </td>
-                                <td class="text-xs text-muted font-mono">
-                                    <?= date('M j, Y · H:i', strtotime($item['updated_at'])) ?>
+                                <td class="text-xs text-muted font-mono whitespace-nowrap">
+                                    <strong class="text-slate-800 font-mono block"><?= format_datetime_myanmar($item['updated_at'], 'date') ?></strong>
+                                    <div class="flex items-center gap-1.5 text-slate-500 font-mono mt-0.5">
+                                        <span><?= format_datetime_myanmar($item['updated_at'], 'time') ?></span>
+                                        <span class="text-[10px] px-1.5 py-0.2 bg-slate-100 rounded text-slate-600 font-sans"><?= format_datetime_myanmar($item['updated_at'], 'relative') ?></span>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; endif; ?>

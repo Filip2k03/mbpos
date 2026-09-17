@@ -58,6 +58,21 @@ if (!$voucher) {
     redirect('index.php?page=voucher_list');
 }
 
+// Fetch Item Breakdown Rows
+$breakdown_items = [];
+$stmt_items = mysqli_prepare($connection, "SELECT * FROM voucher_breakdowns WHERE voucher_id = ? ORDER BY id ASC");
+if ($stmt_items) {
+    mysqli_stmt_bind_param($stmt_items, 'i', $voucher_id);
+    mysqli_stmt_execute($stmt_items);
+    $res_items = mysqli_stmt_get_result($stmt_items);
+    if ($res_items) {
+        while ($item_row = mysqli_fetch_assoc($res_items)) {
+            $breakdown_items[] = $item_row;
+        }
+    }
+    mysqli_stmt_close($stmt_items);
+}
+
 // --- Handle POST request for status/notes update ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf_request();
@@ -173,19 +188,35 @@ include_template('header', ['page' => 'voucher_view']);
             <!-- Tracking Header -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 pb-8 border-b border-gray-100 gap-6">
                 <div class="flex items-center gap-5">
-                    <div class="w-16 h-16 rounded-2xl flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/30 text-white">
+                    <div class="w-16 h-16 rounded-2xl flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/30 text-white shrink-0">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     </div>
                     <div>
-                        <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight" data-i18n="Voucher Details">Voucher Details</h2>
-                        <p class="text-gray-500 font-medium mt-1"><span data-i18n="Issued by">Issued by</span> <span class="font-bold text-gray-700"><?= htmlspecialchars($voucher['created_by_username'] ?? 'System', ENT_QUOTES, 'UTF-8') ?></span></p>
+                        <div class="flex flex-wrap items-center gap-2 mb-1">
+                            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight" data-i18n="Voucher Details">Voucher Details</h2>
+                            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                                <?= e($voucher['delivery_type'] ?? 'Standard') ?>
+                            </span>
+                        </div>
+                        <p class="text-gray-500 font-medium text-sm flex flex-wrap items-center gap-2">
+                            <span><span data-i18n="Issued by">Issued by</span> <strong class="text-gray-800"><?= htmlspecialchars($voucher['created_by_username'] ?? 'System', ENT_QUOTES, 'UTF-8') ?></strong> (<?= e($voucher['origin_branch_name'] ?? 'N/A') ?>)</span>
+                            <span class="text-gray-300">•</span>
+                            <span class="font-mono text-slate-700 bg-slate-100 px-2 py-0.5 rounded text-xs"><?= format_datetime_myanmar($voucher['created_at'], 'full') ?></span>
+                            <span class="text-xs font-semibold text-slate-500">(<?= format_datetime_myanmar($voucher['created_at'], 'relative') ?>)</span>
+                        </p>
                     </div>
                 </div>
                 <div class="text-left md:text-right flex flex-col md:items-end">
-                    <p class="font-mono text-2xl font-bold text-indigo-600 bg-indigo-50 px-4 py-1.5 rounded-xl border border-indigo-100 inline-block mb-2 tracking-wider">
-                        #<?= htmlspecialchars($voucher['voucher_code'], ENT_QUOTES, 'UTF-8') ?>
-                    </p>
+                    <div class="flex items-center gap-2 mb-2">
+                        <p class="font-mono text-2xl font-bold text-indigo-600 bg-indigo-50 px-4 py-1.5 rounded-xl border border-indigo-100 tracking-wider">
+                            #<?= htmlspecialchars($voucher['voucher_code'], ENT_QUOTES, 'UTF-8') ?>
+                        </p>
+                        <button type="button" class="p-2.5 bg-slate-100 hover:bg-indigo-50 text-slate-500 hover:text-indigo-600 rounded-xl transition-all border border-slate-200 hover:border-indigo-200" title="Copy voucher code" data-copy="<?= e($voucher['voucher_code']) ?>" aria-label="Copy voucher code">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-width="2"/></svg>
+                        </button>
+                    </div>
                     <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold border <?= $statusClass ?> shadow-sm">
+                        <span class="w-2 h-2 rounded-full bg-current mr-2"></span>
                         <?= htmlspecialchars($voucher['status'], ENT_QUOTES, 'UTF-8') ?>
                     </span>
                 </div>
@@ -262,6 +293,92 @@ include_template('header', ['page' => 'voucher_view']);
                             <p class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-1" data-i18n="Total Due">Total Due</p>
                             <p class="font-extrabold text-indigo-700 text-lg"><?= htmlspecialchars($voucher['currency'], ENT_QUOTES, 'UTF-8') ?> <?= number_format($voucher['total_amount'], 2) ?></p>
                         </div>
+                    </div>
+
+                    <!-- Cargo Items Breakdown & Pricing -->
+                    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                        <div class="flex items-center justify-between border-b border-gray-100 pb-4 mb-6">
+                            <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                </div>
+                                <span data-i18n="Cargo Breakdown & Pricing">Cargo Breakdown & Pricing</span>
+                            </h3>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                <?= count($breakdown_items) ?> <span data-i18n="item(s)">item(s)</span>
+                            </span>
+                        </div>
+
+                        <?php if (!empty($breakdown_items)): ?>
+                            <div class="overflow-x-auto rounded-2xl border border-gray-100">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-gray-50/80 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                                        <tr>
+                                            <th class="py-3.5 px-4" data-i18n="Cargo / Item Type">Cargo / Item Type</th>
+                                            <th class="py-3.5 px-4 text-right" data-i18n="Weight (kg)">Weight (kg)</th>
+                                            <th class="py-3.5 px-4 text-right" data-i18n="Rate / Price">Rate / Price</th>
+                                            <th class="py-3.5 px-4 text-right" data-i18n="Line Total">Line Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100 text-gray-700 font-medium">
+                                        <?php
+                                        $items_subtotal = 0;
+                                        foreach ($breakdown_items as $item):
+                                            $line_total = (float)$item['kg'] * (float)$item['price_per_kg'];
+                                            $items_subtotal += $line_total;
+                                        ?>
+                                            <tr class="hover:bg-gray-50/50 transition-colors">
+                                                <td class="py-3 px-4 font-semibold text-gray-900 flex items-center gap-2">
+                                                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                                                    <?= htmlspecialchars($item['item_type'], ENT_QUOTES, 'UTF-8') ?>
+                                                </td>
+                                                <td class="py-3 px-4 text-right tabular-nums">
+                                                    <?= number_format((float)$item['kg'], 2) ?> <span class="text-xs text-gray-400">kg</span>
+                                                </td>
+                                                <td class="py-3 px-4 text-right tabular-nums">
+                                                    <?= htmlspecialchars($voucher['currency'], ENT_QUOTES, 'UTF-8') ?> <?= number_format((float)$item['price_per_kg'], 2) ?>
+                                                </td>
+                                                <td class="py-3 px-4 text-right font-bold text-gray-900 tabular-nums">
+                                                    <?= htmlspecialchars($voucher['currency'], ENT_QUOTES, 'UTF-8') ?> <?= number_format($line_total, 2) ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                    <tfoot class="bg-gray-50/90 font-medium text-xs text-gray-600 border-t border-gray-200">
+                                        <tr>
+                                            <td colspan="3" class="py-2.5 px-4 text-right font-bold text-gray-500 uppercase tracking-wider" data-i18n="Items Subtotal">Items Subtotal</td>
+                                            <td class="py-2.5 px-4 text-right font-bold text-gray-900 tabular-nums text-sm">
+                                                <?= htmlspecialchars($voucher['currency'], ENT_QUOTES, 'UTF-8') ?> <?= number_format($items_subtotal, 2) ?>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3" class="py-2 px-4 text-right font-bold text-gray-500 uppercase tracking-wider" data-i18n="Delivery Charge">Delivery Charge</td>
+                                            <td class="py-2 px-4 text-right font-semibold text-gray-700 tabular-nums text-sm">
+                                                <?= htmlspecialchars($voucher['currency'], ENT_QUOTES, 'UTF-8') ?> <?= number_format((float)$voucher['delivery_charge'], 2) ?>
+                                            </td>
+                                        </tr>
+                                        <tr class="bg-indigo-50/60 text-indigo-900 font-extrabold text-sm border-t border-indigo-100">
+                                            <td colspan="3" class="py-3.5 px-4 text-right uppercase tracking-wider text-xs text-indigo-700" data-i18n="Grand Total Due">Grand Total Due</td>
+                                            <td class="py-3.5 px-4 text-right font-black text-indigo-700 text-base tabular-nums">
+                                                <?= htmlspecialchars($voucher['currency'], ENT_QUOTES, 'UTF-8') ?> <?= number_format((float)$voucher['total_amount'], 2) ?>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 p-6 text-center">
+                                <p class="text-sm font-semibold text-gray-700" data-i18n="Consignment Summary">Consignment Summary</p>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <span data-i18n="Total Weight:">Total Weight:</span> <strong><?= number_format((float)$voucher['weight_kg'], 2) ?> kg</strong> |
+                                    <span data-i18n="Delivery Type:">Delivery Type:</span> <strong><?= htmlspecialchars($voucher['delivery_type'] ?? 'Standard', ENT_QUOTES, 'UTF-8') ?></strong>
+                                </p>
+                                <div class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl font-bold text-sm">
+                                    <span data-i18n="Total Amount:">Total Amount:</span> <?= htmlspecialchars($voucher['currency'], ENT_QUOTES, 'UTF-8') ?> <?= number_format((float)$voucher['total_amount'], 2) ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Conversation / Notes Timeline -->

@@ -225,4 +225,31 @@ function mbpos_icon($name, $class = 'w-5 h-5') {
     ];
     return $icons[$name] ?? '<span class="' . $class_attr . '">•</span>';
 }
+
+/**
+ * Standardized date and time formatting for Myanmar operations (GMT+6:30).
+ * @param string|null $datetime Database timestamp (e.g. YYYY-MM-DD HH:MM:SS)
+ * @param string $format Output format ('full', 'date', 'time', 'relative', 'compact')
+ * @return string Formatted string
+ */
+function format_datetime_myanmar($datetime, $format = 'full') {
+    if (empty($datetime)) return 'N/A';
+    $ts = strtotime($datetime);
+    if (!$ts) return 'N/A';
+
+    return match($format) {
+        'date' => date('Y-m-d', $ts),
+        'time' => date('h:i A', $ts),
+        'compact' => date('d M Y, h:i A', $ts),
+        'relative' => (function() use ($ts) {
+            $diff = time() - $ts;
+            if ($diff < 60) return 'Just now';
+            if ($diff < 3600) return floor($diff / 60) . ' mins ago';
+            if ($diff < 86400) return floor($diff / 3600) . ' hours ago';
+            if ($diff < 172800) return 'Yesterday';
+            return date('M d, Y', $ts);
+        })(),
+        default => date('F j, Y · h:i A', $ts) . ' (GMT+6:30)'
+    };
+}
 ?>

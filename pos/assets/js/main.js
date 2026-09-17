@@ -943,6 +943,22 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    document.addEventListener('click', function (e) {
+        if (!isFormDirty || isFormSubmitting) return;
+        const link = e.target.closest('a[href]');
+        if (!link) return;
+        const href = link.getAttribute('href');
+        if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+
+        const confirmMsg = currentLanguage() === 'mm'
+            ? 'ရေးသွင်းထားသော ဘောက်ချာအချက်အလက်များ မသိမ်းဆည်းရသေးပါ။ ထွက်ခွာရန် သေချာပါသလား?'
+            : 'You have unsaved voucher information. Are you sure you want to leave this page?';
+        if (!window.confirm(confirmMsg)) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        }
+    }, true);
+
     window.addEventListener('online', setOfflineState);
     window.addEventListener('offline', setOfflineState);
 
@@ -1068,6 +1084,85 @@ document.addEventListener('DOMContentLoaded', function () {
                 submitBtn.disabled = true;
                 submitBtn.classList.add('opacity-75', 'cursor-wait');
             }, 50);
+        }
+    });
+
+    // =========================================================================
+    // V5 1-Click Clipboard Copy Hook with Visual Toast Feedback
+    // =========================================================================
+    document.addEventListener('click', function (e) {
+        const copyBtn = e.target.closest('[data-copy]');
+        if (!copyBtn) return;
+        const textToCopy = copyBtn.getAttribute('data-copy');
+        if (!textToCopy) return;
+
+        function notifyCopied() {
+            const isMm = currentLanguage() === 'mm';
+            const msg = isMm ? textToCopy + ' ကို ကူးယူပြီးပါပြီ' : 'Copied ' + textToCopy + ' to clipboard';
+            if (typeof Toastify === 'function') {
+                Toastify({
+                    text: msg,
+                    duration: 2500,
+                    close: false,
+                    gravity: "bottom",
+                    position: "right",
+                    style: {
+                        background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+                        color: "#fff",
+                        borderRadius: "10px",
+                        padding: "10px 16px",
+                        fontSize: "13px",
+                        fontWeight: "600",
+                        boxShadow: "0 10px 25px rgba(5, 150, 105, 0.3)"
+                    }
+                }).showToast();
+            }
+            copyBtn.classList.add('text-emerald-600', 'scale-110');
+            setTimeout(function () {
+                copyBtn.classList.remove('text-emerald-600', 'scale-110');
+            }, 600);
+        }
+
+        function fallbackCopy(text) {
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                notifyCopied();
+            } catch (err) {
+                console.warn('Copy failed', err);
+            }
+        }
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(textToCopy).then(notifyCopied).catch(function () {
+                fallbackCopy(textToCopy);
+            });
+        } else {
+            fallbackCopy(textToCopy);
+        }
+    });
+
+    // =========================================================================
+    // V5 Quick Keyboard Shortcuts Hook
+    // Ctrl+Enter or Cmd+Enter to submit active form
+    // =========================================================================
+    document.addEventListener('keydown', function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            const activeForm = document.querySelector('form[data-protect-unsaved="true"]');
+            if (activeForm) {
+                const submitBtn = activeForm.querySelector('button[type="submit"], input[type="submit"]');
+                if (submitBtn && !submitBtn.disabled) {
+                    e.preventDefault();
+                    submitBtn.click();
+                }
+            }
         }
     });
 

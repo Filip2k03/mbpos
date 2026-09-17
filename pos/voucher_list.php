@@ -232,6 +232,7 @@ include_template('header', ['page' => 'voucher_list']);
                     <thead>
                         <tr>
                             <th data-i18n="Tracking Code">Tracking Code</th>
+                            <th data-i18n="Created At">Created At</th>
                             <th data-i18n="Sender">Sender</th>
                             <th data-i18n="Receiver">Receiver</th>
                             <th data-i18n="Route">Route</th>
@@ -244,7 +245,7 @@ include_template('header', ['page' => 'voucher_list']);
                     <tbody>
                         <?php if (empty($vouchers)): ?>
                             <tr>
-                                <td colspan="8">
+                                <td colspan="9">
                                     <div class="v5-empty">
                                         <span class="v5-empty__icon"><?= mbpos_icon('vouchers', 'w-8 h-8 text-slate-400') ?></span>
                                         <strong data-i18n="No ledger records match your criteria.">No ledger records match your criteria.</strong>
@@ -264,30 +265,58 @@ include_template('header', ['page' => 'voucher_list']);
                             ?>
                                 <tr>
                                     <td>
-                                        <a class="font-mono font-bold text-primary hover:underline" href="index.php?page=voucher_view&id=<?= (int)$voucher['id'] ?>">
-                                            <?= e($voucher['voucher_code']) ?>
-                                        </a>
+                                        <div class="flex items-center gap-2">
+                                            <a class="font-mono font-bold text-primary hover:underline tracking-tight" href="index.php?page=voucher_view&id=<?= (int)$voucher['id'] ?>">
+                                                <?= e($voucher['voucher_code']) ?>
+                                            </a>
+                                            <button type="button" class="text-slate-400 hover:text-blue-600 transition-colors p-1 rounded-md hover:bg-slate-100" title="Copy voucher code" data-copy="<?= e($voucher['voucher_code']) ?>" aria-label="Copy voucher code">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-width="2"/></svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td class="text-xs whitespace-nowrap">
+                                        <strong class="text-slate-800 font-mono block"><?= format_datetime_myanmar($voucher['created_at'], 'date') ?></strong>
+                                        <div class="flex items-center gap-1.5 text-slate-500 font-mono mt-0.5">
+                                            <span><?= format_datetime_myanmar($voucher['created_at'], 'time') ?></span>
+                                            <span class="text-[10px] px-1.5 py-0.2 bg-slate-100 rounded text-slate-600 font-sans"><?= format_datetime_myanmar($voucher['created_at'], 'relative') ?></span>
+                                        </div>
                                     </td>
                                     <td><strong class="text-main"><?= e($voucher['sender_name']) ?></strong></td>
                                     <td><strong class="text-main"><?= e($voucher['receiver_name']) ?></strong></td>
                                     <td class="text-xs">
-                                        <div><strong><?= e($voucher['origin_region'] ?? 'N/A') ?></strong> <span class="text-muted">(<?= e($voucher['origin_branch'] ?? 'N/A') ?>)</span></div>
-                                        <div class="text-muted">→ <?= e($voucher['destination_region'] ?? 'N/A') ?> <span class="text-muted">(<?= e($voucher['destination_branch'] ?? 'N/A') ?>)</span></div>
+                                        <div class="flex items-center gap-1">
+                                            <strong class="text-slate-800"><?= e($voucher['origin_region'] ?? 'N/A') ?></strong>
+                                            <span class="text-slate-400">→</span>
+                                            <strong class="text-blue-700"><?= e($voucher['destination_region'] ?? 'N/A') ?></strong>
+                                        </div>
+                                        <div class="text-[11px] text-muted mt-0.5">
+                                            <span><?= e($voucher['origin_branch'] ?? 'N/A') ?></span>
+                                            <span class="text-slate-300">•</span>
+                                            <span><?= e($voucher['destination_branch'] ?? 'N/A') ?></span>
+                                        </div>
                                     </td>
-                                    <td class="font-mono font-bold text-main">
+                                    <td class="font-mono font-bold text-main whitespace-nowrap">
                                         <span class="text-xs text-muted"><?= e($voucher['currency']) ?></span> <?= number_format($voucher['total_amount'], 2) ?>
                                     </td>
                                     <td>
-                                        <span class="v5-badge <?= $status_class ?>"><?= e($voucher['status']) ?></span>
+                                        <span class="v5-badge <?= $status_class ?> flex items-center gap-1.5 w-fit">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                            <span><?= e($voucher['status']) ?></span>
+                                        </span>
                                     </td>
                                     <td class="text-xs text-muted">
-                                        <div><?= e($voucher['created_by_username'] ?? 'N/A') ?></div>
-                                        <div><?= e($voucher['creator_branch_name'] ?? 'System') ?></div>
+                                        <div class="font-medium text-slate-700"><?= e($voucher['created_by_username'] ?? 'N/A') ?></div>
+                                        <div class="text-[11px] text-slate-400"><?= e($voucher['creator_branch_name'] ?? 'System') ?></div>
                                     </td>
                                     <td class="text-right">
-                                        <a href="index.php?page=voucher_view&id=<?= (int)$voucher['id'] ?>" class="btn-ghost btn-sm" data-i18n="Details">
-                                            Details
-                                        </a>
+                                        <div class="flex items-center justify-end gap-1.5">
+                                            <a href="index.php?page=voucher_view&id=<?= (int)$voucher['id'] ?>" class="btn-ghost btn-sm" data-i18n="Details">
+                                                Details
+                                            </a>
+                                            <a href="voucher_print.php?id=<?= (int)$voucher['id'] ?>" target="_blank" rel="noopener noreferrer" class="btn-ghost btn-sm text-slate-600 hover:text-blue-600 p-2" title="Print Waybill" aria-label="Print Waybill">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

@@ -101,7 +101,10 @@ include_template('header', ['page' => 'notifications']);
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-semibold <?= $notification['is_read'] ? 'text-slate-700' : 'text-slate-900 font-bold' ?>"><?= htmlspecialchars($notification['message']) ?></p>
-                                <p class="text-[11px] font-medium text-slate-400 mt-1"><?= date('F j, Y · g:i A', strtotime($notification['created_at'])) ?> (GMT+6:30)</p>
+                                <p class="text-[11px] font-medium text-slate-400 mt-1 flex items-center gap-2">
+                                    <span><?= format_datetime_myanmar($notification['created_at'], 'date') ?> · <?= format_datetime_myanmar($notification['created_at'], 'time') ?></span>
+                                    <span class="text-[10px] px-1.5 py-0.2 bg-slate-100 rounded text-slate-600 font-sans"><?= format_datetime_myanmar($notification['created_at'], 'relative') ?></span>
+                                </p>
                             </div>
                             <?php if (!$notification['is_read']): ?>
                                 <span class="w-2 h-2 rounded-full bg-blue-500 mt-2 shrink-0"></span>

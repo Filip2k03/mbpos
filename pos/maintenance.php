@@ -19,6 +19,7 @@ $edit_category = null;
 
 // --- Handle POST Requests (Add/Update/Toggle/Delete) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    require_csrf_request();
     $id = intval($_POST['delete_id']);
     if ($id > 0) {
         $stmt = mysqli_prepare($connection, "DELETE FROM maintenance WHERE id = ?");
@@ -30,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf_request();
     // Toggle Status
     if (isset($_POST['toggle_id'])) {
         $id = intval($_POST['toggle_id']);

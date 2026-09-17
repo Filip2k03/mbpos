@@ -640,6 +640,57 @@ include_template('header', ['page' => 'voucher_create']);
   min-height: 96px;
   resize: vertical;
 }
+.voucher-create-page .field-head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+.voucher-create-page .notes-char-count {
+  font-size: 11px;
+  color: var(--vc-text-muted);
+  font-weight: 700;
+}
+.voucher-create-page .quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.voucher-create-page .chips-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--vc-text-muted);
+  margin-right: 2px;
+}
+.voucher-create-page .tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: 20px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  user-select: none;
+}
+.voucher-create-page .tag-chip:hover {
+  border-color: var(--vc-blue);
+  background: #eff6ff;
+  color: var(--vc-blue);
+  transform: translateY(-1px);
+}
+.voucher-create-page .tag-chip.active {
+  border-color: var(--vc-blue);
+  background: #0b6ff5;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(11, 111, 245, 0.28);
+}
 .voucher-create-page .required { color: var(--vc-red); }
 .voucher-create-page .secure-hint {
   display: flex;
@@ -776,19 +827,37 @@ include_template('header', ['page' => 'voucher_create']);
   background: #fff;
   box-shadow: 0 0 0 3px rgba(11, 111, 245, 0.12);
 }
-.voucher-create-page .remove {
-  width: 42px;
-  height: 42px;
-  display: grid;
+.voucher-create-page .row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.voucher-create-page .row-btn {
+  width: 38px;
+  height: 38px;
+  display: inline-grid;
   place-items: center;
+  border-radius: 10px;
+  transition: all 0.18s ease;
+  cursor: pointer;
+}
+.voucher-create-page .remove {
   border: 1px solid #fecaca;
   background: #fff5f5;
   color: var(--vc-red);
-  border-radius: 10px;
-  transition: all 0.18s ease;
 }
 .voucher-create-page .remove:hover {
   background: #fee2e2;
+  transform: scale(1.05);
+}
+.voucher-create-page .duplicate {
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: var(--vc-blue);
+}
+.voucher-create-page .duplicate:hover {
+  background: #dbeafe;
   transform: scale(1.05);
 }
 .voucher-create-page .add {
@@ -923,6 +992,28 @@ include_template('header', ['page' => 'voucher_create']);
 .voucher-create-page .secondary:hover {
   background: #f8fafc;
   border-color: #cbd5e1;
+}
+.voucher-create-page .tertiary-reset {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  border: 1px dashed #cbd5e1;
+  background: #f8fafc;
+  color: #64748b;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.voucher-create-page .tertiary-reset:hover {
+  border-color: #fca5a5;
+  background: #fef2f2;
+  color: #b91c1c;
 }
 .voucher-create-page .request-status {
   margin-top: 10px;
@@ -1579,8 +1670,19 @@ include_template('header', ['page' => 'voucher_create']);
                   </div>
 
                   <div class="field full">
-                    <label data-i18n="Operational Notes">Operational Notes</label>
+                    <div class="field-head-row">
+                      <label data-i18n="Operational Notes">Operational Notes</label>
+                      <span class="notes-char-count" id="notesCount">0 / 500</span>
+                    </div>
                     <textarea id="notes" name="notes" maxlength="500" placeholder="Operational notes (optional)..." data-i18n-placeholder="Operational notes (optional)..."><?= htmlspecialchars($duplicate_voucher['notes'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+                    <div class="quick-chips" aria-label="Quick handling tags">
+                      <span class="chips-label" data-i18n="Quick Tags:">Quick Tags:</span>
+                      <button type="button" class="tag-chip" data-tag="Fragile" data-i18n="Fragile">Fragile</button>
+                      <button type="button" class="tag-chip" data-tag="Keep Dry" data-i18n="Keep Dry">Keep Dry</button>
+                      <button type="button" class="tag-chip" data-tag="Handle With Care" data-i18n="Handle With Care">Handle With Care</button>
+                      <button type="button" class="tag-chip" data-tag="Do Not Bend" data-i18n="Do Not Bend">Do Not Bend</button>
+                      <button type="button" class="tag-chip" data-tag="Call Before Delivery" data-i18n="Call Before Delivery">Call Before Delivery</button>
+                    </div>
                   </div>
 
                 </div>
@@ -1600,7 +1702,7 @@ include_template('header', ['page' => 'voucher_create']);
                       <th data-i18n="Weight (kg)">Weight (kg)</th>
                       <th data-i18n="Price / kg">Price / kg</th>
                       <th data-i18n="Total" style="text-align:right">Total</th>
-                      <th style="width:60px;text-align:center" data-i18n="Action">Action</th>
+                      <th style="width:96px;text-align:center" data-i18n="Action">Action</th>
                     </tr>
                   </thead>
                   <tbody id="rows"></tbody>
@@ -1638,6 +1740,10 @@ include_template('header', ['page' => 'voucher_create']);
                 <button type="button" class="secondary" id="print">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:16px;height:16px"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                   <span data-i18n="Preview and Print Voucher">Preview / Print Voucher</span>
+                </button>
+                <button type="button" class="tertiary-reset" id="resetForm">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:15px;height:15px"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                  <span data-i18n="Reset Workspace">Reset Workspace</span>
                 </button>
               </div>
               <div id="requestStatus" class="request-status" role="status" aria-live="polite"></div>
@@ -1706,6 +1812,9 @@ include_template('header', ['page' => 'voucher_create']);
                 <div class="pbox full">
                   <span id="porigin">Select origin</span> · <span id="pregion">Select destination</span> · <span id="pbranch">Select branch</span><br>
                   <span id="pdelivery" style="font-weight:700;color:#0b6ff5">Select delivery type</span> · <span id="pcurrency" style="font-weight:700">Select currency</span>
+                </div>
+                <div class="pbox full" id="pnotesWrap" style="display:none;margin-top:6px">
+                  <b data-i18n="Operational Notes">Operational Notes</b>: <span id="pnotes"></span>
                 </div>
 
                 <h4 data-i18n="Item Breakdown">Item Breakdown</h4>
@@ -1804,11 +1913,23 @@ function addRow(data = {}) {
       <input class="price" name="item_price_per_kg[]" type="number" min="0" max="999999999" step="0.01" value="${priceVal}" placeholder="0.00" required inputmode="decimal" aria-label="${escapeHtml(t("Price / Kg"))}">
     </td>
     <td class="lineTotal" data-label="${escapeHtml(t("Total"))}" style="font-weight:800;color:#0f2238;text-align:right">0</td>
-    <td data-label="${escapeHtml(t("Action"))}" style="text-align:center"><button type="button" class="remove" title="${escapeHtml(t("Remove Item"))}" aria-label="${escapeHtml(t("Remove Item"))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:17px;height:17px"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15M10 10v7m4-7v7"/></svg></button></td>
+    <td data-label="${escapeHtml(t("Action"))}" style="text-align:center">
+      <div class="row-actions">
+        <button type="button" class="row-btn duplicate" title="${escapeHtml(t("Duplicate Row"))}" aria-label="${escapeHtml(t("Duplicate Row"))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:15px;height:15px"><rect width="13" height="13" x="9" y="9" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        <button type="button" class="row-btn remove" title="${escapeHtml(t("Remove Item"))}" aria-label="${escapeHtml(t("Remove Item"))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:15px;height:15px"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15M10 10v7m4-7v7"/></svg></button>
+      </div>
+    </td>
   `;
   byId("rows").appendChild(tr);
 
   tr.querySelectorAll("input,select").forEach(el => el.addEventListener("input", update));
+  tr.querySelector(".duplicate").onclick = () => {
+    const cat = tr.querySelector(".category").value;
+    const w = tr.querySelector(".weight").value;
+    const p = tr.querySelector(".price").value;
+    addRow({ category: cat, weight: w, price: p });
+    toast(t("Item row duplicated."));
+  };
   tr.querySelector(".remove").onclick = () => {
     if (document.querySelectorAll("#rows tr").length <= 1) {
       toast(t("Voucher requires at least one item."));
@@ -1872,6 +1993,19 @@ function update() {
   byId("pcurrency").textContent = currency || t("Select currency");
   const deliveryChecked = document.querySelector('input[name="delivery_type"]:checked');
   byId("pdelivery").textContent = deliveryChecked ? deliveryChecked.value : t("Select delivery type");
+
+  // Operational notes preview sync
+  const notesVal = safeText(byId("notes") ? byId("notes").value : "");
+  const pnotesWrap = byId("pnotesWrap");
+  if (pnotesWrap) {
+    if (notesVal) {
+      pnotesWrap.style.display = "block";
+      byId("pnotes").textContent = notesVal;
+    } else {
+      pnotesWrap.style.display = "none";
+      byId("pnotes").textContent = "";
+    }
+  }
 
   // Step state tracking
   updateSteps();
@@ -2005,13 +2139,102 @@ document.getElementById("voucher-form").addEventListener("submit", function(e) {
 byId("print").onclick = () => window.print();
 byId("print2").onclick = () => window.print();
 
+// Quick Cargo Tags & Character Counter
+function syncNotesChips() {
+  const notesEl = byId("notes");
+  if (!notesEl) return;
+  const notesVal = notesEl.value;
+  const counter = byId("notesCount");
+  if (counter) counter.textContent = `${notesVal.length} / 500`;
+  document.querySelectorAll(".tag-chip").forEach(chip => {
+    const tag = chip.dataset.tag;
+    const active = notesVal.toLowerCase().includes(tag.toLowerCase());
+    chip.classList.toggle("active", active);
+    chip.setAttribute("aria-pressed", active ? "true" : "false");
+  });
+}
+
+document.querySelectorAll(".tag-chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    const tag = chip.dataset.tag;
+    const notesEl = byId("notes");
+    if (!notesEl) return;
+    let notes = notesEl.value.trim();
+    const regex = new RegExp(`(^|\\s*\\|\\s*|\\s*,\\s*)${tag.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}(\\s*\\|\\s*|\\s*,\\s*|$)`, "i");
+    if (regex.test(notes)) {
+      notes = notes.replace(regex, " ").replace(/\\s*\\|\\s*\\|/g, " | ").trim();
+      if (notes.startsWith("|")) notes = notes.slice(1).trim();
+      if (notes.endsWith("|")) notes = notes.slice(0, -1).trim();
+    } else {
+      notes = notes ? `${notes} | ${tag}` : tag;
+    }
+    if (notes.length <= 500) {
+      notesEl.value = notes;
+      syncNotesChips();
+      update();
+    } else {
+      toast(t("Operational notes limit reached."));
+    }
+  });
+});
+
+// Phone number live sanitizer
+function sanitizePhone(input) {
+  if (!input) return;
+  const original = input.value;
+  const cleaned = original.replace(/[^\d+\-\s]/g, "");
+  if (original !== cleaned) {
+    input.value = cleaned;
+  }
+}
+
+// Reset workspace action
+const resetBtn = byId("resetForm");
+if (resetBtn) {
+  resetBtn.addEventListener("click", () => {
+    if (!confirm(t("Are you sure you want to reset the form? All entered details will be cleared."))) {
+      return;
+    }
+    byId("voucher-form").reset();
+    byId("currency_input").value = "";
+    currency = "";
+    document.querySelectorAll("[data-currency]").forEach(b => {
+      b.classList.remove("active");
+      b.setAttribute("aria-pressed", "false");
+    });
+    byId("branch").innerHTML = `<option value="">${escapeHtml(t("Select region first"))}</option>`;
+    byId("rows").innerHTML = "";
+    addRow();
+    syncNotesChips();
+    update();
+    toast(t("Form reset to blank."));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+}
+
 // Setup Event Listeners
 byId("addRow").addEventListener("click", () => addRow());
 byId("extra").addEventListener("input", update);
-["sender", "senderPhone", "receiver", "receiverPhone", "address", "notes", "origin"].forEach(id => {
+["sender", "receiver", "address", "origin"].forEach(id => {
   const el = byId(id);
   if (el) el.addEventListener("input", update);
 });
+["senderPhone", "receiverPhone"].forEach(id => {
+  const el = byId(id);
+  if (el) {
+    el.addEventListener("input", () => {
+      sanitizePhone(el);
+      update();
+    });
+  }
+});
+const notesEl = byId("notes");
+if (notesEl) {
+  notesEl.addEventListener("input", () => {
+    syncNotesChips();
+    update();
+  });
+}
 
 byId("region").addEventListener("change", function() {
   loadBranches(this.value);
@@ -2041,13 +2264,24 @@ document.addEventListener("mbpos:languagechange", () => {
     const labels = ["Item", "Item Category", "Weight (kg)", "Price / Kg", "Total", "Action"];
     tr.querySelectorAll("td").forEach((cell, index) => cell.dataset.label = t(labels[index]));
     const category = tr.querySelector(".category");
-    category.setAttribute("aria-label", t("Item Category"));
-    category.options[0].textContent = t("Select category");
-    tr.querySelector(".weight").setAttribute("aria-label", t("Weight (kg)"));
-    tr.querySelector(".price").setAttribute("aria-label", t("Price / Kg"));
+    if (category) {
+      category.setAttribute("aria-label", t("Item Category"));
+      if (category.options[0]) category.options[0].textContent = t("Select category");
+    }
+    const weight = tr.querySelector(".weight");
+    if (weight) weight.setAttribute("aria-label", t("Weight (kg)"));
+    const price = tr.querySelector(".price");
+    if (price) price.setAttribute("aria-label", t("Price / Kg"));
+    const duplicateBtn = tr.querySelector(".duplicate");
+    if (duplicateBtn) {
+      duplicateBtn.title = t("Duplicate Row");
+      duplicateBtn.setAttribute("aria-label", t("Duplicate Row"));
+    }
     const remove = tr.querySelector(".remove");
-    remove.title = t("Remove Item");
-    remove.setAttribute("aria-label", t("Remove Item"));
+    if (remove) {
+      remove.title = t("Remove Item");
+      remove.setAttribute("aria-label", t("Remove Item"));
+    }
   });
   update();
 });
@@ -2080,6 +2314,7 @@ if (duplicateItems && duplicateItems.length > 0) {
 } else {
   addRow();
 }
+syncNotesChips();
 update();
 </script>
 

@@ -228,7 +228,7 @@ include_template('header', ['page' => 'other_income']);
                             </tr>
                             <?php else: foreach ($incomes as $income): ?>
                             <tr>
-                                <td><?= date('M j, Y', strtotime($income['income_date'])) ?></td>
+                                <td><strong><?= htmlspecialchars(format_datetime_myanmar($income['income_date'], 'date')) ?></strong></td>
                                 <td><strong><?= htmlspecialchars($income['description'], ENT_QUOTES, 'UTF-8') ?></strong></td>
                                 <td>
                                     <span class="v5-badge" style="background:#edf6ff;color:#1675e8;">

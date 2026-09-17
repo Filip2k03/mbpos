@@ -200,7 +200,7 @@ include_template('header', ['page' => 'expenses']);
                         <?php foreach ($expenses as $expense): ?>
                             <tr>
                                 <td>
-                                    <strong><?= htmlspecialchars($expense['expense_date']) ?></strong>
+                                    <strong><?= htmlspecialchars(format_datetime_myanmar($expense['expense_date'], 'date')) ?></strong>
                                 </td>
                                 <td>
                                     <!-- ENT_QUOTES | UTF-8 prevents corruption of Myanmar encoding -->

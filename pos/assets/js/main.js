@@ -672,7 +672,23 @@ document.addEventListener('DOMContentLoaded', function () {
         "Call Receiver": "လက်ခံသူထံ ဖုန်းခေါ်မည်",
         "Copy Address": "လိပ်စာ ကူးယူရန်",
         "Address copied to clipboard": "လိပ်စာ ကူးယူပြီးပါပြီ",
-        "New item row added": "ကုန်ပစ္စည်း အတန်းအသစ် ထည့်ပြီးပါပြီ"
+        "New item row added": "ကုန်ပစ္စည်း အတန်းအသစ် ထည့်ပြီးပါပြီ",
+        "Ready": "အဆင်သင့်ဖြစ်ပြီ",
+        "entered": "ဖြည့်သွင်းပြီး",
+        "Configured": "သတ်မှတ်ပြီး",
+        "selected": "ရွေးချယ်ပြီး",
+        "Incomplete": "မပြည့်စုံသေးပါ",
+        "Verified": "စစ်ဆေးပြီး",
+        "In progress": "လုပ်ဆောင်နေဆဲ",
+        "Ready to Create": "ဘောက်ချာထုတ်ရန် အသင့်ဖြစ်ပြီ",
+        "Awaiting details": "အချက်အလက် စောင့်ဆိုင်းဆဲ",
+        "Voucher creation workflow": "ဘောက်ချာ ဖန်တီးမှု အဆင့်ဆင့်",
+        "Voucher creation progress": "ဘောက်ချာ ဖန်တီးမှု တိုးတက်မှု",
+        "0 items": "၀ ခု",
+        "add": "ထည့်ရန်",
+        "submit": "အတည်ပြုရန်",
+        "Quick Weight:": "အမြန် အလေးချိန်:",
+        "preset applied": "အလေးချိန် ထည့်သွင်းပြီးပါပြီ"
     };
 
     const english = Object.keys(translations).reduce((map, key) => {

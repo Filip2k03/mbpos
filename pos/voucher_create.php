@@ -518,49 +518,176 @@ include_template('header', ['page' => 'voucher_create']);
   backdrop-filter: blur(14px);
 }
 
-/* Steps */
+/* Live Interactive Stepper Component */
+.voucher-create-page .steps-container {
+  position: relative;
+  border: 1px solid var(--vc-line);
+  border-radius: var(--vc-radius);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+  backdrop-filter: blur(16px);
+  margin-bottom: 22px;
+  padding: 10px 14px;
+  overflow: hidden;
+}
+
+.voucher-create-page .steps-progress-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3.5px;
+  background: #edf2f7;
+  overflow: hidden;
+}
+
+.voucher-create-page .steps-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #0b6ff5, #10b981);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .voucher-create-page .steps {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 8px;
-  padding: 10px;
-  margin-bottom: 22px;
+  align-items: center;
+  position: relative;
+  z-index: 2;
 }
+
 .voucher-create-page .step {
-  text-align: center;
-  padding: 10px 8px;
-  color: #79899d;
-  font-size: 12px;
-  font-weight: 650;
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 8px 10px;
   border-radius: 12px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
   user-select: none;
-  transition: all 0.2s ease;
+}
+
+.voucher-create-page .step:hover {
+  background: rgba(241, 246, 251, 0.85);
+  border-color: #e2e8f0;
+}
+
+.voucher-create-page .step-num {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #e2e8f0;
+}
+
+.voucher-create-page .step-num .check-icon {
+  display: none;
+  width: 16px;
+  height: 16px;
+}
+
+.voucher-create-page .step-info {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 6px;
+  min-width: 0;
 }
-.voucher-create-page .step b {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #edf2f7;
-  color: #64748b;
+
+.voucher-create-page .step-title {
   font-size: 12px;
-  font-weight: 800;
-  transition: all 0.2s ease;
+  font-weight: 700;
+  color: #334155;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s ease;
 }
-.voucher-create-page .step.active {
-  background: var(--vc-blue-soft);
-  color: var(--vc-blue);
-  font-weight: 800;
+
+.voucher-create-page .step-status {
+  font-size: 10px;
+  font-weight: 600;
+  color: #94a3b8;
+  white-space: nowrap;
+  transition: color 0.2s ease;
 }
-.voucher-create-page .step.active b {
+
+/* Active / In-Progress State */
+.voucher-create-page .step.is-active {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  box-shadow: 0 2px 8px rgba(11, 111, 245, 0.08);
+}
+.voucher-create-page .step.is-active .step-num {
+  background: #0b6ff5;
   color: #fff;
-  background: var(--vc-blue);
+  border-color: #0b6ff5;
   box-shadow: 0 4px 12px rgba(11, 111, 245, 0.35);
+}
+.voucher-create-page .step.is-active .step-title {
+  color: #0b6ff5;
+}
+.voucher-create-page .step.is-active .step-status {
+  color: #2563eb;
+}
+
+/* Completed State */
+.voucher-create-page .step.is-completed {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+.voucher-create-page .step.is-completed .step-num {
+  background: #10b981;
+  color: #fff;
+  border-color: #10b981;
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3);
+}
+.voucher-create-page .step.is-completed .step-num .num-text {
+  display: none;
+}
+.voucher-create-page .step.is-completed .step-num .check-icon {
+  display: block;
+}
+.voucher-create-page .step.is-completed .step-title {
+  color: #166534;
+}
+.voucher-create-page .step.is-completed .step-status {
+  color: #15803d;
+}
+
+/* Step 5 Ready Glow State */
+.voucher-create-page .step.is-ready {
+  background: linear-gradient(135deg, #0b6ff5, #10b981);
+  border-color: transparent;
+  animation: pulse-ready 2s infinite ease-in-out;
+}
+.voucher-create-page .step.is-ready .step-num {
+  background: #fff;
+  color: #0b6ff5;
+  border-color: #fff;
+}
+.voucher-create-page .step.is-ready .step-title,
+.voucher-create-page .step.is-ready .step-status {
+  color: #fff;
+}
+
+@keyframes pulse-ready {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
 }
 
 /* Workspace Layout */
@@ -1314,17 +1441,30 @@ include_template('header', ['page' => 'voucher_create']);
     border: 1px solid var(--vc-line);
     border-radius: 12px;
   }
+  .voucher-create-page .steps-container {
+    padding: 8px 10px;
+    margin-bottom: 16px;
+  }
   .voucher-create-page .steps {
     display: flex;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
-    padding: 8px;
+    gap: 6px;
+    padding: 4px 2px;
     -webkit-overflow-scrolling: touch;
   }
   .voucher-create-page .step {
-    min-width: 105px;
+    min-width: 135px;
     scroll-snap-align: start;
     flex-shrink: 0;
+    padding: 6px 8px;
+    gap: 8px;
+  }
+  .voucher-create-page .step-num {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+    border-radius: 8px;
   }
   .voucher-create-page .card,
   .voucher-create-page .summary,
@@ -1555,12 +1695,62 @@ include_template('header', ['page' => 'voucher_create']);
       </div>
 
       <!-- Step Wizard Progress Indicator -->
-      <div class="steps glass" role="progressbar" aria-label="Voucher creation progress" data-i18n-aria-label="Voucher creation progress">
-        <div class="step active" id="st-1"><b>1</b><span data-i18n="Sender & Receiver">Sender &amp; Receiver</span></div>
-        <div class="step" id="st-2"><b>2</b><span data-i18n="Routing & Service">Routing &amp; Service</span></div>
-        <div class="step" id="st-3"><b>3</b><span data-i18n="Package Items">Package Items</span></div>
-        <div class="step" id="st-4"><b>4</b><span data-i18n="Order Review">Order Review</span></div>
-        <div class="step" id="st-5"><b>5</b><span data-i18n="Issue Voucher">Issue Voucher</span></div>
+      <div class="steps-container glass" role="region" aria-label="Voucher creation workflow" data-i18n-aria-label="Voucher creation workflow">
+        <div class="steps-progress-track">
+          <div class="steps-progress-fill" id="steps-progress-fill" style="width: 0%;"></div>
+        </div>
+        <div class="steps" role="progressbar" id="voucher-steps" aria-label="Voucher creation progress" data-i18n-aria-label="Voucher creation progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+          <button type="button" class="step" id="st-1" data-step="1" title="Step 1: Sender & Receiver" data-i18n-title="Sender & Receiver">
+            <span class="step-num">
+              <span class="num-text">1</span>
+              <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <div class="step-info">
+              <span class="step-title" data-i18n="Sender & Receiver">Sender &amp; Receiver</span>
+              <small class="step-status" id="st-1-status" data-i18n="Pending">Pending</small>
+            </div>
+          </button>
+          <button type="button" class="step" id="st-2" data-step="2" title="Step 2: Routing & Service" data-i18n-title="Routing & Service">
+            <span class="step-num">
+              <span class="num-text">2</span>
+              <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <div class="step-info">
+              <span class="step-title" data-i18n="Routing & Service">Routing &amp; Service</span>
+              <small class="step-status" id="st-2-status" data-i18n="Pending">Pending</small>
+            </div>
+          </button>
+          <button type="button" class="step" id="st-3" data-step="3" title="Step 3: Package Items" data-i18n-title="Package Items">
+            <span class="step-num">
+              <span class="num-text">3</span>
+              <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <div class="step-info">
+              <span class="step-title" data-i18n="Package Items">Package Items</span>
+              <small class="step-status" id="st-3-status" data-i18n="0 items">0 items</small>
+            </div>
+          </button>
+          <button type="button" class="step" id="st-4" data-step="4" title="Step 4: Order Review" data-i18n-title="Order Review">
+            <span class="step-num">
+              <span class="num-text">4</span>
+              <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <div class="step-info">
+              <span class="step-title" data-i18n="Order Review">Order Review</span>
+              <small class="step-status" id="st-4-status" data-i18n="Pending">Pending</small>
+            </div>
+          </button>
+          <button type="button" class="step" id="st-5" data-step="5" title="Step 5: Issue Voucher" data-i18n-title="Issue Voucher">
+            <span class="step-num">
+              <span class="num-text">5</span>
+              <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <div class="step-info">
+              <span class="step-title" data-i18n="Issue Voucher">Issue Voucher</span>
+              <small class="step-status" id="st-5-status" data-i18n="Pending">Pending</small>
+            </div>
+          </button>
+        </div>
       </div>
 
       <!-- V5 Form & Workspace -->
@@ -2031,16 +2221,139 @@ function update() {
 }
 
 function updateSteps() {
-  const hasCustomer = (byId("sender").value.trim() && byId("receiver").value.trim() && byId("address").value.trim());
-  const hasRouting = (byId("region").value && byId("branch").value && byId("currency_input").value);
-  const hasItems = [...document.querySelectorAll("#rows tr")].some(tr =>
-    tr.querySelector(".category").value && Number(tr.querySelector(".weight").value) > 0
+  const sName = (byId("sender")?.value || "").trim();
+  const sPhone = (byId("senderPhone")?.value || "").trim();
+  const rName = (byId("receiver")?.value || "").trim();
+  const rPhone = (byId("receiverPhone")?.value || "").trim();
+  const rAddr = (byId("address")?.value || "").trim();
+  const filledCust = (sName ? 1 : 0) + (sPhone ? 1 : 0) + (rName ? 1 : 0) + (rPhone ? 1 : 0) + (rAddr ? 1 : 0);
+  const hasCustomer = filledCust === 5;
+
+  const destRegion = byId("region")?.value || "";
+  const destBranch = byId("branch")?.value || "";
+  const delType = document.querySelector('input[name="delivery_type"]:checked')?.value || "";
+  const curr = currency || byId("currency_input")?.value || "";
+  const filledRoute = (destRegion ? 1 : 0) + (destBranch ? 1 : 0) + (delType ? 1 : 0) + (curr ? 1 : 0);
+  const hasRouting = filledRoute === 4;
+
+  const itemRows = [...document.querySelectorAll("#rows tr")];
+  let validItems = 0;
+  let totalKg = 0;
+  itemRows.forEach(tr => {
+    const cat = tr.querySelector(".category")?.value;
+    const w = parseFloat(tr.querySelector(".weight")?.value) || 0;
+    if (cat && w > 0) {
+      validItems++;
+      totalKg += w;
+    }
+  });
+  const hasItems = validItems > 0;
+  const hasReview = hasCustomer && hasRouting && hasItems;
+  const isReady = hasReview;
+
+  function setStepState(stepId, statusId, isComplete, isInProgress, statusText) {
+    const stepEl = byId(stepId);
+    const statusEl = byId(statusId);
+    if (!stepEl) return;
+
+    stepEl.classList.remove("is-completed", "is-active", "is-ready");
+    if (isComplete) {
+      stepEl.classList.add("is-completed");
+    } else if (isInProgress) {
+      stepEl.classList.add("is-active");
+    }
+
+    if (statusEl) {
+      statusEl.textContent = statusText;
+    }
+  }
+
+  // Step 1: Sender & Receiver
+  setStepState(
+    "st-1",
+    "st-1-status",
+    hasCustomer,
+    filledCust > 0 && !hasCustomer,
+    hasCustomer ? t("Ready") : (filledCust > 0 ? `${filledCust}/5 ${t("entered")}` : t("Pending"))
   );
 
-  byId("st-1").className = "step " + (hasCustomer ? "active" : "");
-  byId("st-2").className = "step " + (hasRouting ? "active" : "");
-  byId("st-3").className = "step " + (hasItems ? "active" : "");
-  byId("st-4").className = "step " + (hasCustomer && hasRouting && hasItems ? "active" : "");
+  // Step 2: Routing & Service
+  setStepState(
+    "st-2",
+    "st-2-status",
+    hasRouting,
+    filledRoute > 0 && !hasRouting,
+    hasRouting ? t("Configured") : (filledRoute > 0 ? `${filledRoute}/4 ${t("selected")}` : t("Pending"))
+  );
+
+  // Step 3: Package Items
+  setStepState(
+    "st-3",
+    "st-3-status",
+    hasItems,
+    itemRows.length > 0 && !hasItems,
+    hasItems ? `${validItems} ${t("item(s)")} (${totalKg.toFixed(1)} kg)` : (itemRows.length > 0 ? t("Incomplete") : t("0 items"))
+  );
+
+  // Step 4: Order Review
+  setStepState(
+    "st-4",
+    "st-4-status",
+    hasReview,
+    (hasCustomer || hasRouting || hasItems) && !hasReview,
+    hasReview ? t("Verified") : ((hasCustomer || hasRouting || hasItems) ? t("In progress") : t("Pending"))
+  );
+
+  // Step 5: Issue Voucher
+  const st5 = byId("st-5");
+  const st5Status = byId("st-5-status");
+  if (st5) {
+    st5.classList.remove("is-completed", "is-active", "is-ready");
+    if (isReady) {
+      st5.classList.add("is-ready");
+      if (st5Status) st5Status.textContent = t("Ready to Create");
+    } else {
+      if (st5Status) st5Status.textContent = t("Awaiting details");
+    }
+  }
+
+  // Live progress percentage calculation
+  const scoreCust = (filledCust / 5) * 25;
+  const scoreRoute = (filledRoute / 4) * 25;
+  const scoreItems = hasItems ? 25 : (itemRows.length ? 10 : 0);
+  const scoreReview = hasReview ? 25 : 0;
+  const progressPercent = Math.min(100, Math.round(scoreCust + scoreRoute + scoreItems + scoreReview));
+
+  const fill = byId("steps-progress-fill");
+  if (fill) fill.style.width = progressPercent + "%";
+  const stepsContainer = byId("voucher-steps");
+  if (stepsContainer) stepsContainer.setAttribute("aria-valuenow", progressPercent);
+}
+
+function bindStepNavigation() {
+  document.querySelectorAll(".steps .step").forEach(stepBtn => {
+    stepBtn.addEventListener("click", e => {
+      e.preventDefault();
+      const stepNum = stepBtn.dataset.step;
+      if (stepNum === "1") {
+        document.querySelector(".card:nth-of-type(1)")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => byId("sender")?.focus(), 250);
+      } else if (stepNum === "2") {
+        document.querySelector(".card.route")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => byId("region")?.focus(), 250);
+      } else if (stepNum === "3") {
+        document.querySelector(".card.items")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        const firstCat = document.querySelector("#rows .category");
+        setTimeout(() => { if (firstCat) firstCat.focus(); else byId("addRow")?.focus(); }, 250);
+      } else if (stepNum === "4") {
+        document.querySelector(".summary")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else if (stepNum === "5") {
+        const createBtn = byId("create");
+        document.querySelector(".summary")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => createBtn?.focus(), 250);
+      }
+    });
+  });
 }
 
 // Load branches dynamically based on region selection
@@ -2369,6 +2682,7 @@ if (duplicateItems && duplicateItems.length > 0) {
   addRow();
 }
 syncNotesChips();
+bindStepNavigation();
 update();
 </script>
 

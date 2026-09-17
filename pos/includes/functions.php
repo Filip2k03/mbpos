@@ -55,7 +55,7 @@ function require_csrf_request() {
     }
 
     $cookie_token = csrf_token();
-    $posted_token = (string)($_POST['csrf_token'] ?? '');
+    $posted_token = (string)($_POST['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''));
     $token_ok = $cookie_token !== '' && $posted_token !== '' && hash_equals($cookie_token, $posted_token);
 
     if (!$origin_ok && !$token_ok) {

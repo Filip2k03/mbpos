@@ -705,7 +705,27 @@ document.addEventListener('DOMContentLoaded', function () {
         "add": "ထည့်ရန်",
         "submit": "အတည်ပြုရန်",
         "Quick Weight:": "အမြန် အလေးချိန်:",
-        "preset applied": "အလေးချိန် ထည့်သွင်းပြီးပါပြီ"
+        "preset applied": "အလေးချိန် ထည့်သွင်းပြီးပါပြီ",
+        "Update Voucher Status": "ဘောက်ချာ အခြေအနေ ပြင်ဆင်ရန်",
+        "Shipment Dossier": "ပါဆယ် ပို့ဆောင်မှု အချက်အလက်",
+        "Transit Corridor": "ပို့ဆောင်ရေး လမ်းကြောင်း",
+        "Milestone Transition": "အဆင့်ကူးပြောင်းမှု ပြသချက်",
+        "Target Status": "ပြောင်းလဲမည့် အခြေအနေ",
+        "Operational Remark": "လုပ်ငန်းဆိုင်ရာ မှတ်ချက်",
+        "Save Status Update": "အခြေအနေ အတည်ပြု သိမ်းဆည်းမည်",
+        "Back to Voucher": "ဘောက်ချာသို့ ပြန်သွားမည်",
+        "Operational Timeline": "မှတ်တမ်း အချိန်ဇယား",
+        "Reason Required": "အကြောင်းပြချက် လိုအပ်ပါသည်",
+        "Hub Received": "စင်တာသို့ ရောက်ရှိ",
+        "Out for Delivery": "ပို့ဆောင်ရန် ထွက်ခွာ",
+        "Delivered & Signed": "လက်ခံလက်မှတ် ရေးထိုးပြီး",
+        "Rescheduled": "ရက်ရွှေ့ဆိုင်း",
+        "Address Clarification": "လိပ်စာ အတည်ပြုချက်",
+        "SQL Terminal Workbench": "SQL ဒေတာဘေ့စ် စမ်းသပ်ကွန်ဆိုးလ်",
+        "Database Console": "ဒေတာဘေ့စ် ကွန်ဆိုးလ်",
+        "Fast Query Presets": "အမြန် စုံစမ်းမေးမြန်းမှုများ",
+        "Recent Alerts": "လတ်တလော သတိပေးချက်များ",
+        "total notifications": "စုစုပေါင်း သတိပေးချက်များ"
     };
 
     const english = Object.keys(translations).reduce((map, key) => {

@@ -78,6 +78,9 @@ switch ($page) {
     case 'voucher_view':
         include 'voucher_view.php';
         break;
+    case 'status_edit':
+        include 'status_edit.php';
+        break;
     case 'export_vouchers':
         include 'export_vouchers.php';
         break;

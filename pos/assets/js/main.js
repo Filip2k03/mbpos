@@ -650,7 +650,29 @@ document.addEventListener('DOMContentLoaded', function () {
         "Service name": "ဝန်ဆောင်မှု အမည်",
         "Category name": "အမျိုးအစား အမည်",
         "Initializing secure logistics workspace...": "လုံခြုံသော ပို့ဆောင်ရေးစနစ်ကို စတင်ပြင်ဆင်နေပါသည်...",
-        "Independent Architecture & Engineering by": "လွတ်လပ်သော ဗိသုကာနှင့် အင်ဂျင်နီယာ ရေးဆွဲမှု -"
+        "Independent Architecture & Engineering by": "လွတ်လပ်သော ဗိသုကာနှင့် အင်ဂျင်နီယာ ရေးဆွဲမှု -",
+        "Toggle compact view": "အကျဉ်းချုပ်ကြည့်ရန် ပြောင်းမည်",
+        "Compact view": "ကျစ်လျစ်သော ပုံစံ",
+        "Comfortable view": "ပုံမှန် အကျယ် ပုံစံ",
+        "Compact view enabled": "ကျစ်လျစ်သော ဇယားပုံစံ ဖွင့်ထားပါသည်",
+        "Comfortable view enabled": "ပုံမှန် အကျယ် ဇယားပုံစံ ဖွင့်ထားပါသည်",
+        "Customer contacted": "ဖောက်သည်ထံ ဆက်သွယ်ပြီး",
+        "Out for delivery": "ပို့ဆောင်ရန် ထွက်ခွာပြီ",
+        "Address confirmed": "လိပ်စာ အတည်ပြုပြီး",
+        "Delayed by weather": "ရာသီဥတုကြောင့် ကြန့်ကြာမှုရှိ",
+        "Package inspected": "ပါဆယ် စစ်ဆေးပြီး",
+        "Quick Note Templates": "အမြန်မှတ်ချက် ပုံစံတိုများ",
+        "All": "အားလုံး",
+        "Pending": "စောင့်ဆိုင်းဆဲ",
+        "In Transit": "လမ်းခရီးတွင်",
+        "Delivered": "ပို့ဆောင်ပြီး",
+        "Cancelled": "ပယ်ဖျက်ပြီး",
+        "Returned": "ပြန်လည်ပို့ဆောင်",
+        "Call Sender": "ပို့သူထံ ဖုန်းခေါ်မည်",
+        "Call Receiver": "လက်ခံသူထံ ဖုန်းခေါ်မည်",
+        "Copy Address": "လိပ်စာ ကူးယူရန်",
+        "Address copied to clipboard": "လိပ်စာ ကူးယူပြီးပါပြီ",
+        "New item row added": "ကုန်ပစ္စည်း အတန်းအသစ် ထည့်ပြီးပါပြီ"
     };
 
     const english = Object.keys(translations).reduce((map, key) => {
@@ -757,6 +779,43 @@ document.addEventListener('DOMContentLoaded', function () {
             const language = currentLanguage() === 'mm' ? 'en' : 'mm';
             try { localStorage.setItem(languageKey, language); } catch (e) {}
             applyLanguage(language);
+        });
+
+        // ---------------------------------------------------------------------
+        // Density Preference (Compact vs Comfortable)
+        // ---------------------------------------------------------------------
+        const densityKey = 'mbpos_density';
+        function currentDensity() {
+            try {
+                return localStorage.getItem(densityKey) || 'comfortable';
+            } catch (e) {
+                return 'comfortable';
+            }
+        }
+
+        function applyDensity(density) {
+            const isCompact = density === 'compact';
+            document.body.classList.toggle('is-compact-density', isCompact);
+            document.querySelectorAll('.density-toggle, #density-toggle').forEach(function (btn) {
+                btn.classList.toggle('is-compact', isCompact);
+                btn.setAttribute('aria-pressed', isCompact ? 'true' : 'false');
+                const titleText = isCompact ? 'Comfortable view' : 'Compact view';
+                btn.title = t(titleText);
+                btn.setAttribute('aria-label', t(titleText));
+            });
+        }
+
+        applyDensity(currentDensity());
+
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.density-toggle, #density-toggle');
+            if (btn) {
+                e.preventDefault();
+                const nextDensity = currentDensity() === 'compact' ? 'comfortable' : 'compact';
+                try { localStorage.setItem(densityKey, nextDensity); } catch (err) {}
+                applyDensity(nextDensity);
+                showToast(t(nextDensity === 'compact' ? 'Compact view enabled' : 'Comfortable view enabled'), 'info');
+            }
         });
 
         // ---------------------------------------------------------------------

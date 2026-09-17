@@ -127,9 +127,11 @@ if (!empty(trim($raw_notes))) {
 
         // Try to extract the structured header
         if (preg_match('/^\[\[(.*?) @ (.*?)\]\]\n(.*)/s', $part, $matches)) {
+            $raw_time = trim($matches[2]);
             $chat_bubbles[] = [
                 'author' => trim($matches[1]),
-                'time' => date('M d, Y - h:i A', strtotime(trim($matches[2]))),
+                'time' => format_datetime_myanmar($raw_time, 'compact'),
+                'relative' => format_datetime_myanmar($raw_time, 'relative'),
                 'text' => trim($matches[3]),
                 'is_legacy' => false
             ];
@@ -137,7 +139,8 @@ if (!empty(trim($raw_notes))) {
             // Treat as an old/legacy note before the update
             $chat_bubbles[] = [
                 'author' => 'System / Initial Note',
-                'time' => date('M d, Y - h:i A', strtotime($voucher['created_at'])),
+                'time' => format_datetime_myanmar($voucher['created_at'], 'compact'),
+                'relative' => format_datetime_myanmar($voucher['created_at'], 'relative'),
                 'text' => $part,
                 'is_legacy' => true
             ];
@@ -236,7 +239,10 @@ include_template('header', ['page' => 'voucher_view']);
                             <div>
                                 <p class="text-xs font-bold text-blue-500 uppercase tracking-wider mb-1" data-i18n="Sender">Sender</p>
                                 <p class="font-extrabold text-gray-900 text-lg"><?= htmlspecialchars($voucher['sender_name'], ENT_QUOTES, 'UTF-8') ?></p>
-                                <p class="text-gray-500 font-medium text-sm mt-0.5"><?= htmlspecialchars($voucher['sender_phone'], ENT_QUOTES, 'UTF-8') ?></p>
+                                <a href="tel:<?= e(preg_replace('/[^0-9+]/', '', $voucher['sender_phone'])) ?>" class="text-blue-600 hover:text-blue-800 font-mono font-semibold text-sm mt-0.5 inline-flex items-center gap-1.5 hover:underline" title="Call Sender" data-i18n-title="Call Sender">
+                                    <span><?= htmlspecialchars($voucher['sender_phone'], ENT_QUOTES, 'UTF-8') ?></span>
+                                    <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -251,7 +257,10 @@ include_template('header', ['page' => 'voucher_view']);
                             <div>
                                 <p class="text-xs font-bold text-emerald-500 uppercase tracking-wider mb-1" data-i18n="Receiver">Receiver</p>
                                 <p class="font-extrabold text-gray-900 text-lg"><?= htmlspecialchars($voucher['receiver_name'], ENT_QUOTES, 'UTF-8') ?></p>
-                                <p class="text-gray-500 font-medium text-sm mt-0.5"><?= htmlspecialchars($voucher['receiver_phone'], ENT_QUOTES, 'UTF-8') ?></p>
+                                <a href="tel:<?= e(preg_replace('/[^0-9+]/', '', $voucher['receiver_phone'])) ?>" class="text-emerald-600 hover:text-emerald-800 font-mono font-semibold text-sm mt-0.5 inline-flex items-center gap-1.5 hover:underline" title="Call Receiver" data-i18n-title="Call Receiver">
+                                    <span><?= htmlspecialchars($voucher['receiver_phone'], ENT_QUOTES, 'UTF-8') ?></span>
+                                    <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -263,9 +272,14 @@ include_template('header', ['page' => 'voucher_view']);
                             <div class="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600 shrink-0">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                             </div>
-                            <div>
-                                <p class="text-xs font-bold text-purple-500 uppercase tracking-wider mb-1" data-i18n="Deliver To">Deliver To</p>
-                                <p class="text-gray-700 font-medium text-sm leading-relaxed"><?= nl2br(htmlspecialchars($voucher['receiver_address'], ENT_QUOTES, 'UTF-8')) ?></p>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between">
+                                    <p class="text-xs font-bold text-purple-500 uppercase tracking-wider mb-1" data-i18n="Deliver To">Deliver To</p>
+                                    <button type="button" class="text-purple-500 hover:text-purple-700 p-1 rounded-md hover:bg-purple-100 transition-colors" title="Copy Address" data-i18n-title="Copy Address" data-copy="<?= e($voucher['receiver_address']) ?>" aria-label="Copy Address">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-width="2"/></svg>
+                                    </button>
+                                </div>
+                                <p class="text-gray-700 font-medium text-sm leading-relaxed break-words"><?= nl2br(htmlspecialchars($voucher['receiver_address'], ENT_QUOTES, 'UTF-8')) ?></p>
                             </div>
                         </div>
                     </div>
@@ -439,6 +453,14 @@ include_template('header', ['page' => 'voucher_view']);
                                 <div class="md:col-span-8 space-y-2">
                                     <label for="new_note" class="block text-xs font-bold text-gray-500 uppercase tracking-wider ml-1" data-i18n="Add to Conversation">Add to Conversation</label>
                                     <textarea id="new_note" name="new_note" rows="2" class="w-full rounded-xl border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm font-medium text-gray-800 py-3 px-4 shadow-sm" placeholder="Write an operational note... (Supports English & Myanmar)" data-i18n-placeholder="Write an operational note... (Supports English & Myanmar)"></textarea>
+                                    <div class="quick-chips flex flex-wrap items-center gap-1.5 mt-2" aria-label="Quick note templates">
+                                        <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mr-1" data-i18n="Quick Note:">Quick Note:</span>
+                                        <button type="button" class="quick-note-chip text-xs bg-white hover:bg-indigo-50 text-indigo-700 font-semibold px-2.5 py-1 rounded-lg border border-indigo-200 transition-all shadow-sm" data-text="Customer contacted" data-i18n="Customer contacted">Customer contacted</button>
+                                        <button type="button" class="quick-note-chip text-xs bg-white hover:bg-indigo-50 text-indigo-700 font-semibold px-2.5 py-1 rounded-lg border border-indigo-200 transition-all shadow-sm" data-text="Out for delivery" data-i18n="Out for delivery">Out for delivery</button>
+                                        <button type="button" class="quick-note-chip text-xs bg-white hover:bg-indigo-50 text-indigo-700 font-semibold px-2.5 py-1 rounded-lg border border-indigo-200 transition-all shadow-sm" data-text="Address confirmed" data-i18n="Address confirmed">Address confirmed</button>
+                                        <button type="button" class="quick-note-chip text-xs bg-white hover:bg-indigo-50 text-indigo-700 font-semibold px-2.5 py-1 rounded-lg border border-indigo-200 transition-all shadow-sm" data-text="Delayed by weather" data-i18n="Delayed by weather">Delayed by weather</button>
+                                        <button type="button" class="quick-note-chip text-xs bg-white hover:bg-indigo-50 text-indigo-700 font-semibold px-2.5 py-1 rounded-lg border border-indigo-200 transition-all shadow-sm" data-text="Package inspected" data-i18n="Package inspected">Package inspected</button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -481,6 +503,22 @@ include_template('header', ['page' => 'voucher_view']);
         if (chatContainer) {
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
+
+        // Quick Note Template Chips
+        document.querySelectorAll('.quick-note-chip').forEach(function(chip) {
+            chip.addEventListener('click', function(e) {
+                e.preventDefault();
+                const noteInput = document.getElementById('new_note');
+                if (!noteInput) return;
+                const text = this.getAttribute('data-text');
+                if (noteInput.value.trim().length > 0) {
+                    noteInput.value = noteInput.value.trim() + ' | ' + text;
+                } else {
+                    noteInput.value = text;
+                }
+                noteInput.focus();
+            });
+        });
     });
 </script>
 

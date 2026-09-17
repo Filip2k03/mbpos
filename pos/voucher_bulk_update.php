@@ -320,8 +320,12 @@ include_template('header', ['page' => 'voucher_bulk_update']);
                                 <td>
                                     <span class="v5-badge <?= $status_class ?>"><?= e($voucher['status']) ?></span>
                                 </td>
-                                <td class="text-xs text-muted">
-                                    <?= date('M j, Y', strtotime($voucher['created_at'])) ?>
+                                <td class="text-xs whitespace-nowrap">
+                                    <strong class="text-slate-800 font-mono block"><?= format_datetime_myanmar($voucher['created_at'], 'date') ?></strong>
+                                    <div class="flex items-center gap-1.5 text-slate-500 font-mono mt-0.5">
+                                        <span><?= format_datetime_myanmar($voucher['created_at'], 'time') ?></span>
+                                        <span class="text-[10px] px-1.5 py-0.2 bg-slate-100 rounded text-slate-600 font-sans"><?= format_datetime_myanmar($voucher['created_at'], 'relative') ?></span>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; endif; ?>

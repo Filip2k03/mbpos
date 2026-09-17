@@ -319,6 +319,10 @@ $nav_groups = [
                     <span class="language-option language-option-mm">မြန်မာ</span>
                 </button>
 
+                <button type="button" id="density-toggle" class="density-toggle" aria-label="Toggle compact view" title="Toggle compact view" data-i18n-title="Toggle compact view" data-i18n-aria-label="Toggle compact view">
+                    <?= mbpos_icon('density', 'w-4 h-4') ?>
+                </button>
+
                 <button type="button" id="install-pwa" class="pwa-install-button" hidden data-i18n="Install app">Install app</button>
 
                 <?php if (is_logged_in()): ?>

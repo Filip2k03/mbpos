@@ -226,6 +226,29 @@ include_template('header', ['page' => 'voucher_list']);
             <span class="v5-count" data-i18n="Page">Page <?= $page ?> <span data-i18n="of">of</span> <?= $total_pages ?></span>
         </div>
 
+        <?php
+        $quick_statuses = ['All', 'Pending', 'In Transit', 'Delivered', 'Cancelled', 'Returned'];
+        $status_url_base = $_GET;
+        unset($status_url_base['p']);
+        ?>
+        <div class="px-4 py-2.5 bg-slate-50/80 border-b border-slate-100 flex flex-wrap items-center gap-1.5" aria-label="Quick Status Filters">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1" data-i18n="Quick Filter:">Quick Filter:</span>
+            <?php foreach ($quick_statuses as $qs):
+                $is_qs_active = ($qs === 'All' && empty($filter_status)) || ($filter_status === $qs);
+                $qs_params = $status_url_base;
+                if ($qs === 'All') {
+                    unset($qs_params['status']);
+                } else {
+                    $qs_params['status'] = $qs;
+                }
+                $qs_url = 'index.php?' . http_build_query($qs_params);
+            ?>
+                <a href="<?= e($qs_url) ?>" class="text-xs px-2.5 py-1 rounded-lg font-semibold transition-all <?= $is_qs_active ? 'bg-blue-600 text-white shadow-sm' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200' ?>" data-i18n="<?= e($qs) ?>">
+                    <?= e($qs) ?>
+                </a>
+            <?php endforeach; ?>
+        </div>
+
         <div class="v5-panel__body p-0">
             <div class="overflow-x-auto">
                 <table class="v5-table w-full">

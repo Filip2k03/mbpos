@@ -1520,6 +1520,10 @@ include_template('header', ['page' => 'voucher_create']);
           <span class="language-option language-option-mm">မြန်မာ</span>
         </button>
 
+        <button type="button" id="density-toggle" class="density-toggle" aria-label="Toggle compact view" title="Toggle compact view" data-i18n-title="Toggle compact view" data-i18n-aria-label="Toggle compact view">
+          <?= mbpos_icon('density', 'w-4 h-4') ?>
+        </button>
+
         <button type="button" id="install-pwa" class="pwa-install-button" hidden data-i18n="Install app">Install app</button>
 
         <div class="avatar" title="<?= htmlspecialchars($_SESSION['username'] ?? 'Operator', ENT_QUOTES, 'UTF-8') ?>">
@@ -1692,7 +1696,13 @@ include_template('header', ['page' => 'voucher_create']);
 
             <!-- Card 4: Item Breakdown -->
             <div class="card glass items">
-              <h3><span class="section-title"><span class="section-number">4</span><span data-i18n="Item Breakdown">Item Breakdown</span></span><small data-i18n="Package calculation">Package calculation</small></h3>
+              <h3>
+                <span class="section-title"><span class="section-number">4</span><span data-i18n="Item Breakdown">Item Breakdown</span></span>
+                <span style="font-size:10px;font-weight:600;color:var(--vc-text-muted);display:inline-flex;align-items:center;gap:4px">
+                  <kbd style="padding:1px 5px;background:#e2e8f0;border-radius:4px;font-family:monospace;font-size:9px">Alt+N</kbd> <span data-i18n="add">add</span> ·
+                  <kbd style="padding:1px 5px;background:#e2e8f0;border-radius:4px;font-family:monospace;font-size:9px">Ctrl+↵</kbd> <span data-i18n="submit">submit</span>
+                </span>
+              </h3>
               <div class="tablewrap">
                 <table class="table">
                   <thead>
@@ -1708,10 +1718,19 @@ include_template('header', ['page' => 'voucher_create']);
                   <tbody id="rows"></tbody>
                 </table>
               </div>
-              <button type="button" class="add" id="addRow">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:16px;height:16px"><path d="M12 5v14M5 12h14"/></svg>
-                <span data-i18n="Add Item">Add Item</span>
-              </button>
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:12px">
+                <button type="button" class="add" id="addRow" style="margin-top:0">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:16px;height:16px"><path d="M12 5v14M5 12h14"/></svg>
+                  <span data-i18n="Add Item">Add Item</span>
+                </button>
+                <div class="weight-presets" style="display:inline-flex;align-items:center;gap:5px" aria-label="Weight presets">
+                  <span style="font-size:11px;font-weight:700;color:var(--vc-text-muted)" data-i18n="Quick Weight:">Quick Weight:</span>
+                  <button type="button" class="preset-weight-btn" data-weight="1" style="padding:3px 7px;font-size:11px;font-weight:700;border:1px solid var(--vc-line);border-radius:6px;background:#fff;color:var(--vc-text);cursor:pointer;">1 kg</button>
+                  <button type="button" class="preset-weight-btn" data-weight="3" style="padding:3px 7px;font-size:11px;font-weight:700;border:1px solid var(--vc-line);border-radius:6px;background:#fff;color:var(--vc-text);cursor:pointer;">3 kg</button>
+                  <button type="button" class="preset-weight-btn" data-weight="5" style="padding:3px 7px;font-size:11px;font-weight:700;border:1px solid var(--vc-line);border-radius:6px;background:#fff;color:var(--vc-text);cursor:pointer;">5 kg</button>
+                  <button type="button" class="preset-weight-btn" data-weight="10" style="padding:3px 7px;font-size:11px;font-weight:700;border:1px solid var(--vc-line);border-radius:6px;background:#fff;color:var(--vc-text);cursor:pointer;">10 kg</button>
+                </div>
+              </div>
               <div class="totals">
                 <span><span data-i18n="Total Weight">Total Weight</span> <strong id="weightTotal">0.00 kg</strong></span>
                 <span><span data-i18n="Grand Total">Grand Total</span> <strong id="grandTotal">0</strong></span>
@@ -2258,6 +2277,41 @@ navToggle.addEventListener("click", () => setNavigationOpen(!voucherPage.classLi
 navScrim.addEventListener("click", () => setNavigationOpen(false));
 document.addEventListener("keydown", event => {
   if (event.key === "Escape") setNavigationOpen(false);
+  // Keyboard shortcut: Alt+N or Alt+A to add new item row
+  if (event.altKey && (event.key === "n" || event.key === "N" || event.key === "a" || event.key === "A")) {
+    event.preventDefault();
+    addRow();
+    toast(t("New item row added"));
+  }
+  // Keyboard shortcut: Ctrl+Enter or Cmd+Enter to submit voucher
+  if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+    const form = byId("voucher-form");
+    if (form && !byId("create").disabled) {
+      event.preventDefault();
+      form.requestSubmit();
+    }
+  }
+});
+
+// Preset Weight Click Handlers
+document.querySelectorAll(".preset-weight-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const val = btn.dataset.weight;
+    const rows = document.querySelectorAll("#rows tr");
+    let targetRow = rows[rows.length - 1];
+    if (!targetRow) {
+      addRow();
+      targetRow = document.querySelector("#rows tr:last-child");
+    }
+    if (targetRow) {
+      const weightInput = targetRow.querySelector(".weight");
+      if (weightInput) {
+        weightInput.value = val;
+        update();
+        toast(`${val} kg ` + t("preset applied"));
+      }
+    }
+  });
 });
 document.addEventListener("mbpos:languagechange", () => {
   document.querySelectorAll("#rows tr").forEach(tr => {

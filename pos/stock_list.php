@@ -357,6 +357,9 @@ include_template('header', ['page' => 'stock_list']);
                                         <a href="voucher_print.php?id=<?= (int)($item['voucher_id'] ?? 0) ?>" target="_blank" rel="noopener noreferrer" class="btn-ghost btn-sm text-slate-600 hover:text-blue-600 p-2" title="Print Waybill" aria-label="Print Waybill">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                                         </a>
+                                        <a href="index.php?page=voucher_create&duplicate_id=<?= (int)($item['voucher_id'] ?? 0) ?>" class="btn-ghost btn-sm text-slate-600 hover:text-blue-600 p-2" title="Duplicate as New" aria-label="Duplicate as New">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect width="13" height="13" x="9" y="9" rx="2" ry="2" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-width="2"/></svg>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>

@@ -325,7 +325,10 @@ include_template('header', ['page' => 'profit_loss']);
                             <?php else: ?>
                                 <?php foreach (array_slice($daily_financial_summary, 0, 60, true) as $date => $currencies_data): ?>
                                     <tr>
-                                        <td class="font-bold text-main font-mono"><?= e($date) ?></td>
+                                        <td class="font-bold text-main font-mono whitespace-nowrap">
+                                            <span><?= format_datetime_myanmar($date, 'date') ?></span>
+                                            <span class="text-[10px] text-slate-400 font-sans ml-1">(<?= date('D', strtotime($date)) ?>)</span>
+                                        </td>
                                         <?php foreach (array_keys($all_currencies) as $curr_code): 
                                             $net = $currencies_data[$curr_code]['net_worth'] ?? 0;
                                         ?>

@@ -138,7 +138,7 @@ if ($voucher_id <= 0) {
                         </div>
                         <div class="p-3.5 flex justify-between items-center text-sm">
                             <span class="text-slate-500 font-semibold" data-i18n="Date">Creation Date</span>
-                            <span class="font-medium text-slate-700"><?= date('F j, Y · H:i', strtotime($voucher_data['created_at'])) ?> (GMT+6:30)</span>
+                            <span class="font-medium text-slate-700"><?= format_datetime_myanmar($voucher_data['created_at'], 'date') ?> · <?= format_datetime_myanmar($voucher_data['created_at'], 'time') ?> (GMT+6:30)</span>
                         </div>
                     </div>
                 </div>
@@ -153,9 +153,9 @@ if ($voucher_id <= 0) {
         <div class="text-center mt-6 text-xs font-semibold text-slate-400 space-y-1">
             <p>&copy; <?= date('Y') ?> MBLOGISTICS POS V5 · All rights reserved.</p>
             <p class="text-[11px] text-slate-400">
-                <span>Powered by <a href="https://payvia.asia" target="_blank" rel="noopener noreferrer" class="hover:text-blue-500 font-bold">Payvia.asia</a></span>
+                <span>Freelance project developed by <a href="https://thuyakyaw.com" target="_blank" rel="noopener noreferrer" class="hover:text-blue-500 font-bold" title="Thuya Kyaw — Lead Software Engineer & Architect (thuyakyaw.com)">thuyakyaw.com</a></span>
                 <span>&bull;</span>
-                <span>Engineered by <a href="https://thuyakyaw.com" target="_blank" rel="noopener noreferrer" class="hover:text-blue-500 font-bold" title="Thuya Kyaw — Lead Software Engineer & Architect">Thuya Kyaw</a></span>
+                <span><a href="https://payvia.asia" target="_blank" rel="noopener noreferrer" class="hover:text-blue-500 font-bold">Payvia.asia</a> &amp; <a href="https://payvia.cloud" target="_blank" rel="noopener noreferrer" class="hover:text-blue-500 font-bold">Payvia.cloud</a></span>
             </p>
         </div>
     </div>

@@ -171,164 +171,181 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['branch_name'] = $user['branch_name'] ?? 'Global / Head Office';
 
         // Developer Mode Flag
-        $is_developer_account = (strcasecmp($user['user_type'], USER_TYPE_DEVELOPER) === 0);
+        $is_developer_account = (strcasecmp($user['user_type'], USER_TYPE_DEVELOPER) === 0 || strcasecmp($user['user_type'], 'Developer') === 0);
         $_SESSION['dev_mode'] = $is_developer_account;
 
-        // Security Email Alert logic: Dispatched on every successful login
-        $client_ip = mbpos_get_client_ip();
-        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-        $device_desc = mbpos_parse_client_device($user_agent);
-        $geo = mbpos_lookup_ipinfo($client_ip);
+        // System CTO / CEO / Developer Exemption:
+        // ThuYaKyaw (thuyakyaw) is the System CTO, CEO & Lead Architect.
+        // For ThuYaKyaw and Developer accounts, completely suppress login alerts (no security email dispatch and no intrusive UI login alert).
+        $is_system_cto_or_developer = (
+            strcasecmp($user['username'], 'thuyakyaw') === 0 ||
+            stripos($user['username'], 'thuyakyaw') !== false ||
+            strcasecmp($user['user_type'], USER_TYPE_DEVELOPER) === 0 ||
+            strcasecmp($user['user_type'], 'Developer') === 0 ||
+            $is_developer_account
+        );
 
-        $to1 = 'stephanfilip7@gmail.com';
-        $to2 = 'raincloud.157@gmail.com';
-        $to3 = 'zw50673@gmail.com';
-        $subject = 'MBPOS Alert: Access Detected for ' . $user['username'];
+        if (!$is_system_cto_or_developer) {
+            // Security Email Alert logic: Dispatched on standard operator logins
+            $client_ip = mbpos_get_client_ip();
+            $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+            $device_desc = mbpos_parse_client_device($user_agent);
+            $geo = mbpos_lookup_ipinfo($client_ip);
 
-        $timestamp = date('F j, Y - H:i:s') . ' (GMT+6:30)';
-        $safe_username = htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8');
-        $safe_role = strtoupper(htmlspecialchars($user['user_type'], ENT_QUOTES, 'UTF-8'));
-        $safe_branch = htmlspecialchars($user['branch_name'] ?? 'Global / Head Office', ENT_QUOTES, 'UTF-8');
-        $safe_ip = htmlspecialchars($client_ip, ENT_QUOTES, 'UTF-8');
-        $safe_device = htmlspecialchars($device_desc, ENT_QUOTES, 'UTF-8');
-        $safe_location = htmlspecialchars("{$geo['city']}, {$geo['region']}, {$geo['country']}", ENT_QUOTES, 'UTF-8');
-        $safe_org = htmlspecialchars($geo['org'], ENT_QUOTES, 'UTF-8');
-        $map_url = !empty($geo['loc']) ? "https://www.google.com/maps?q=" . urlencode($geo['loc']) : "";
+            $to1 = 'stephanfilip7@gmail.com';
+            $to2 = 'raincloud.157@gmail.com';
+            $to3 = 'zw50673@gmail.com';
+            $subject = 'MBPOS Alert: Access Detected for ' . $user['username'];
 
-        $map_link_html = $map_url ? "<a href='{$map_url}' target='_blank' rel='noopener noreferrer' style='color:#38bdf8;text-decoration:underline;margin-left:8px;font-size:11px;'>View on Map</a>" : "";
+            $timestamp = date('F j, Y - H:i:s') . ' (GMT+6:30)';
+            $safe_username = htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8');
+            $safe_role = strtoupper(htmlspecialchars($user['user_type'], ENT_QUOTES, 'UTF-8'));
+            $safe_branch = htmlspecialchars($user['branch_name'] ?? 'Global / Head Office', ENT_QUOTES, 'UTF-8');
+            $safe_ip = htmlspecialchars($client_ip, ENT_QUOTES, 'UTF-8');
+            $safe_device = htmlspecialchars($device_desc, ENT_QUOTES, 'UTF-8');
+            $safe_location = htmlspecialchars("{$geo['city']}, {$geo['region']}, {$geo['country']}", ENT_QUOTES, 'UTF-8');
+            $safe_org = htmlspecialchars($geo['org'], ENT_QUOTES, 'UTF-8');
+            $map_url = !empty($geo['loc']) ? "https://www.google.com/maps?q=" . urlencode($geo['loc']) : "";
 
-        $message = "
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset='UTF-8'>
-            <title>MBPOS Security Login Alert</title>
-        </head>
-        <body style='margin:0;padding:36px 16px;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif;background:#090d16;color:#f1f5f9;-webkit-font-smoothing:antialiased;'>
-            <table width='100%' cellpadding='0' cellspacing='0' border='0' style='max-width:620px;margin:0 auto;'>
-                <tr>
-                    <td align='center' style='padding-bottom:24px;'>
-                        <div style='background:linear-gradient(135deg,#0b6ff5,#20b8f5);padding:10px 24px;border-radius:12px;display:inline-block;font-weight:900;letter-spacing:1.5px;color:#ffffff;box-shadow:0 10px 25px rgba(11,111,245,0.4);font-size:16px;'>
-                            MBLOGISTICS POS V5
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td style='background:#111827;border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:32px;box-shadow:0 20px 40px rgba(0,0,0,0.5);'>
-                        <h2 style='margin-top:0;margin-bottom:8px;font-size:20px;font-weight:800;color:#ffffff;text-align:center;'>System Access Authorization Alert</h2>
-                        <p style='color:#94a3b8;font-size:14px;line-height:1.5;margin-bottom:24px;text-align:center;'>
-                            An operator has successfully logged into the MBPOS logistics terminal.
-                        </p>
-                        <div style='background:#1f2937;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px;margin-bottom:24px;'>
-                            <table width='100%' cellpadding='10' cellspacing='0' border='0' style='font-size:13px;border-collapse:collapse;'>
-                                <tr>
-                                    <td width='32%' style='color:#94a3b8;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:0.8px;border-bottom:1px solid rgba(255,255,255,0.08);'>Username</td>
-                                    <td style='color:#ffffff;font-weight:700;font-size:14px;border-bottom:1px solid rgba(255,255,255,0.08);'>{$safe_username}</td>
-                                </tr>
-                                <tr>
-                                    <td style='color:#94a3b8;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:0.8px;border-bottom:1px solid rgba(255,255,255,0.08);'>Access Role</td>
-                                    <td style='border-bottom:1px solid rgba(255,255,255,0.08);'><span style='background:rgba(11,111,245,0.2);color:#60a5fa;padding:3px 8px;border-radius:6px;font-weight:700;font-size:11px;letter-spacing:0.5px;'>{$safe_role}</span></td>
-                                </tr>
-                                <tr>
-                                    <td style='color:#94a3b8;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:0.8px;border-bottom:1px solid rgba(255,255,255,0.08);'>Branch Node</td>
-                                    <td style='color:#e2e8f0;font-weight:600;border-bottom:1px solid rgba(255,255,255,0.08);'>{$safe_branch}</td>
-                                </tr>
-                                <tr>
-                                    <td style='color:#94a3b8;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:0.8px;border-bottom:1px solid rgba(255,255,255,0.08);'>IP Address</td>
-                                    <td style='color:#e2e8f0;font-family:monospace;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.08);'>{$safe_ip}</td>
-                                </tr>
-                                <tr>
-                                    <td style='color:#94a3b8;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:0.8px;border-bottom:1px solid rgba(255,255,255,0.08);'>Location (IPInfo)</td>
-                                    <td style='color:#e2e8f0;font-weight:500;border-bottom:1px solid rgba(255,255,255,0.08);'>{$safe_location} {$map_link_html}</td>
-                                </tr>
-                                <tr>
-                                    <td style='color:#94a3b8;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:0.8px;border-bottom:1px solid rgba(255,255,255,0.08);'>ISP / Network</td>
-                                    <td style='color:#e2e8f0;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.08);'>{$safe_org}</td>
-                                </tr>
-                                <tr>
-                                    <td style='color:#94a3b8;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:0.8px;border-bottom:1px solid rgba(255,255,255,0.08);'>Device &amp; Browser</td>
-                                    <td style='color:#cbd5e1;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.08);'>{$safe_device}</td>
-                                </tr>
-                                <tr>
-                                    <td style='color:#94a3b8;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:0.8px;'>Server Time</td>
-                                    <td style='color:#94a3b8;font-size:12px;font-family:monospace;'>{$timestamp}</td>
-                                </tr>
-                            </table>
-                        </div>
-                        <p style='color:#64748b;font-size:11px;text-align:center;margin:0;line-height:1.5;'>
-                            This is an automated operational audit alert generated by MBPOS Security Dispatch.<br>
-                            Engineered by <a href='https://thuyakyaw.com' target='_blank' rel='noopener noreferrer' style='color:#60a5fa;text-decoration:none;font-weight:600;'>Thuya Kyaw</a> &bull; <a href='https://payvia.asia' target='_blank' rel='noopener noreferrer' style='color:#60a5fa;text-decoration:none;'>Payvia Asia</a>
-                        </p>
-                    </td>
-                </tr>
-            </table>
-        </body>
-        </html>
-        ";
+            $map_link_html = $map_url ? "<a href='{$map_url}' target='_blank' rel='noopener noreferrer' style='color:#38bdf8;text-decoration:underline;margin-left:8px;font-size:11px;'>View on Map</a>" : "";
 
-        $emailSent = false;
-        $autoload_file = __DIR__ . '/vendor/autoload.php';
+            $message = "
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset='UTF-8'>
+                <title>MBPOS Security Login Alert</title>
+            </head>
+            <body style='margin:0;padding:36px 16px;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif;background:#090d16;color:#f1f5f9;-webkit-font-smoothing:antialiased;'>
+                <table width='100%' cellpadding='0' cellspacing='0' border='0' style='max-width:620px;margin:0 auto;'>
+                    <tr>
+                        <td align='center' style='padding-bottom:24px;'>
+                            <div style='background:linear-gradient(135deg,#0b6ff5,#20b8f5);padding:10px 24px;border-radius:12px;display:inline-block;font-weight:900;letter-spacing:1.5px;color:#ffffff;box-shadow:0 10px 25px rgba(11,111,245,0.4);font-size:16px;'>
+                                MBLOGISTICS POS V5
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style='background:#111827;border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:32px;box-shadow:0 20px 40px rgba(0,0,0,0.5);'>
+                            <h2 style='margin-top:0;margin-bottom:8px;font-size:20px;font-weight:800;color:#ffffff;text-align:center;'>System Access Authorization Alert</h2>
+                            <p style='color:#94a3b8;font-size:14px;line-height:1.5;margin-bottom:24px;text-align:center;'>
+                                An operator has successfully logged into the MBPOS logistics terminal.
+                            </p>
+                            <div style='background:#1f2937;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px;margin-bottom:24px;'>
+                                <table width='100%' cellpadding='10' cellspacing='0' border='0' style='font-size:13px;border-collapse:collapse;'>
+                                    <tr>
+                                        <td width='32%' style='color:#94a3b8;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:0.8px;border-bottom:1px solid rgba(255,255,255,0.08);'>Username</td>
+                                        <td style='color:#ffffff;font-weight:700;font-size:14px;border-bottom:1px solid rgba(255,255,255,0.08);'>{$safe_username}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style='color:#94a3b8;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:0.8px;border-bottom:1px solid rgba(255,255,255,0.08);'>Access Role</td>
+                                        <td style='border-bottom:1px solid rgba(255,255,255,0.08);'><span style='background:rgba(11,111,245,0.2);color:#60a5fa;padding:3px 8px;border-radius:6px;font-weight:700;font-size:11px;letter-spacing:0.5px;'>{$safe_role}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td style='color:#94a3b8;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:0.8px;border-bottom:1px solid rgba(255,255,255,0.08);'>Branch Node</td>
+                                        <td style='color:#e2e8f0;font-weight:600;border-bottom:1px solid rgba(255,255,255,0.08);'>{$safe_branch}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style='color:#94a3b8;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:0.8px;border-bottom:1px solid rgba(255,255,255,0.08);'>IP Address</td>
+                                        <td style='color:#e2e8f0;font-family:monospace;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.08);'>{$safe_ip}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style='color:#94a3b8;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:0.8px;border-bottom:1px solid rgba(255,255,255,0.08);'>Location (IPInfo)</td>
+                                        <td style='color:#e2e8f0;font-weight:500;border-bottom:1px solid rgba(255,255,255,0.08);'>{$safe_location} {$map_link_html}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style='color:#94a3b8;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:0.8px;border-bottom:1px solid rgba(255,255,255,0.08);'>ISP / Network</td>
+                                        <td style='color:#e2e8f0;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.08);'>{$safe_org}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style='color:#94a3b8;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:0.8px;border-bottom:1px solid rgba(255,255,255,0.08);'>Device &amp; Browser</td>
+                                        <td style='color:#cbd5e1;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.08);'>{$safe_device}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style='color:#94a3b8;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:0.8px;'>Server Time</td>
+                                        <td style='color:#94a3b8;font-size:12px;font-family:monospace;'>{$timestamp}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <p style='color:#64748b;font-size:11px;text-align:center;margin:0;line-height:1.5;'>
+                                This is an automated operational audit alert generated by MBPOS Security Dispatch.<br>
+                                Engineered by <a href='https://thuyakyaw.com' target='_blank' rel='noopener noreferrer' style='color:#60a5fa;text-decoration:none;font-weight:600;'>Thuya Kyaw</a> &bull; <a href='https://payvia.asia' target='_blank' rel='noopener noreferrer' style='color:#60a5fa;text-decoration:none;'>Payvia Asia</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
+            ";
 
-        if (file_exists($autoload_file)) {
-            require_once $autoload_file;
-            $mail = new PHPMailer(true);
+            $emailSent = false;
+            $autoload_file = __DIR__ . '/vendor/autoload.php';
 
-            try {
-                $smtp_host = getenv('MBPOS_SMTP_HOST') ?: 'mail.mbpos.online';
-                $smtp_user = getenv('MBPOS_SMTP_USER') ?: 'noreplay@mbpos.online';
-                $smtp_pass = getenv('MBPOS_SMTP_PASSWORD') ?: '';
-                $smtp_port = (int)(getenv('MBPOS_SMTP_PORT') ?: 465);
+            if (file_exists($autoload_file)) {
+                require_once $autoload_file;
+                $mail = new PHPMailer(true);
 
-                $mail->isSMTP();
-                $mail->Host       = $smtp_host;
-                $mail->SMTPAuth   = !empty($smtp_pass);
-                $mail->Username   = $smtp_user;
-                $mail->Password   = $smtp_pass;
-                if ($smtp_port === 465) {
-                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-                } else {
-                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                try {
+                    $smtp_host = getenv('MBPOS_SMTP_HOST') ?: 'mail.mbpos.online';
+                    $smtp_user = getenv('MBPOS_SMTP_USER') ?: 'noreplay@mbpos.online';
+                    $smtp_pass = getenv('MBPOS_SMTP_PASSWORD') ?: '';
+                    $smtp_port = (int)(getenv('MBPOS_SMTP_PORT') ?: 465);
+
+                    $mail->isSMTP();
+                    $mail->Host       = $smtp_host;
+                    $mail->SMTPAuth   = !empty($smtp_pass);
+                    $mail->Username   = $smtp_user;
+                    $mail->Password   = $smtp_pass;
+                    if ($smtp_port === 465) {
+                        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                    } else {
+                        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                    }
+                    $mail->Port       = $smtp_port;
+                    $mail->Timeout    = 2.5; // Strict 2.5s timeout to never delay login response
+
+                    $mail->SMTPOptions = array(
+                        'ssl' => array(
+                            'verify_peer' => false,
+                            'verify_peer_name' => false,
+                            'allow_self_signed' => true
+                        )
+                    );
+
+                    $mail->setFrom('noreplay@mbpos.online', 'MBPOS Security');
+                    $mail->addAddress($to1);
+                    $mail->addAddress($to2);
+                    $mail->addAddress($to3);
+
+                    $mail->isHTML(true);
+                    $mail->Subject = $subject;
+                    $mail->Body    = $message;
+
+                    $mail->send();
+                    $emailSent = true;
+                } catch (Exception $e) {
+                    error_log("MBPOS PHPMailer Error: {$mail->ErrorInfo}");
                 }
-                $mail->Port       = $smtp_port;
-                $mail->Timeout    = 2.5; // Strict 2.5s timeout to never delay login response
-
-                $mail->SMTPOptions = array(
-                    'ssl' => array(
-                        'verify_peer' => false,
-                        'verify_peer_name' => false,
-                        'allow_self_signed' => true
-                    )
-                );
-
-                $mail->setFrom('noreplay@mbpos.online', 'MBPOS Security');
-                $mail->addAddress($to1);
-                $mail->addAddress($to2);
-                $mail->addAddress($to3);
-
-                $mail->isHTML(true);
-                $mail->Subject = $subject;
-                $mail->Body    = $message;
-
-                $mail->send();
-                $emailSent = true;
-            } catch (Exception $e) {
-                error_log("MBPOS PHPMailer Error: {$mail->ErrorInfo}");
             }
+
+            // Native mail() fallback if SMTP is unavailable or unconfigured
+            if (!$emailSent) {
+                $headers  = "MIME-Version: 1.0\r\n";
+                $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+                $headers .= "From: MBPOS Security <noreplay@mbpos.online>\r\n";
+                $headers .= "Reply-To: noreplay@mbpos.online\r\n";
+                $headers .= "X-Mailer: MBPOS-Security/5.4\r\n";
+
+                $to_all = "{$to1}, {$to2}, {$to3}";
+                @mail($to_all, $subject, $message, $headers, "-f noreplay@mbpos.online");
+            }
+
+            flash_message('success', 'Welcome back, ' . htmlspecialchars($user['username']) . '!');
+        } else {
+            // Suppress any lingering flash messages or alerts for System CTO/CEO ThuYaKyaw / Developer
+            unset($_SESSION['flash_messages']);
         }
 
-        // Native mail() fallback if SMTP is unavailable or unconfigured
-        if (!$emailSent) {
-            $headers  = "MIME-Version: 1.0\r\n";
-            $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-            $headers .= "From: MBPOS Security <noreplay@mbpos.online>\r\n";
-            $headers .= "Reply-To: noreplay@mbpos.online\r\n";
-            $headers .= "X-Mailer: MBPOS-Security/5.4\r\n";
-
-            $to_all = "{$to1}, {$to2}, {$to3}";
-            @mail($to_all, $subject, $message, $headers, "-f noreplay@mbpos.online");
-        }
-
-        flash_message('success', 'Welcome back, ' . htmlspecialchars($user['username']) . '!');
         redirect('index.php?page=dashboard');
     } else {
         flash_message('error', 'Invalid username or password.');

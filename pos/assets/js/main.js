@@ -503,6 +503,11 @@ document.addEventListener('DOMContentLoaded', function () {
         "Total entries": "စုစုပေါင်း မှတ်တမ်း",
         "total entries": "စုစုပေါင်း မှတ်တမ်း",
         "Export CSV": "CSV ထုတ်ယူရန်",
+        "Status Overview": "အခြေအနေ အကျဉ်းချုပ်",
+        "All Vouchers": "ဘောက်ချာ အားလုံး",
+        "Clear Filters": "စစ်ထုတ်မှု ရှင်းရန်",
+        "All Statuses": "အခြေအနေ အားလုံး",
+        "Sender / Receiver": "ပို့သူ / လက်ခံသူ",
 
         // Diagnostics, Dev Center & Maintenance
         "Error Logs": "ချို့ယွင်းချက် မှတ်တမ်း",
@@ -892,16 +897,26 @@ document.addEventListener('DOMContentLoaded', function () {
         document.dispatchEvent(new CustomEvent('mbpos:languagechange', { detail: { language: language } }));
     }
 
-    function setOfflineState() {
+    function setOfflineState(notify) {
         const offline = !navigator.onLine;
         const banner = document.getElementById('offline-status');
         if (banner) banner.hidden = !offline;
         document.body.classList.toggle('is-offline', offline);
 
-        if (!offline) {
-            showToast(currentLanguage() === 'mm' ? 'စနစ်အင်တာနက် ပြန်လည်ရရှိပါပြီ' : 'System Online: Connection restored', 'success', 3500);
+        if (notify === true) {
+            const toastFn = (typeof window.showToast === 'function')
+                ? window.showToast
+                : (typeof showToast === 'function' ? showToast : null);
+            if (toastFn) {
+                if (offline) {
+                    toastFn(currentLanguage() === 'mm' ? 'အင်တာနက်လိုင်း ပြတ်တောက်နေပါသည်' : 'System Offline: Working with cached drafts', 'warning', 4000);
+                } else {
+                    toastFn(currentLanguage() === 'mm' ? 'စနစ်အင်တာနက် ပြန်လည်ရရှိပါပြီ' : 'System Online: Connection restored', 'success', 3500);
+                }
+            }
         }
     }
+
 
     document.addEventListener('DOMContentLoaded', function () {
         // Automatic CSRF input injection for all POST forms
@@ -919,7 +934,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Apply saved language & offline status
         applyLanguage(currentLanguage());
-        setOfflineState();
+        setOfflineState(false);
 
         // Language toggle button listener
         const toggle = document.getElementById('language-toggle');
@@ -1244,8 +1259,15 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }, true);
 
-    window.addEventListener('online', setOfflineState);
-    window.addEventListener('offline', setOfflineState);
+    window.addEventListener('online', function () {
+        setOfflineState(true);
+        if (typeof window.syncPendingDrafts === 'function') {
+            window.syncPendingDrafts();
+        }
+    });
+    window.addEventListener('offline', function () {
+        setOfflineState(true);
+    });
 
     // Progressive PWA Install Prompt Handler
     let deferredInstallPrompt = null;

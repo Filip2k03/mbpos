@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (is_staff() && $user_branch_id) {
-            $update_query .= " AND (origin_branch_id = ? OR (destination_branch_id = ? AND status != 'Pending'))";
+            $update_query .= " AND (origin_branch_id = ? OR destination_branch_id = ?)";
             $types .= 'ii';
             $update_values[] = $user_branch_id;
             $update_values[] = $user_branch_id;
@@ -97,6 +97,33 @@ $regions = mbpos_cache_remember('lookup-regions', 'all', 300, function () use ($
     if ($regionResult) while ($row = mysqli_fetch_assoc($regionResult)) $rows[] = $row;
     return $rows;
 });
+
+// Status Statistics Counts across the voucher system
+$status_counts = [];
+$stats_query = "SELECT status, COUNT(*) as cnt FROM vouchers v";
+$stats_bind_types = '';
+$stats_bind_vals = [];
+if (is_staff() && $user_branch_id > 0) {
+    $stats_query .= " WHERE (v.origin_branch_id = ? OR v.destination_branch_id = ?)";
+    $stats_bind_types = 'ii';
+    $stats_bind_vals = [$user_branch_id, $user_branch_id];
+}
+$stats_query .= " GROUP BY status";
+
+$stats_stmt = mysqli_prepare($connection, $stats_query);
+if ($stats_stmt) {
+    if ($stats_bind_types !== '') {
+        mysqli_stmt_bind_param($stats_stmt, $stats_bind_types, ...$stats_bind_vals);
+    }
+    if (mysqli_stmt_execute($stats_stmt)) {
+        $stats_res = mysqli_stmt_get_result($stats_stmt);
+        while ($r = mysqli_fetch_assoc($stats_res)) {
+            $status_counts[$r['status']] = (int)$r['cnt'];
+        }
+    }
+    mysqli_stmt_close($stats_stmt);
+}
+$all_vouchers_count = array_sum($status_counts);
 
 // Get filter parameters from GET request
 $filters = mbpos_normalize_voucher_filters($_GET, $possible_statuses);
@@ -203,6 +230,65 @@ include_template('header', ['page' => 'voucher_bulk_update']);
         </div>
     </div>
 
+    <!-- Status Overview Statistics Cards -->
+    <section class="v5-kpi-grid" aria-label="Status Overview">
+        <a href="index.php?page=voucher_bulk_update" class="v5-kpi-card v5-kpi-card--all <?= empty($filter_status) ? 'is-active' : '' ?>">
+            <div class="v5-kpi-card__title">
+                <span class="w-2 h-2 rounded-full bg-slate-900 inline-block"></span>
+                <span data-i18n="All Vouchers">All Vouchers</span>
+            </div>
+            <div class="v5-kpi-card__count"><?= number_format($all_vouchers_count) ?></div>
+        </a>
+
+        <a href="index.php?page=voucher_bulk_update&amp;status=Pending" class="v5-kpi-card v5-kpi-card--pending <?= $filter_status === 'Pending' ? 'is-active' : '' ?>">
+            <div class="v5-kpi-card__title">
+                <span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>
+                <span data-i18n="Pending">Pending</span>
+            </div>
+            <div class="v5-kpi-card__count"><?= number_format($status_counts['Pending'] ?? 0) ?></div>
+        </a>
+
+        <a href="index.php?page=voucher_bulk_update&amp;status=In Transit" class="v5-kpi-card v5-kpi-card--in-transit <?= $filter_status === 'In Transit' ? 'is-active' : '' ?>">
+            <div class="v5-kpi-card__title">
+                <span class="w-2 h-2 rounded-full bg-sky-500 inline-block"></span>
+                <span data-i18n="In Transit">In Transit</span>
+            </div>
+            <div class="v5-kpi-card__count"><?= number_format($status_counts['In Transit'] ?? 0) ?></div>
+        </a>
+
+        <a href="index.php?page=voucher_bulk_update&amp;status=Received" class="v5-kpi-card v5-kpi-card--received <?= $filter_status === 'Received' ? 'is-active' : '' ?>">
+            <div class="v5-kpi-card__title">
+                <span class="w-2 h-2 rounded-full bg-teal-500 inline-block"></span>
+                <span data-i18n="Received">Received</span>
+            </div>
+            <div class="v5-kpi-card__count"><?= number_format($status_counts['Received'] ?? 0) ?></div>
+        </a>
+
+        <a href="index.php?page=voucher_bulk_update&amp;status=Delivered" class="v5-kpi-card v5-kpi-card--delivered <?= $filter_status === 'Delivered' ? 'is-active' : '' ?>">
+            <div class="v5-kpi-card__title">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                <span data-i18n="Delivered">Delivered</span>
+            </div>
+            <div class="v5-kpi-card__count"><?= number_format($status_counts['Delivered'] ?? 0) ?></div>
+        </a>
+
+        <a href="index.php?page=voucher_bulk_update&amp;status=Returned" class="v5-kpi-card v5-kpi-card--returned <?= $filter_status === 'Returned' ? 'is-active' : '' ?>">
+            <div class="v5-kpi-card__title">
+                <span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span>
+                <span data-i18n="Returned">Returned</span>
+            </div>
+            <div class="v5-kpi-card__count"><?= number_format($status_counts['Returned'] ?? 0) ?></div>
+        </a>
+
+        <a href="index.php?page=voucher_bulk_update&amp;status=Cancelled" class="v5-kpi-card v5-kpi-card--cancelled <?= $filter_status === 'Cancelled' ? 'is-active' : '' ?>">
+            <div class="v5-kpi-card__title">
+                <span class="w-2 h-2 rounded-full bg-slate-500 inline-block"></span>
+                <span data-i18n="Cancelled">Cancelled</span>
+            </div>
+            <div class="v5-kpi-card__count"><?= number_format($status_counts['Cancelled'] ?? 0) ?></div>
+        </a>
+    </section>
+
     <!-- Filters Panel -->
     <section class="v5-panel mb-6" aria-label="Filters">
         <div class="v5-panel__head">
@@ -258,9 +344,9 @@ include_template('header', ['page' => 'voucher_bulk_update']);
                 <div class="v5-field">
                     <label for="filter_status" class="v5-field-label" data-i18n="Status">Status</label>
                     <select id="filter_status" name="status" class="v5-input">
-                        <option value="" data-i18n="All Statuses">All Statuses</option>
+                        <option value="" data-i18n="All Statuses">All Statuses (<?= number_format($all_vouchers_count) ?>)</option>
                         <?php foreach ($possible_statuses as $s): ?>
-                            <option value="<?= e($s) ?>" <?= $filter_status === $s ? 'selected' : '' ?>><?= e($s) ?></option>
+                            <option value="<?= e($s) ?>" <?= $filter_status === $s ? 'selected' : '' ?>><?= e($s) ?> (<?= number_format($status_counts[$s] ?? 0) ?>)</option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -304,22 +390,30 @@ include_template('header', ['page' => 'voucher_bulk_update']);
             </div>
 
             <!-- Quick Status Filter Pills Ribbon -->
-            <div class="v5-status-ribbon" aria-label="Quick Status Filters">
+            <div class="v5-status-ribbon flex flex-wrap items-center gap-2" aria-label="Quick Status Filters">
                 <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1" data-i18n="Quick Filter:">Quick Filter:</span>
                 <?php foreach ($quick_statuses as $qs):
                     $is_qs_active = ($qs === 'All' && empty($filter_status)) || ($filter_status === $qs);
-                    $qs_params = $status_url_base;
+                    $qs_count = ($qs === 'All') ? $all_vouchers_count : ($status_counts[$qs] ?? 0);
                     if ($qs === 'All') {
-                        unset($qs_params['status']);
+                        $qs_url = 'index.php?page=voucher_bulk_update';
                     } else {
+                        $qs_params = $status_url_base;
                         $qs_params['status'] = $qs;
+                        $qs_url = 'index.php?' . http_build_query($qs_params);
                     }
-                    $qs_url = 'index.php?' . http_build_query($qs_params);
                 ?>
-                    <a href="<?= e($qs_url) ?>" class="v5-status-pill <?= $is_qs_active ? 'is-active' : '' ?>" data-i18n="<?= e($qs) ?>">
-                        <?= e($qs) ?>
+                    <a href="<?= e($qs_url) ?>" class="v5-status-pill <?= $is_qs_active ? 'is-active' : '' ?>">
+                        <span data-i18n="<?= e($qs) ?>"><?= e($qs) ?></span>
+                        <span class="v5-pill-count"><?= number_format($qs_count) ?></span>
                     </a>
                 <?php endforeach; ?>
+                <?php if (!empty($start_date) || !empty($end_date) || $filter_origin_region_id !== 'All' || $filter_destination_region_id !== 'All' || !empty($filter_status) || !empty($search_term)): ?>
+                    <a href="index.php?page=voucher_bulk_update" class="btn-ghost btn-xs text-rose-600 hover:bg-rose-50 flex items-center gap-1 ml-auto" data-i18n="Clear Filters">
+                        <?= mbpos_icon('x', 'w-3.5 h-3.5') ?>
+                        <span>Clear Filters</span>
+                    </a>
+                <?php endif; ?>
             </div>
 
             <!-- Batch Action Controls Ribbon -->
@@ -368,12 +462,13 @@ include_template('header', ['page' => 'voucher_bulk_update']);
                             <th data-i18n="Amount">Amount</th>
                             <th data-i18n="Status">Status</th>
                             <th data-i18n="Created">Created</th>
+                            <th data-i18n="Action" class="text-right">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($vouchers)): ?>
                             <tr>
-                                <td colspan="7">
+                                <td colspan="8">
                                     <div class="v5-empty">
                                         <span class="v5-empty__icon"><?= mbpos_icon('voucher_list', 'w-8 h-8 text-slate-400') ?></span>
                                         <strong data-i18n="No vouchers match these filters">No vouchers match these filters</strong>
@@ -393,33 +488,49 @@ include_template('header', ['page' => 'voucher_bulk_update']);
                             $currency = $voucher['currency'] ?? 'MMK';
                         ?>
                             <tr data-voucher-id="<?= (int)$voucher['id'] ?>" class="v5-table-row">
-                                <td class="text-center">
+                                <td class="text-center" data-label="Select">
                                     <input type="checkbox" name="voucher_ids[]" value="<?= (int)$voucher['id'] ?>" class="voucher-checkbox" aria-label="Select <?= e($voucher['voucher_code']) ?>">
                                 </td>
-                                <td>
-                                    <a class="font-mono font-bold text-primary hover:underline flex items-center gap-1" href="index.php?page=voucher_view&id=<?= (int)$voucher['id'] ?>" title="View voucher details">
-                                        <?= e($voucher['voucher_code']) ?>
-                                    </a>
+                                <td data-label="Voucher">
+                                    <div class="flex items-center gap-1.5">
+                                        <a class="font-mono font-bold text-primary hover:underline flex items-center gap-1" href="index.php?page=voucher_view&id=<?= (int)$voucher['id'] ?>" title="View voucher details">
+                                            <?= e($voucher['voucher_code']) ?>
+                                        </a>
+                                        <button type="button" class="text-slate-400 hover:text-blue-600 transition-colors p-1 rounded-md hover:bg-slate-100" title="Copy voucher code" data-copy="<?= e($voucher['voucher_code']) ?>" aria-label="Copy voucher code">
+                                            <?= mbpos_icon('copy', 'w-3.5 h-3.5') ?>
+                                        </button>
+                                    </div>
                                 </td>
-                                <td>
+                                <td data-label="Sender / Receiver">
                                     <strong><?= e($voucher['sender_name']) ?></strong>
                                     <div class="text-xs text-muted mt-0.5">→ <?= e($voucher['receiver_name']) ?></div>
                                 </td>
-                                <td>
+                                <td data-label="Route">
                                     <div class="text-xs font-semibold text-slate-700"><?= e($voucher['origin_region'] ?? 'N/A') ?> <span class="text-slate-400">/</span> <?= e($voucher['origin_branch'] ?? 'N/A') ?></div>
                                     <div class="text-xs text-muted mt-0.5">→ <?= e($voucher['destination_region'] ?? 'N/A') ?> <span class="text-slate-400">/</span> <?= e($voucher['destination_branch'] ?? 'N/A') ?></div>
                                 </td>
-                                <td class="text-xs font-bold font-mono text-slate-800 whitespace-nowrap">
+                                <td data-label="Amount" class="text-xs font-bold font-mono text-slate-800 whitespace-nowrap">
                                     <?= format_currency($voucher['total_amount'] ?? 0, $currency) ?>
                                 </td>
-                                <td>
+                                <td data-label="Status">
                                     <span class="v5-badge <?= $status_class ?>"><?= e($voucher['status']) ?></span>
                                 </td>
-                                <td class="text-xs whitespace-nowrap">
+                                <td data-label="Created" class="text-xs whitespace-nowrap">
                                     <strong class="text-slate-800 font-mono block"><?= format_datetime_myanmar($voucher['created_at'], 'date') ?></strong>
                                     <div class="flex items-center gap-1.5 text-slate-500 font-mono mt-0.5">
                                         <span><?= format_datetime_myanmar($voucher['created_at'], 'time') ?></span>
                                         <span class="text-[10px] px-1.5 py-0.2 bg-slate-100 rounded text-slate-600 font-sans"><?= format_datetime_myanmar($voucher['created_at'], 'relative') ?></span>
+                                    </div>
+                                </td>
+                                <td data-label="Action" class="text-right whitespace-nowrap">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <a href="index.php?page=status_edit&id=<?= (int)$voucher['id'] ?>" class="btn-secondary btn-xs inline-flex items-center gap-1 text-slate-700 hover:text-blue-600" title="Edit individual status">
+                                            <?= mbpos_icon('edit', 'w-3.5 h-3.5') ?>
+                                            <span data-i18n="Update">Update</span>
+                                        </a>
+                                        <a href="index.php?page=voucher_view&id=<?= (int)$voucher['id'] ?>" class="btn-ghost btn-xs inline-flex items-center p-1 text-slate-500 hover:text-blue-600" title="View voucher">
+                                            <?= mbpos_icon('external_link', 'w-3.5 h-3.5') ?>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>

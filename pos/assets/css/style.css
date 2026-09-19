@@ -1708,3 +1708,125 @@ html[data-language="mm"] button, html[data-language="mm"] input, html[data-langu
     justify-content: flex-end;
   }
 }
+
+/* --- V5 Wide Operational Tables in Scroll Containers --- */
+/* Ensure wide data tables in scroll containers retain their multi-column tabular structure */
+.overflow-x-auto .v5-table,
+.overflow-x-auto table.v5-table {
+  min-width: 880px !important;
+  display: table !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  width: 100% !important;
+}
+.overflow-x-auto .v5-table thead {
+  display: table-header-group !important;
+}
+.overflow-x-auto .v5-table thead th {
+  background: #f1f6fb !important;
+  color: #475569 !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  padding: 0.85rem 1rem !important;
+  border-bottom: 2px solid #dce7f3 !important;
+}
+.overflow-x-auto .v5-table tbody {
+  display: table-row-group !important;
+}
+.overflow-x-auto .v5-table tbody tr {
+  display: table-row !important;
+  flex-direction: row !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.overflow-x-auto .v5-table tbody tr td {
+  display: table-cell !important;
+  padding: 0.85rem 1rem !important;
+  border-bottom: 1px solid #edf2f7 !important;
+  font-size: 0.82rem !important;
+}
+.overflow-x-auto .v5-table tbody tr td::before {
+  display: none !important;
+}
+.overflow-x-auto .v5-table tbody tr:hover td {
+  background: #f8fbff !important;
+}
+
+/* Status Overview KPI Grid */
+.v5-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.v5-kpi-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0.85rem 1rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.85rem;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+.v5-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 6px 16px -4px rgba(15, 23, 42, 0.08);
+}
+.v5-kpi-card.is-active {
+  border-color: #0b6ff5;
+  background: #f0f7ff;
+  box-shadow: 0 0 0 2px rgba(11, 111, 245, 0.15);
+}
+.v5-kpi-card__title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.v5-kpi-card__count {
+  font-size: 1.35rem;
+  font-weight: 800;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #0f172a;
+  margin-top: 0.35rem;
+  line-height: 1;
+}
+.v5-kpi-card--all { border-left: 3.5px solid #0f172a; }
+.v5-kpi-card--pending { border-left: 3.5px solid #f59e0b; }
+.v5-kpi-card--in-transit { border-left: 3.5px solid #0284c7; }
+.v5-kpi-card--received { border-left: 3.5px solid #0d9488; }
+.v5-kpi-card--delivered { border-left: 3.5px solid #10b981; }
+.v5-kpi-card--returned { border-left: 3.5px solid #e11d48; }
+.v5-kpi-card--cancelled { border-left: 3.5px solid #64748b; }
+
+/* Quick Status Filter Ribbon and Count Badges */
+.v5-pill-count {
+  font-size: 0.7rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  color: #475569;
+  margin-left: 0.35rem;
+  display: inline-block;
+  vertical-align: middle;
+}
+.v5-status-pill.is-active .v5-pill-count {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}

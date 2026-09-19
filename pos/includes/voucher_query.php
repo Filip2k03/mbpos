@@ -34,7 +34,7 @@ if (!function_exists('mbpos_normalize_voucher_filters')) {
             : substr($searchTerm, 0, 120);
 
         $status = is_string($input['status'] ?? null) ? trim($input['status']) : '';
-        if (!in_array($status, $allowedStatuses, true)) {
+        if ($status === 'All' || !in_array($status, $allowedStatuses, true)) {
             $status = '';
         }
 
@@ -66,7 +66,7 @@ if (!function_exists('mbpos_build_voucher_filter_sql')) {
         $values = [];
 
         if ($restrictToBranch && $userBranchId > 0) {
-            $where[] = "(v.origin_branch_id = ? OR (v.destination_branch_id = ? AND v.status != 'Pending'))";
+            $where[] = "(v.origin_branch_id = ? OR v.destination_branch_id = ?)";
             $types .= 'ii';
             $values[] = $userBranchId;
             $values[] = $userBranchId;

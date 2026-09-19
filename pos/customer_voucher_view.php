@@ -49,6 +49,15 @@ if ($voucher_id <= 0) {
     <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="assets/css/style.css">
+    <script>
+    (function(){
+        var _w = console.warn;
+        console.warn = function(){
+            if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].indexOf('cdn.tailwindcss.com should not be used in production') !== -1) return;
+            _w.apply(console, arguments);
+        };
+    })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {

@@ -196,6 +196,15 @@ $nav_groups = [
     <!-- Shared Assets -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="assets/css/style.css?v=<?= $asset_version ?>">
+    <script>
+    (function(){
+        var _w = console.warn;
+        console.warn = function(){
+            if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].indexOf('cdn.tailwindcss.com should not be used in production') !== -1) return;
+            _w.apply(console, arguments);
+        };
+    })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <?php if (function_exists('load_assets')) load_assets($current_page); ?>
 </head>

@@ -181,6 +181,24 @@ document.addEventListener('DOMContentLoaded', function () {
         "No vouchers selected": "ဘောက်ချာ ရွေးချယ်ထားခြင်း မရှိပါ",
         "Maintenance Zones": "စနစ်ထိန်းသိမ်းမှု ဇုန်များ",
 
+        // Local Draft & Offline Voucher Sync
+        "Unsaved local draft detected": "မသိမ်းဆည်းရသေးသော ဒေသတွင်း မူကြမ်းတွေ့ရှိပါသည်",
+        "Restore Draft": "မူကြမ်း ပြန်လည်ရယူရန်",
+        "Discard": "ပယ်ဖျက်ရန်",
+        "Discard Draft": "မူကြမ်း ပယ်ဖျက်ရန်",
+        "Offline Mode Active": "အော့ဖ်လိုင်းမုဒ် အသုံးပြုနေသည်",
+        "Your entries are saved automatically to local storage and ready to submit when online.": "သင်ဖြည့်စွက်ထားသည်များကို စက်တွင်းတွင် အလိုအလျောက် သိမ်းဆည်းထားပြီး အွန်လိုင်းရရှိပါက တင်သွင်းနိုင်ပါသည်။",
+        "Auto-save enabled": "အလိုအလျောက် သိမ်းဆည်းမှု ဖွင့်ထားသည်",
+        "Draft saved locally.": "မူကြမ်းကို စက်တွင်း၌ သိမ်းဆည်းပြီးပါပြီ။",
+        "Draft discarded.": "မူကြမ်းကို ပယ်ဖျက်ပြီးပါပြီ။",
+        "Save Offline Draft": "အော့ဖ်လိုင်း မူကြမ်းအဖြစ် သိမ်းရန်",
+        "Local draft restored successfully.": "မူကြမ်းကို အောင်မြင်စွာ ပြန်လည်ရယူပြီးပါပြီ။",
+        "Please enter your username": "ကျေးဇူးပြု၍ အသုံးပြုသူအမည် ရိုက်ထည့်ပါ",
+        "Please enter your password": "ကျေးဇူးပြု၍ စကားဝှက် ရိုက်ထည့်ပါ",
+        "Caps Lock is ON": "Caps Lock ဖွင့်ထားပါသည်",
+        "Encrypted Session": "လုံခြုံစွာ ကုဒ်ဝှက်ထားသော ဆက်ရှင်",
+        "Node Online": "စနစ်အွန်လိုင်း",
+
         // Command Palette & Search
         "Command Palette": "အမြန်ညွှန်ကြားချက် ပလက်ဖောင်း",
         "Quick Actions": "အမြန်ဆောင်ရွက်ချက်များ",
@@ -767,6 +785,12 @@ document.addEventListener('DOMContentLoaded', function () {
     window.mbposT = function (key) {
         return currentLanguage() === 'mm' ? (translations[key] || key) : key;
     };
+    function t(key, fallback) {
+        if (currentLanguage() === 'mm' && translations[key]) {
+            return translations[key];
+        }
+        return fallback !== undefined ? fallback : key;
+    }
     window.mbposApplyLanguage = applyLanguage;
 
     function translateText(text, language) {

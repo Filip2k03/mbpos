@@ -1777,6 +1777,33 @@ include_template('header', ['page' => 'voucher_create']);
             </div>
           </button>
         </div>
+      <!-- Local Storage Voucher Draft Recovery Banner -->
+      <div id="draft-recovery-banner" class="draft-banner" style="display:none;" role="alert">
+        <div class="draft-banner-content">
+          <span class="draft-icon"><?= mbpos_icon('clock', 'w-5 h-5') ?></span>
+          <div>
+            <strong data-i18n="Unsaved local draft detected">Unsaved local draft detected</strong>
+            <p id="draft-saved-time"></p>
+          </div>
+        </div>
+        <div class="draft-banner-actions">
+          <button type="button" id="btn-restore-draft" class="btn-restore" data-i18n="Restore Draft">Restore Draft</button>
+          <button type="button" id="btn-discard-draft" class="btn-discard" data-i18n="Discard">Discard</button>
+        </div>
+      </div>
+
+      <!-- Live Connection / Offline Sync Banner -->
+      <div id="voucher-offline-banner" class="draft-banner offline-banner" style="display:none;" role="status">
+        <div class="draft-banner-content">
+          <span class="draft-icon"><?= mbpos_icon('alert', 'w-5 h-5') ?></span>
+          <div>
+            <strong data-i18n="Offline Mode Active">Offline Mode Active</strong>
+            <p data-i18n="Your entries are saved automatically to local storage and ready to submit when online.">Your entries are saved automatically to local storage and ready to submit when online.</p>
+          </div>
+        </div>
+        <div class="draft-banner-status">
+          <span class="draft-pill" id="draft-auto-status" data-i18n="Auto-save enabled">Auto-save enabled</span>
+        </div>
       </div>
 
       <!-- V5 Form & Workspace -->
@@ -2383,7 +2410,7 @@ function bindStepNavigation() {
 }
 
 // Load branches dynamically based on region selection
-function loadBranches(regionId) {
+function loadBranches(regionId, selectedBranchId = "") {
   const select = byId("branch");
   select.innerHTML = `<option value="">${escapeHtml(t("Select branch"))}</option>`;
   if (!regionId) return;
@@ -2394,6 +2421,9 @@ function loadBranches(regionId) {
       const opt = document.createElement("option");
       opt.value = b.id;
       opt.textContent = b.branch_name;
+      if (selectedBranchId && String(b.id) === String(selectedBranchId)) {
+        opt.selected = true;
+      }
       select.appendChild(opt);
     });
   } else {
@@ -2710,6 +2740,244 @@ if (duplicateItems && duplicateItems.length > 0) {
 syncNotesChips();
 bindStepNavigation();
 update();
+
+// =========================================================================
+// Local Storage & Offline Voucher Draft Engine (V5)
+// =========================================================================
+const DRAFT_KEY = "mbpos_voucher_draft_v5";
+let draftSaveTimer = null;
+
+function getFormDraftPayload() {
+  const items = [];
+  document.querySelectorAll("#rows tr").forEach(tr => {
+    const cat = tr.querySelector(".category")?.value || "";
+    const weight = tr.querySelector(".weight")?.value || "";
+    const price = tr.querySelector(".price")?.value || "";
+    if (cat || weight || price) {
+      items.push({ category: cat, weight: weight, price: price });
+    }
+  });
+
+  const senderName = byId("sender")?.value?.trim() || "";
+  const receiverName = byId("receiver")?.value?.trim() || "";
+  const senderPhone = byId("senderPhone")?.value?.trim() || "";
+  const receiverPhone = byId("receiverPhone")?.value?.trim() || "";
+  const address = byId("address")?.value?.trim() || "";
+  const origin = byId("origin")?.value || "";
+  const region = byId("region")?.value || "";
+  const branch = byId("branch")?.value || "";
+  const extra = byId("extra")?.value || "";
+  const notes = byId("notes")?.value || "";
+  const deliveryType = document.querySelector('input[name="delivery_type"]:checked')?.value || "";
+
+  // Only consider draft valid if meaningful input exists
+  const hasData = senderName || receiverName || senderPhone || receiverPhone || address || region || branch || items.length > 0 || notes;
+  if (!hasData) return null;
+
+  return {
+    senderName,
+    senderPhone,
+    receiverName,
+    receiverPhone,
+    address,
+    origin,
+    region,
+    branch,
+    currency,
+    deliveryType,
+    extra,
+    notes,
+    items,
+    savedAt: new Date().toISOString(),
+    savedAtFormatted: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+  };
+}
+
+function saveLocalDraft(isExplicit = false) {
+  try {
+    const payload = getFormDraftPayload();
+    if (!payload) return;
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+    const autoStatus = byId("draft-auto-status");
+    if (autoStatus) {
+      autoStatus.textContent = t("Draft saved at") + " " + payload.savedAtFormatted;
+    }
+    if (isExplicit) {
+      toast(t("Voucher draft saved locally.") + " (" + payload.savedAtFormatted + ")");
+    }
+  } catch (err) {
+    console.warn("Could not write voucher draft to localStorage", err);
+  }
+}
+
+function scheduleDraftSave() {
+  clearTimeout(draftSaveTimer);
+  draftSaveTimer = setTimeout(() => saveLocalDraft(false), 600);
+}
+
+function checkSavedDraft() {
+  if (duplicateItems && duplicateItems.length > 0) return;
+
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+    const draft = JSON.parse(raw);
+    if (!draft || (!draft.senderName && !draft.receiverName && (!draft.items || draft.items.length === 0))) {
+      return;
+    }
+
+    const banner = byId("draft-recovery-banner");
+    const savedTimeEl = byId("draft-saved-time");
+    if (banner && savedTimeEl) {
+      const itemCount = Array.isArray(draft.items) ? draft.items.length : 0;
+      savedTimeEl.textContent = (draft.savedAtFormatted ? draft.savedAtFormatted : t("earlier session")) + " (" + itemCount + " " + t("items") + ")";
+      banner.style.display = "flex";
+    }
+  } catch (e) {
+    console.warn("Could not check local draft", e);
+  }
+}
+
+function restoreLocalDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+    const draft = JSON.parse(raw);
+    if (!draft) return;
+
+    if (draft.senderName && byId("sender")) byId("sender").value = draft.senderName;
+    if (draft.senderPhone && byId("senderPhone")) byId("senderPhone").value = draft.senderPhone;
+    if (draft.receiverName && byId("receiver")) byId("receiver").value = draft.receiverName;
+    if (draft.receiverPhone && byId("receiverPhone")) byId("receiverPhone").value = draft.receiverPhone;
+    if (draft.address && byId("address")) byId("address").value = draft.address;
+    if (draft.origin && byId("origin")) byId("origin").value = draft.origin;
+
+    if (draft.region && byId("region")) {
+      byId("region").value = draft.region;
+      loadBranches(draft.region, draft.branch || "");
+    }
+
+    if (draft.currency) {
+      currency = draft.currency;
+      byId("currency_input").value = currency;
+      document.querySelectorAll("[data-currency]").forEach(b => {
+        const active = b.dataset.currency === currency;
+        b.classList.toggle("active", active);
+        b.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+    }
+
+    if (draft.deliveryType) {
+      const radio = document.querySelector(`input[name="delivery_type"][value="${draft.deliveryType}"]`);
+      if (radio) radio.checked = true;
+    }
+
+    if (draft.extra !== undefined && byId("extra")) byId("extra").value = draft.extra;
+    if (draft.notes && byId("notes")) {
+      byId("notes").value = draft.notes;
+      syncNotesChips();
+    }
+
+    if (Array.isArray(draft.items) && draft.items.length > 0) {
+      byId("rows").innerHTML = "";
+      draft.items.forEach(item => addRow(item));
+    }
+
+    update();
+    const banner = byId("draft-recovery-banner");
+    if (banner) banner.style.display = "none";
+    toast(t("Local draft restored successfully."));
+  } catch (err) {
+    console.error("Error restoring draft", err);
+    toast(t("Could not restore draft."));
+  }
+}
+
+function discardLocalDraft() {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+    const banner = byId("draft-recovery-banner");
+    if (banner) banner.style.display = "none";
+    toast(t("Draft discarded."));
+  } catch (err) {}
+}
+
+function syncConnectionState() {
+  const isOffline = !navigator.onLine;
+  const offlineBanner = byId("voucher-offline-banner");
+  const createBtn = byId("create");
+
+  if (offlineBanner) {
+    offlineBanner.style.display = isOffline ? "flex" : "none";
+  }
+
+  if (createBtn) {
+    const btnSpan = createBtn.querySelector("span[data-i18n]");
+    if (isOffline) {
+      createBtn.classList.add("btn-offline-mode");
+      if (btnSpan) btnSpan.textContent = t("Save Offline Draft");
+    } else {
+      createBtn.classList.remove("btn-offline-mode");
+      if (btnSpan) btnSpan.textContent = t("Create Ledger Entry");
+    }
+  }
+}
+
+// Bind draft buttons
+const restoreBtn = byId("btn-restore-draft");
+if (restoreBtn) restoreBtn.addEventListener("click", restoreLocalDraft);
+
+const discardBtn = byId("btn-discard-draft");
+if (discardBtn) discardBtn.addEventListener("click", discardLocalDraft);
+
+// Auto-save debounced on form inputs
+const formEl = byId("voucher-form");
+if (formEl) {
+  formEl.addEventListener("input", scheduleDraftSave);
+  formEl.addEventListener("change", scheduleDraftSave);
+}
+
+// Online/Offline status listeners
+window.addEventListener("online", () => {
+  syncConnectionState();
+  toast(t("Online: Connection restored."));
+});
+window.addEventListener("offline", () => {
+  syncConnectionState();
+  saveLocalDraft(false);
+  toast(t("Offline: Changes will be saved locally."));
+});
+
+// Clear draft on successful form submit
+if (formEl) {
+  formEl.addEventListener("submit", () => {
+    if (navigator.onLine) {
+      try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+    } else {
+      saveLocalDraft(true);
+      toast(t("Offline draft saved. You can submit when connection returns."));
+    }
+  });
+}
+
+// Clear draft on form reset
+if (resetBtn) {
+  resetBtn.addEventListener("click", () => {
+    try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+  });
+}
+
+// Keyboard shortcut: Ctrl+S / Cmd+S to explicitly save draft
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
+    e.preventDefault();
+    saveLocalDraft(true);
+  }
+});
+
+// Run initial draft & connection checks
+checkSavedDraft();
+syncConnectionState();
 </script>
 
 <?php

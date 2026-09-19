@@ -793,6 +793,63 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     window.mbposApplyLanguage = applyLanguage;
 
+    function showToast(message, type, duration) {
+        type = type || 'info';
+        duration = duration || 3000;
+        if (typeof Toastify === 'function') {
+            const bgGradients = {
+                success: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                error: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)',
+                warning: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+                info: 'linear-gradient(135deg, #0b6ff5 0%, #0284c7 100%)'
+            };
+            Toastify({
+                text: message,
+                duration: duration,
+                close: false,
+                gravity: 'bottom',
+                position: 'right',
+                stopOnFocus: true,
+                style: {
+                    background: bgGradients[type] || bgGradients.info,
+                    color: '#ffffff',
+                    borderRadius: '12px',
+                    padding: '12px 18px',
+                    fontWeight: '600',
+                    fontSize: '13px',
+                    boxShadow: '0 10px 25px rgba(15, 23, 42, 0.18)'
+                }
+            }).showToast();
+        } else {
+            let toastBox = document.getElementById('mbpos-native-toast');
+            if (!toastBox) {
+                toastBox = document.createElement('div');
+                toastBox.id = 'mbpos-native-toast';
+                toastBox.setAttribute('role', 'status');
+                toastBox.setAttribute('aria-live', 'polite');
+                toastBox.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:99999;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:600;color:#fff;box-shadow:0 10px 25px rgba(15,23,42,0.18);transition:all 0.25s ease;pointer-events:none;';
+                document.body.appendChild(toastBox);
+            }
+            const colors = {
+                success: '#059669',
+                error: '#e11d48',
+                warning: '#d97706',
+                info: '#0b6ff5'
+            };
+            toastBox.style.background = colors[type] || colors.info;
+            toastBox.textContent = message;
+            toastBox.style.opacity = '1';
+            toastBox.style.transform = 'translateY(0)';
+            clearTimeout(toastBox._timer);
+            toastBox._timer = setTimeout(function () {
+                toastBox.style.opacity = '0';
+                toastBox.style.transform = 'translateY(10px)';
+            }, duration);
+        }
+    }
+    window.showToast = showToast;
+    window.mbposToast = showToast;
+
     function translateText(text, language) {
         const normalized = text.trim();
         if (!normalized) return text;
@@ -841,20 +898,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (banner) banner.hidden = !offline;
         document.body.classList.toggle('is-offline', offline);
 
-        if (!offline && typeof Toastify === 'function') {
-            Toastify({
-                text: currentLanguage() === 'mm' ? 'စနစ်အင်တာနက် ပြန်လည်ရရှိပါပြီ' : 'System Online: Connection restored',
-                duration: 3500,
-                gravity: 'top',
-                position: 'right',
-                style: {
-                    background: 'linear-gradient(135deg, #0ca678, #23c993)',
-                    color: '#ffffff',
-                    borderRadius: '12px',
-                    fontWeight: '700',
-                    fontSize: '13px'
-                }
-            }).showToast();
+        if (!offline) {
+            showToast(currentLanguage() === 'mm' ? 'စနစ်အင်တာနက် ပြန်လည်ရရှိပါပြီ' : 'System Online: Connection restored', 'success', 3500);
         }
     }
 
@@ -1339,24 +1384,7 @@ document.addEventListener('DOMContentLoaded', function () {
         function notifyCopied() {
             const isMm = currentLanguage() === 'mm';
             const msg = isMm ? textToCopy + ' ကို ကူးယူပြီးပါပြီ' : 'Copied ' + textToCopy + ' to clipboard';
-            if (typeof Toastify === 'function') {
-                Toastify({
-                    text: msg,
-                    duration: 2500,
-                    close: false,
-                    gravity: "bottom",
-                    position: "right",
-                    style: {
-                        background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
-                        color: "#fff",
-                        borderRadius: "10px",
-                        padding: "10px 16px",
-                        fontSize: "13px",
-                        fontWeight: "600",
-                        boxShadow: "0 10px 25px rgba(5, 150, 105, 0.3)"
-                    }
-                }).showToast();
-            }
+            showToast(msg, 'success', 2500);
             copyBtn.classList.add('text-emerald-600', 'scale-110');
             setTimeout(function () {
                 copyBtn.classList.remove('text-emerald-600', 'scale-110');

@@ -28,25 +28,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $voucher_ids = array_values(array_unique(array_filter(array_map('intval', (array)($_POST['voucher_ids'] ?? [])), function ($id) {
         return $id > 0;
     })));
-    $new_status = $_POST['new_status'] ?? '';
+    $new_status = trim($_POST['new_status'] ?? '');
+    $batch_note = trim($_POST['batch_note'] ?? '');
 
     if (empty($voucher_ids)) {
         flash_message('error', 'No vouchers were selected for update.');
     } elseif (count($voucher_ids) > 200) {
         flash_message('error', 'A maximum of 200 vouchers can be updated per request.');
-    } elseif (!in_array($new_status, $possible_statuses)) {
+    } elseif (!in_array($new_status, $possible_statuses, true)) {
         flash_message('error', 'An invalid status was selected.');
     } else {
         $ids_placeholder = implode(',', array_fill(0, count($voucher_ids), '?'));
-        $update_query = "UPDATE vouchers SET status = ? WHERE id IN ($ids_placeholder)";
-        $types = 's' . str_repeat('i', count($voucher_ids));
-        $update_values = array_merge([$new_status], $voucher_ids);
+
+        if (!empty($batch_note)) {
+            $username = $_SESSION['username'] ?? 'Staff';
+            $user_type = $_SESSION['user_type'] ?? 'Operator';
+            $note_entry = "[" . date('Y-m-d H:i:s') . "] (" . $username . " - " . $user_type . "): " . $batch_note;
+            $update_query = "UPDATE vouchers "
+                          . "SET status = ?, "
+                          . "    notes = CASE "
+                          . "        WHEN notes IS NULL OR TRIM(notes) = '' THEN ? "
+                          . "        ELSE CONCAT(notes, '\n\n===SPLIT===\n\n', ?) "
+                          . "    END "
+                          . "WHERE id IN ($ids_placeholder)";
+            $types = 'sss' . str_repeat('i', count($voucher_ids));
+            $update_values = array_merge([$new_status, $note_entry, $note_entry], $voucher_ids);
+        } else {
+            $update_query = "UPDATE vouchers SET status = ? WHERE id IN ($ids_placeholder)";
+            $types = 's' . str_repeat('i', count($voucher_ids));
+            $update_values = array_merge([$new_status], $voucher_ids);
+        }
+
         if (is_staff() && $user_branch_id) {
             $update_query .= " AND (origin_branch_id = ? OR (destination_branch_id = ? AND status != 'Pending'))";
             $types .= 'ii';
             $update_values[] = $user_branch_id;
             $update_values[] = $user_branch_id;
         }
+
         $stmt = mysqli_prepare($connection, $update_query);
         if (!$stmt) {
             error_log('MBPOS bulk voucher update prepare failed: ' . mysqli_error($connection));
@@ -63,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mysqli_stmt_close($stmt);
         }
     }
-    // Redirect back to the same page with filters preserved to see the result
+    // Redirect back to the same page with filters preserved
     $return_params = $_GET;
     unset($return_params['page']);
     $return_query = http_build_query($return_params);
@@ -115,7 +134,7 @@ $page = min($page, $total_pages);
 $offset = ($page - 1) * $limit;
 
 // Paginate voucher IDs first; lookup joins enrich only the current 50 rows.
-$query = "SELECT v.id, v.voucher_code, v.sender_name, v.receiver_name, v.status, v.created_at,
+$query = "SELECT v.id, v.voucher_code, v.sender_name, v.receiver_name, v.total_amount, v.currency, v.status, v.created_at,
                  r_origin.region_name AS origin_region,
                  b_origin.branch_name AS origin_branch,
                  r_dest.region_name AS destination_region,
@@ -147,7 +166,7 @@ if ($stmt) {
     flash_message('error', 'Unable to load vouchers right now. Please try again.');
 }
 
-// --- Prepare Export Link ---
+// --- Prepare Export and Pagination Links ---
 $export_params = $_GET;
 unset($export_params['page'], $export_params['p']);
 $export_query_string = http_build_query($export_params);
@@ -155,32 +174,55 @@ $export_url = 'index.php?page=export_vouchers' . ($export_query_string !== '' ? 
 $pagination_query_string = $export_query_string;
 $pagination_suffix = $pagination_query_string !== '' ? '&' . $pagination_query_string : '';
 
+// Quick status filter ribbon definitions
+$quick_statuses = ['All', 'Pending', 'In Transit', 'Received', 'Delivered', 'Cancelled', 'Returned'];
+$status_url_base = $_GET;
+unset($status_url_base['p']);
+
 include_template('header', ['page' => 'voucher_bulk_update']);
 ?>
 
 <div class="v5-page">
+    <!-- Page Header -->
     <div class="v5-page-head">
         <div class="v5-page-head__copy">
-            <span class="v5-kicker" data-i18n="Ledger Operations">Ledger Operations</span>
+            <span class="v5-kicker" data-i18n="Operations">Operations</span>
             <h1 data-i18n="Bulk Voucher Update">Bulk Voucher Update</h1>
-            <p data-i18n="Filter ledger records and apply controlled shipment-status changes.">Filter ledger records and apply controlled shipment-status changes.</p>
+            <p data-i18n="Filter ledger records, review shipment routes, and batch update operational statuses.">Filter ledger records, review shipment routes, and batch update operational statuses.</p>
         </div>
         <div class="v5-page-actions flex items-center gap-3">
-            <a href="<?= e($export_url) ?>" class="btn-secondary btn-sm" data-i18n="Export CSV">Export CSV</a>
+            <a href="index.php?page=voucher_list" class="btn-secondary btn-sm flex items-center gap-1.5">
+                <?= mbpos_icon('voucher_list', 'w-4 h-4') ?>
+                <span data-i18n="Voucher Ledger">Voucher Ledger</span>
+            </a>
+            <a href="<?= e($export_url) ?>" class="btn-secondary btn-sm flex items-center gap-1.5" data-i18n="Export CSV">
+                <?= mbpos_icon('download', 'w-4 h-4') ?>
+                <span>Export CSV</span>
+            </a>
             <span class="v5-count"><?= number_format($total_vouchers) ?> <span data-i18n="total entries">total entries</span></span>
         </div>
     </div>
 
     <!-- Filters Panel -->
-    <section class="v5-panel mb-6">
+    <section class="v5-panel mb-6" aria-label="Filters">
         <div class="v5-panel__head">
-            <h2 data-i18n="Voucher Filters">Voucher Filters</h2>
+            <h2 data-i18n="Filter Ledger Records">Filter Ledger Records</h2>
             <div class="v5-toolbar__group">
                 <a class="btn-ghost btn-sm" href="index.php?page=voucher_bulk_update" data-i18n="Reset Filters">Reset Filters</a>
             </div>
         </div>
         <div class="v5-panel__body">
-            <form action="index.php" method="GET" class="v5-filter-grid">
+            <!-- Quick Date Filter Shortcuts -->
+            <div class="v5-date-chips" aria-label="Date range shortcuts">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1" data-i18n="Date Range:">Date Range:</span>
+                <button type="button" class="v5-date-chip" data-range="today" data-i18n="Today">Today</button>
+                <button type="button" class="v5-date-chip" data-range="yesterday" data-i18n="Yesterday">Yesterday</button>
+                <button type="button" class="v5-date-chip" data-range="last7" data-i18n="Last 7 Days">Last 7 Days</button>
+                <button type="button" class="v5-date-chip" data-range="month" data-i18n="This Month">This Month</button>
+                <button type="button" class="v5-date-chip" data-range="clear" data-i18n="Clear Dates">Clear Dates</button>
+            </div>
+
+            <form action="index.php" method="GET" class="v5-filter-grid" id="filter-form">
                 <input type="hidden" name="page" value="voucher_bulk_update">
 
                 <div class="v5-field">
@@ -243,39 +285,87 @@ include_template('header', ['page' => 'voucher_bulk_update']);
         </div>
     </section>
 
-    <!-- Bulk Action Form & Table -->
+    <!-- Main Bulk Update Form & Ledger View -->
     <form action="index.php?page=voucher_bulk_update<?= e($pagination_suffix) ?><?= $page > 1 ? '&amp;p=' . $page : '' ?>" method="POST" id="bulk-update-form" class="v5-panel">
         <?= csrf_input() ?>
 
-        <div class="v5-panel__head flex-wrap gap-4">
-            <div>
-                <h2 data-i18n="Filtered Voucher Ledger">Filtered Voucher Ledger</h2>
-                <span class="v5-count" data-i18n="Maximum 200 updates per batch">Maximum 200 updates per batch</span>
+        <!-- Panel Header with Quick Status Ribbon & Batch Action Controls -->
+        <div class="v5-panel__head flex-col gap-4 items-stretch border-b border-slate-100">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h2 data-i18n="Filtered Voucher Ledger">Filtered Voucher Ledger</h2>
+                    <span class="v5-count" data-i18n="Maximum 200 updates per batch">Maximum 200 updates per batch</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="selected-counter" class="v5-badge v5-badge-info hidden">0 selected</span>
+                    <button type="button" id="btn-select-all-toggle" class="btn-secondary btn-sm" data-i18n="Select All">Select All</button>
+                    <button type="button" id="btn-clear-selection" class="btn-ghost btn-sm hidden" data-i18n="Clear Selection">Clear</button>
+                </div>
             </div>
-            <div class="v5-toolbar flex items-center gap-3">
-                <div class="v5-toolbar__group flex items-center gap-2">
-                    <label for="new_status" class="text-xs font-bold text-muted uppercase" data-i18n="Set Selected To:">Set Selected To:</label>
-                    <select id="new_status" name="new_status" class="v5-input" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" required>
+
+            <!-- Quick Status Filter Pills Ribbon -->
+            <div class="v5-status-ribbon" aria-label="Quick Status Filters">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1" data-i18n="Quick Filter:">Quick Filter:</span>
+                <?php foreach ($quick_statuses as $qs):
+                    $is_qs_active = ($qs === 'All' && empty($filter_status)) || ($filter_status === $qs);
+                    $qs_params = $status_url_base;
+                    if ($qs === 'All') {
+                        unset($qs_params['status']);
+                    } else {
+                        $qs_params['status'] = $qs;
+                    }
+                    $qs_url = 'index.php?' . http_build_query($qs_params);
+                ?>
+                    <a href="<?= e($qs_url) ?>" class="v5-status-pill <?= $is_qs_active ? 'is-active' : '' ?>" data-i18n="<?= e($qs) ?>">
+                        <?= e($qs) ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+
+            <!-- Batch Action Controls Ribbon -->
+            <div class="p-3.5 bg-slate-50/80 rounded-xl border border-slate-200/80 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-2 flex-1 min-w-[280px]">
+                    <label for="new_status" class="text-xs font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap" data-i18n="Set Selected To:">Set Selected To:</label>
+                    <select id="new_status" name="new_status" class="v5-input" style="padding: 0.45rem 0.85rem; font-size: 0.85rem; min-width: 150px;" required>
                         <option value="" data-i18n="Choose status">Choose status</option>
                         <?php foreach ($possible_statuses as $status): ?>
                             <option value="<?= e($status) ?>"><?= e($status) ?></option>
                         <?php endforeach; ?>
                     </select>
+
+                    <!-- Quick Status Apply Preset Chips -->
+                    <div class="flex flex-wrap items-center gap-1.5 ml-1">
+                        <button type="button" class="status-quick-btn text-xs px-2.5 py-1 rounded-md bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-all" data-status="In Transit" data-i18n="In Transit">In Transit</button>
+                        <button type="button" class="status-quick-btn text-xs px-2.5 py-1 rounded-md bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all" data-status="Received" data-i18n="Received">Received</button>
+                        <button type="button" class="status-quick-btn text-xs px-2.5 py-1 rounded-md bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all" data-status="Delivered" data-i18n="Delivered">Delivered</button>
+                        <button type="button" class="status-quick-btn text-xs px-2.5 py-1 rounded-md bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition-all" data-status="Returned" data-i18n="Returned">Returned</button>
+                    </div>
                 </div>
-                <button type="submit" class="btn-primary btn-sm" id="btn-submit-batch" data-i18n="Update Selected">Update Selected</button>
-                <span id="selected-counter" class="v5-badge v5-badge-info hidden">0 selected</span>
+
+                <div class="flex flex-wrap items-center gap-2 flex-1 min-w-[280px]">
+                    <label for="batch_note" class="sr-only" data-i18n="Batch Operational Note">Batch Operational Note</label>
+                    <input type="text" id="batch_note" name="batch_note" class="v5-input flex-1" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;" placeholder="Optional memo (e.g. Dispatched via Cargo Van-01)..." data-i18n-placeholder="Optional memo (e.g. Dispatched via Cargo Van-01)..." maxlength="255">
+                    <button type="submit" class="btn-primary btn-sm flex items-center gap-1.5" id="btn-submit-batch">
+                        <?= mbpos_icon('check', 'w-4 h-4') ?>
+                        <span data-i18n="Update Selected">Update Selected</span>
+                    </button>
+                </div>
             </div>
         </div>
 
+        <!-- Ledger Table -->
         <div class="v5-panel__body p-0">
             <div class="overflow-x-auto">
-                <table class="v5-table w-full">
+                <table class="v5-table w-full" id="bulk-vouchers-table">
                     <thead>
                         <tr>
-                            <th style="width:40px;"><input type="checkbox" id="select-all-vouchers" aria-label="Select all vouchers"></th>
+                            <th style="width:44px;" class="text-center">
+                                <input type="checkbox" id="select-all-vouchers" aria-label="Select all vouchers on this page" title="Select all vouchers">
+                            </th>
                             <th data-i18n="Voucher Code">Voucher</th>
                             <th data-i18n="Sender → Receiver">Sender → Receiver</th>
                             <th data-i18n="Route">Route</th>
+                            <th data-i18n="Amount">Amount</th>
                             <th data-i18n="Status">Status</th>
                             <th data-i18n="Created">Created</th>
                         </tr>
@@ -283,9 +373,9 @@ include_template('header', ['page' => 'voucher_bulk_update']);
                     <tbody>
                         <?php if (empty($vouchers)): ?>
                             <tr>
-                                <td colspan="6">
+                                <td colspan="7">
                                     <div class="v5-empty">
-                                        <span class="v5-empty__icon"><?= mbpos_icon('vouchers', 'w-8 h-8 text-slate-400') ?></span>
+                                        <span class="v5-empty__icon"><?= mbpos_icon('voucher_list', 'w-8 h-8 text-slate-400') ?></span>
                                         <strong data-i18n="No vouchers match these filters">No vouchers match these filters</strong>
                                         <p data-i18n="Adjust the search or reset the filter set.">Adjust the search or reset the filter set.</p>
                                     </div>
@@ -296,26 +386,31 @@ include_template('header', ['page' => 'voucher_bulk_update']);
                                 'delivered' => 'v5-badge-success',
                                 'in transit' => 'v5-badge-info',
                                 'pending' => 'v5-badge-warning',
+                                'received' => 'v5-badge-success',
                                 'cancelled', 'returned' => 'v5-badge-danger',
                                 default => 'v5-badge-neutral'
                             };
+                            $currency = $voucher['currency'] ?? 'MMK';
                         ?>
-                            <tr>
-                                <td>
+                            <tr data-voucher-id="<?= (int)$voucher['id'] ?>" class="v5-table-row">
+                                <td class="text-center">
                                     <input type="checkbox" name="voucher_ids[]" value="<?= (int)$voucher['id'] ?>" class="voucher-checkbox" aria-label="Select <?= e($voucher['voucher_code']) ?>">
                                 </td>
                                 <td>
-                                    <a class="font-mono font-bold text-primary hover:underline" href="index.php?page=voucher_view&id=<?= (int)$voucher['id'] ?>">
+                                    <a class="font-mono font-bold text-primary hover:underline flex items-center gap-1" href="index.php?page=voucher_view&id=<?= (int)$voucher['id'] ?>" title="View voucher details">
                                         <?= e($voucher['voucher_code']) ?>
                                     </a>
                                 </td>
                                 <td>
                                     <strong><?= e($voucher['sender_name']) ?></strong>
-                                    <div class="text-xs text-muted">→ <?= e($voucher['receiver_name']) ?></div>
+                                    <div class="text-xs text-muted mt-0.5">→ <?= e($voucher['receiver_name']) ?></div>
                                 </td>
                                 <td>
-                                    <div class="text-xs font-medium text-main"><?= e($voucher['origin_region'] ?? 'N/A') ?> / <?= e($voucher['origin_branch'] ?? 'N/A') ?></div>
-                                    <div class="text-xs text-muted">→ <?= e($voucher['destination_region'] ?? 'N/A') ?> / <?= e($voucher['destination_branch'] ?? 'N/A') ?></div>
+                                    <div class="text-xs font-semibold text-slate-700"><?= e($voucher['origin_region'] ?? 'N/A') ?> <span class="text-slate-400">/</span> <?= e($voucher['origin_branch'] ?? 'N/A') ?></div>
+                                    <div class="text-xs text-muted mt-0.5">→ <?= e($voucher['destination_region'] ?? 'N/A') ?> <span class="text-slate-400">/</span> <?= e($voucher['destination_branch'] ?? 'N/A') ?></div>
+                                </td>
+                                <td class="text-xs font-bold font-mono text-slate-800 whitespace-nowrap">
+                                    <?= format_currency($voucher['total_amount'] ?? 0, $currency) ?>
                                 </td>
                                 <td>
                                     <span class="v5-badge <?= $status_class ?>"><?= e($voucher['status']) ?></span>
@@ -334,6 +429,7 @@ include_template('header', ['page' => 'voucher_bulk_update']);
             </div>
         </div>
 
+        <!-- Pagination Controls -->
         <?php if ($total_pages > 1): ?>
             <div class="v5-panel__head border-t border-slate-100 flex items-center justify-between">
                 <div>
@@ -351,62 +447,258 @@ include_template('header', ['page' => 'voucher_bulk_update']);
                 </div>
             </div>
         <?php endif; ?>
+
+        <!-- Floating Sticky Batch Action Dock (Anchors to Bottom on Selection) -->
+        <div class="v5-bulk-floating-bar" id="bulk-floating-dock" aria-live="polite">
+            <div class="flex items-center gap-3">
+                <span class="v5-badge v5-badge-info font-bold text-sm" id="dock-counter">0 selected</span>
+                <button type="button" id="dock-clear-btn" class="text-xs text-slate-300 hover:text-white underline" data-i18n="Clear Selection">Clear</button>
+            </div>
+            <div class="flex items-center gap-2 v5-bulk-actions-group">
+                <select id="dock-status-select" class="text-xs" aria-label="Selected status action">
+                    <option value="" data-i18n="Choose status">Choose status</option>
+                    <?php foreach ($possible_statuses as $status): ?>
+                        <option value="<?= e($status) ?>"><?= e($status) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="submit" class="btn-primary btn-sm whitespace-nowrap" id="dock-submit-btn" data-i18n="Apply Bulk Update">Apply Bulk Update</button>
+            </div>
+        </div>
     </form>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
+    const table = document.getElementById('bulk-vouchers-table');
     const selectAllCheckbox = document.getElementById('select-all-vouchers');
-    const voucherCheckboxes = document.querySelectorAll('.voucher-checkbox');
+    const selectAllToggleBtn = document.getElementById('btn-select-all-toggle');
+    const clearSelectionBtn = document.getElementById('btn-clear-selection');
+    const voucherCheckboxes = Array.from(document.querySelectorAll('.voucher-checkbox'));
     const counter = document.getElementById('selected-counter');
+    const floatingDock = document.getElementById('bulk-floating-dock');
+    const dockCounter = document.getElementById('dock-counter');
+    const dockClearBtn = document.getElementById('dock-clear-btn');
+    const dockStatusSelect = document.getElementById('dock-status-select');
+    const newStatusSelect = document.getElementById('new_status');
+    const form = document.getElementById('bulk-update-form');
 
-    function updateCounter() {
-        const checkedCount = document.querySelectorAll('.voucher-checkbox:checked').length;
+    function t(key, fallback) {
+        if (typeof window.mbposT === 'function') {
+            const translated = window.mbposT(key);
+            if (translated && translated !== key) return translated;
+        }
+        return fallback || key;
+    }
+
+    function updateSelectionUI() {
+        const checkedBoxes = voucherCheckboxes.filter(cb => cb.checked);
+        const count = checkedBoxes.length;
+        const total = voucherCheckboxes.length;
+
+        // Sync indeterminate and checked state of master checkbox
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = (total > 0 && count === total);
+            selectAllCheckbox.indeterminate = (count > 0 && count < total);
+        }
+
+        // Toggle row highlight class (.is-selected)
+        voucherCheckboxes.forEach(cb => {
+            const tr = cb.closest('tr');
+            if (tr) {
+                tr.classList.toggle('is-selected', cb.checked);
+            }
+        });
+
+        // Top badges and counter
         if (counter) {
-            if (checkedCount > 0) {
-                const label = typeof window.mbposT === 'function' ? window.mbposT('selected') : 'selected';
-                counter.textContent = checkedCount + ' ' + label;
+            if (count > 0) {
+                const label = t('vouchers selected', 'vouchers selected');
+                counter.textContent = count + ' ' + label;
                 counter.classList.remove('hidden');
+                if (clearSelectionBtn) clearSelectionBtn.classList.remove('hidden');
             } else {
                 counter.classList.add('hidden');
+                if (clearSelectionBtn) clearSelectionBtn.classList.add('hidden');
+            }
+        }
+
+        // Floating bottom dock
+        if (floatingDock) {
+            if (count > 0) {
+                floatingDock.classList.add('is-visible');
+                if (dockCounter) {
+                    const label = t('vouchers selected', 'vouchers selected');
+                    dockCounter.textContent = count + ' ' + label;
+                }
+            } else {
+                floatingDock.classList.remove('is-visible');
             }
         }
     }
 
+    // Toggle master checkbox
     if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', function() {
-            voucherCheckboxes.forEach(checkbox => {
-                checkbox.checked = this.checked;
-            });
-            updateCounter();
+        selectAllCheckbox.addEventListener('change', function () {
+            const isChecked = this.checked;
+            voucherCheckboxes.forEach(cb => { cb.checked = isChecked; });
+            updateSelectionUI();
         });
     }
 
-    voucherCheckboxes.forEach(cb => {
-        cb.addEventListener('change', updateCounter);
+    // "Select All" / "Deselect All" button in panel head
+    if (selectAllToggleBtn) {
+        selectAllToggleBtn.addEventListener('click', function () {
+            const allChecked = voucherCheckboxes.length > 0 && voucherCheckboxes.every(cb => cb.checked);
+            const newState = !allChecked;
+            voucherCheckboxes.forEach(cb => { cb.checked = newState; });
+            this.textContent = newState ? t('Deselect All', 'Deselect All') : t('Select All', 'Select All');
+            updateSelectionUI();
+        });
+    }
+
+    // Clear selection buttons
+    function clearSelection() {
+        voucherCheckboxes.forEach(cb => { cb.checked = false; });
+        if (selectAllToggleBtn) selectAllToggleBtn.textContent = t('Select All', 'Select All');
+        updateSelectionUI();
+    }
+    if (clearSelectionBtn) clearSelectionBtn.addEventListener('click', clearSelection);
+    if (dockClearBtn) dockClearBtn.addEventListener('click', clearSelection);
+
+    // Checkbox change handlers + Shift-click range selection
+    let lastCheckedIndex = -1;
+    voucherCheckboxes.forEach((cb, idx) => {
+        cb.addEventListener('click', function (e) {
+            if (e.shiftKey && lastCheckedIndex !== -1 && lastCheckedIndex !== idx) {
+                const start = Math.min(lastCheckedIndex, idx);
+                const end = Math.max(lastCheckedIndex, idx);
+                const shouldCheck = this.checked;
+                for (let i = start; i <= end; i++) {
+                    voucherCheckboxes[i].checked = shouldCheck;
+                }
+            }
+            lastCheckedIndex = idx;
+            updateSelectionUI();
+        });
     });
 
-    const form = document.getElementById('bulk-update-form');
+    // Click anywhere on table row to toggle checkbox (excluding direct links and inputs)
+    if (table) {
+        table.addEventListener('click', function (e) {
+            if (e.target.closest('a, button, input, select, label')) return;
+            const tr = e.target.closest('tr.v5-table-row');
+            if (tr) {
+                const cb = tr.querySelector('.voucher-checkbox');
+                if (cb) {
+                    cb.checked = !cb.checked;
+                    updateSelectionUI();
+                }
+            }
+        });
+    }
+
+    // Fast status preset buttons
+    document.querySelectorAll('.status-quick-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const status = this.getAttribute('data-status');
+            if (newStatusSelect) {
+                newStatusSelect.value = status;
+                newStatusSelect.focus();
+            }
+            if (dockStatusSelect) dockStatusSelect.value = status;
+        });
+    });
+
+    // Synchronize status selects between panel and floating dock
+    if (dockStatusSelect && newStatusSelect) {
+        dockStatusSelect.addEventListener('change', function () {
+            newStatusSelect.value = this.value;
+        });
+        newStatusSelect.addEventListener('change', function () {
+            dockStatusSelect.value = this.value;
+        });
+    }
+
+    // Quick Date Range Shortcuts
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    const filterForm = document.getElementById('filter-form');
+
+    function formatDate(d) {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    document.querySelectorAll('.v5-date-chip').forEach(chip => {
+        chip.addEventListener('click', function () {
+            const range = this.getAttribute('data-range');
+            const today = new Date();
+
+            document.querySelectorAll('.v5-date-chip').forEach(c => c.classList.remove('is-active'));
+            this.classList.add('is-active');
+
+            if (range === 'today') {
+                const ds = formatDate(today);
+                if (startDateInput) startDateInput.value = ds;
+                if (endDateInput) endDateInput.value = ds;
+            } else if (range === 'yesterday') {
+                const y = new Date();
+                y.setDate(today.getDate() - 1);
+                const ds = formatDate(y);
+                if (startDateInput) startDateInput.value = ds;
+                if (endDateInput) endDateInput.value = ds;
+            } else if (range === 'last7') {
+                const past = new Date();
+                past.setDate(today.getDate() - 7);
+                if (startDateInput) startDateInput.value = formatDate(past);
+                if (endDateInput) endDateInput.value = formatDate(today);
+            } else if (range === 'month') {
+                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                if (startDateInput) startDateInput.value = formatDate(firstDay);
+                if (endDateInput) endDateInput.value = formatDate(today);
+            } else if (range === 'clear') {
+                if (startDateInput) startDateInput.value = '';
+                if (endDateInput) endDateInput.value = '';
+                this.classList.remove('is-active');
+            }
+
+            if (filterForm) filterForm.submit();
+        });
+    });
+
+    // Form submission confirmation guard
     if (form) {
-        form.addEventListener('submit', function(e) {
-            const checkedCount = document.querySelectorAll('.voucher-checkbox:checked').length;
+        form.addEventListener('submit', function (e) {
+            const checkedCount = voucherCheckboxes.filter(cb => cb.checked).length;
             if (checkedCount === 0) {
                 e.preventDefault();
-                alert('Please select at least one voucher to update.');
+                alert(t('Please select at least one voucher to update.', 'Please select at least one voucher to update.'));
                 return false;
             }
             if (checkedCount > 200) {
                 e.preventDefault();
-                alert('You can select a maximum of 200 vouchers per batch update.');
+                alert(t('You can select a maximum of 200 vouchers per batch update.', 'You can select a maximum of 200 vouchers per batch update.'));
                 return false;
             }
-            const statusSelect = document.getElementById('new_status');
-            if (!confirm('Are you sure you want to update ' + checkedCount + ' vouchers to "' + statusSelect.value + '"?')) {
+            const chosenStatus = newStatusSelect ? newStatusSelect.value : '';
+            if (!chosenStatus) {
+                e.preventDefault();
+                alert(t('Please choose a status to apply.', 'Please choose a status to apply.'));
+                if (newStatusSelect) newStatusSelect.focus();
+                return false;
+            }
+            const confirmMsg = `Are you sure you want to update ${checkedCount} voucher(s) to "${chosenStatus}"?`;
+            if (!confirm(confirmMsg)) {
                 e.preventDefault();
                 return false;
             }
         });
     }
+
+    // Initial check
+    updateSelectionUI();
 });
 </script>
 

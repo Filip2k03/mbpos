@@ -61,8 +61,17 @@ $nav_groups = [
             'route' => 'index.php?page=voucher_list',
             'icon' => 'voucher_list',
             'allowed' => true,
-            'aliases' => ['voucher_list', 'voucher_bulk_update', 'voucher_view'],
+            'aliases' => ['voucher_list', 'voucher_view', 'status_edit'],
             'mobile_priority' => 3,
+        ],
+        [
+            'key' => 'voucher_bulk_update',
+            'label' => 'Bulk Vouchers',
+            'route' => 'index.php?page=voucher_bulk_update',
+            'icon' => 'voucher_bulk_update',
+            'allowed' => ($is_user_staff || $is_user_admin || $is_user_developer),
+            'aliases' => ['voucher_bulk_update'],
+            'mobile_priority' => 4,
         ],
     ],
     'Finance' => [
@@ -297,7 +306,7 @@ $nav_groups = [
     <div class="mbpos-global-content">
         <header class="mbpos-global-header">
             <?php if (is_logged_in()): ?>
-            <button type="button" id="mobile-drawer-toggle" class="mbpos-icon-button md:hidden" aria-label="Open menu" title="Open navigation menu"><?= mbpos_icon('menu', 'w-5 h-5') ?></button>
+            <button type="button" id="mobile-drawer-toggle" class="mbpos-icon-button mbpos-drawer-toggle" aria-label="Open menu" title="Open navigation menu"><?= mbpos_icon('menu', 'w-5 h-5') ?></button>
             <?php endif; ?>
 
             <a href="index.php?page=dashboard" class="mbpos-header-brand">

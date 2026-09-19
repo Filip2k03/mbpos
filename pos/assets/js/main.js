@@ -153,6 +153,32 @@ document.addEventListener('DOMContentLoaded', function () {
         "Configuration": "စနစ်ဖွဲ့စည်းမှု",
         "Administration": "စီမံခန့်ခွဲမှု",
         "Voucher Ledger": "ဘောက်ချာ မှတ်တမ်း",
+        "Bulk Vouchers": "အစုလိုက် ဘောက်ချာများ",
+        "Bulk Update": "အစုလိုက် မွမ်းမံရန်",
+        "Bulk Status Update": "အစုလိုက် အခြေအနေ မွမ်းမံခြင်း",
+        "Filtered Voucher Ledger": "စစ်ထုတ်ထားသော ဘောက်ချာ စာရင်း",
+        "Select All": "အားလုံးရွေးမည်",
+        "Deselect All": "အားလုံးပြန်ဖြုတ်မည်",
+        "Clear Selection": "ရွေးချယ်မှု ရှင်းလင်းရန်",
+        "vouchers selected": "စောင် ရွေးချယ်ထားသည်",
+        "voucher selected": "စောင် ရွေးချယ်ထားသည်",
+        "selected": "ရွေးချယ်ထားသည်",
+        "Apply Status": "အခြေအနေ ပြောင်းမည်",
+        "Batch Operational Note": "အစုလိုက် လုပ်ငန်းမှတ်ချက်",
+        "Batch Note / Memo": "အစုလိုက် မှတ်ချက်",
+        "Filter by Date": "ရက်စွဲအလိုက် စစ်ထုတ်ရန်",
+        "Today": "ယနေ့",
+        "Yesterday": "မနေ့က",
+        "Last 7 Days": "လွန်ခဲ့သော ၇ ရက်",
+        "This Month": "ယခုလ",
+        "Reset Filters": "မူလအတိုင်း ပြန်ထားရန်",
+        "Update Selected Vouchers": "ရွေးထားသော ဘောက်ချာများ မွမ်းမံမည်",
+        "Update Selected": "ရွေးထားသည်များ မွမ်းမံမည်",
+        "Choose status": "အခြေအနေ ရွေးချယ်ပါ",
+        "Set Selected To:": "ရွေးထားသည်များကို ပြောင်းရန်:",
+        "Maximum 200 updates per batch": "တစ်သုတ်လျှင် အများဆုံး ၂၀၀ စောင်သာ",
+        "Quick Status Filter": "အမြန် အခြေအနေ စစ်ထုတ်မှု",
+        "No vouchers selected": "ဘောက်ချာ ရွေးချယ်ထားခြင်း မရှိပါ",
         "Maintenance Zones": "စနစ်ထိန်းသိမ်းမှု ဇုန်များ",
 
         // Command Palette & Search
@@ -1014,24 +1040,40 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // ---------------------------------------------------------------------
-        // Mobile Drawer Toggle
+        // Mobile Drawer Controller (Canonical Shell + Workspace Support)
         // ---------------------------------------------------------------------
-        const sidebar = document.querySelector('.mbpos-sidebar');
-        const drawerToggle = document.getElementById('mobile-drawer-toggle');
-        const mobileNavMore = document.getElementById('mobile-nav-more');
-        const sidebarClose = document.getElementById('mbpos-sidebar-close');
-
         function toggleMobileDrawer(open) {
+            const sidebar = document.querySelector('.mbpos-sidebar');
+            const voucherPage = document.getElementById('voucher-page');
+            const voucherSidebar = document.getElementById('voucher-sidebar');
+
+            // Workspace-specific sidebar (voucher_create.php)
+            if (voucherPage && voucherSidebar) {
+                const isCurrentlyOpen = voucherPage.classList.contains('nav-open');
+                const shouldOpen = (open !== undefined) ? !!open : !isCurrentlyOpen;
+                voucherPage.classList.toggle('nav-open', shouldOpen);
+                document.body.classList.toggle('mbpos-drawer-active', shouldOpen);
+                const navToggle = document.getElementById('nav-toggle');
+                if (navToggle) {
+                    navToggle.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+                    navToggle.setAttribute('aria-label', t(shouldOpen ? 'Close menu' : 'Open menu'));
+                }
+                return;
+            }
+
+            // Canonical shell sidebar (.mbpos-sidebar)
             if (!sidebar) return;
-            const shouldOpen = (open !== undefined) ? open : !sidebar.classList.contains('drawer-open');
+            const isCurrentlyOpen = sidebar.classList.contains('drawer-open');
+            const shouldOpen = (open !== undefined) ? !!open : !isCurrentlyOpen;
             sidebar.classList.toggle('drawer-open', shouldOpen);
+            document.body.classList.toggle('mbpos-drawer-active', shouldOpen);
 
             let backdrop = document.querySelector('.mbpos-drawer-backdrop');
             if (shouldOpen) {
                 if (!backdrop) {
                     backdrop = document.createElement('div');
                     backdrop.className = 'mbpos-drawer-backdrop';
-                    backdrop.addEventListener('click', () => toggleMobileDrawer(false));
+                    backdrop.setAttribute('aria-hidden', 'true');
                     document.body.appendChild(backdrop);
                 }
             } else {
@@ -1039,15 +1081,48 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        if (drawerToggle) {
-            drawerToggle.addEventListener('click', () => toggleMobileDrawer());
-        }
-        if (mobileNavMore) {
-            mobileNavMore.addEventListener('click', () => toggleMobileDrawer());
-        }
-        if (sidebarClose) {
-            sidebarClose.addEventListener('click', () => toggleMobileDrawer(false));
-        }
+        // Global idempotent event delegation for drawer actions
+        document.addEventListener('click', function (e) {
+            // Toggle triggers (top bar icon button, mobile bottom bar "Menu" button, or any .mbpos-drawer-toggle)
+            const toggleBtn = e.target.closest('#mobile-drawer-toggle, #mobile-nav-more, .mbpos-drawer-toggle, #nav-toggle');
+            if (toggleBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleMobileDrawer();
+                return;
+            }
+
+            // Explicit close buttons
+            const closeBtn = e.target.closest('#mbpos-sidebar-close, .mbpos-sidebar-close, #voucher-sidebar-close, .voucher-sidebar-close');
+            if (closeBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleMobileDrawer(false);
+                return;
+            }
+
+            // Scrim / Backdrop clicks
+            const backdrop = e.target.closest('.mbpos-drawer-backdrop, #nav-scrim, .nav-scrim');
+            if (backdrop) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleMobileDrawer(false);
+                return;
+            }
+
+            // Auto-close on selecting a navigation route in mobile drawer
+            const navLink = e.target.closest('.mbpos-sidebar.drawer-open .mbpos-sidebar-nav a, .voucher-create-page.nav-open .sidebar .nav a');
+            if (navLink) {
+                toggleMobileDrawer(false);
+            }
+        });
+
+        // Close mobile drawer on Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                toggleMobileDrawer(false);
+            }
+        });
     });
 
     // -------------------------------------------------------------------------

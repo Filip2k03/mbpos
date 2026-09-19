@@ -332,6 +332,9 @@ include_template('header', ['page' => 'voucher_create']);
   font-weight: 800;
   letter-spacing: 0.08em;
 }
+.voucher-create-page .voucher-sidebar-close {
+  display: none;
+}
 .voucher-create-page .nav {
   display: flex;
   flex-direction: column;
@@ -1398,6 +1401,27 @@ include_template('header', ['page' => 'voucher_create']);
     box-shadow: 20px 0 50px rgba(15, 35, 65, 0.25);
   }
   .voucher-create-page.nav-open .sidebar { transform: translateX(0); }
+  .voucher-create-page .voucher-sidebar-close {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 2.35rem;
+    height: 2.35rem;
+    margin-left: auto;
+    border-radius: 0.65rem;
+    background: #f1f5f9;
+    color: #475569;
+    border: none;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .voucher-create-page .voucher-sidebar-close:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+  }
   .voucher-create-page .nav-scrim {
     display: block;
     position: fixed;
@@ -1622,12 +1646,14 @@ include_template('header', ['page' => 'voucher_create']);
         <b>MBLOGISTICS</b>
         <small>POS V5 · FAST · SAFE · GLOBAL</small>
       </div>
+      <button type="button" id="voucher-sidebar-close" class="voucher-sidebar-close" aria-label="Close navigation" title="Close menu">&times;</button>
     </div>
 
     <nav class="nav">
       <a href="index.php?page=dashboard"><?= mbpos_icon('dashboard', 'w-4 h-4') ?><span data-i18n="Dashboard">Dashboard</span></a>
       <a href="index.php?page=voucher_create" class="active" aria-current="page"><?= mbpos_icon('voucher_create', 'w-4 h-4') ?><span data-i18n="Create Voucher">Create Voucher</span></a>
       <a href="index.php?page=voucher_list"><?= mbpos_icon('voucher_list', 'w-4 h-4') ?><span data-i18n="Voucher Ledger">Voucher Ledger</span></a>
+      <a href="index.php?page=voucher_bulk_update"><?= mbpos_icon('voucher_bulk_update', 'w-4 h-4') ?><span data-i18n="Bulk Vouchers">Bulk Vouchers</span></a>
       <?php if (is_admin() || is_developer()): ?>
         <a href="index.php?page=profit_loss"><?= mbpos_icon('profit_loss', 'w-4 h-4') ?><span data-i18n="Profit & Loss">Profit &amp; Loss</span></a>
         <a href="index.php?page=branches"><?= mbpos_icon('branches', 'w-4 h-4') ?><span data-i18n="Branches">Branches</span></a>

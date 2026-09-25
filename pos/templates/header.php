@@ -561,65 +561,158 @@ $nav_groups = [
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+<?php if (is_logged_in()): ?>
+    const currentUserId = <?= (int)($_SESSION['user_id'] ?? 0) ?>;
+    const lastIdStorageKey = 'mbpos_last_notif_id_' + currentUserId;
+    const shownToastsStorageKey = 'mbpos_shown_toasts_' + currentUserId;
+    const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+
     let lastId = 0;
+    try {
+        lastId = parseInt(localStorage.getItem(lastIdStorageKey), 10) || 0;
+    } catch (e) {
+        lastId = 0;
+    }
+
     let notificationPollInitialized = false;
     let notificationPollInFlight = false;
-    
+
+    function showNotificationToast(message) {
+        if (!message) return;
+        try {
+            if (typeof Toastify === 'function') {
+                Toastify({
+                    text: message,
+                    duration: 6000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    stopOnFocus: true,
+                    style: {
+                        background: "rgba(255, 255, 255, 0.98)",
+                        backdropFilter: "blur(12px)",
+                        color: "#10233f",
+                        borderLeft: "4px solid #0b6ff5",
+                        borderRadius: "12px",
+                        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.12)",
+                        fontWeight: "600",
+                        fontSize: "14px",
+                        padding: "14px 18px"
+                    },
+                }).showToast();
+            } else if (typeof window.showToast === 'function') {
+                window.showToast(message, 'info', 6000);
+            } else if (typeof window.mbposToast === 'function') {
+                window.mbposToast(message, 'info', 6000);
+            }
+        } catch (err) {
+            console.warn('[Notification Toast Error]', err);
+        }
+    }
+
+    function shouldShowNotificationToast(notifId) {
+        if (!notifId) return false;
+        const now = Date.now();
+        let shownMap = {};
+        try {
+            shownMap = JSON.parse(localStorage.getItem(shownToastsStorageKey) || '{}');
+            if (typeof shownMap !== 'object' || shownMap === null) shownMap = {};
+        } catch (e) {
+            shownMap = {};
+        }
+
+        let changed = false;
+        for (const key in shownMap) {
+            if (now - shownMap[key] > (TWENTY_FOUR_HOURS * 2)) {
+                delete shownMap[key];
+                changed = true;
+            }
+        }
+
+        const lastShown = shownMap[notifId];
+        if (lastShown && (now - lastShown < TWENTY_FOUR_HOURS)) {
+            if (changed) {
+                try { localStorage.setItem(shownToastsStorageKey, JSON.stringify(shownMap)); } catch (e) {}
+            }
+            return false;
+        }
+
+        shownMap[notifId] = now;
+        try {
+            localStorage.setItem(shownToastsStorageKey, JSON.stringify(shownMap));
+        } catch (e) {}
+        return true;
+    }
+
     function fetchNotifications() {
-        <?php if (is_logged_in()): ?>
-        if (notificationPollInFlight || document.hidden) return;
+        if (notificationPollInFlight || document.hidden || (typeof navigator !== 'undefined' && !navigator.onLine)) {
+            return;
+        }
         notificationPollInFlight = true;
-        const request = window.mbposFetch ? window.mbposFetch(`index.php?page=fetch_notifications&last_id=${lastId}`, { timeout: 5000 }) : fetch(`index.php?page=fetch_notifications&last_id=${lastId}`);
-        request
-            .then(response => response.json())
+        const url = `index.php?page=fetch_notifications&last_id=${lastId}`;
+        const fetchPromise = window.mbposFetch
+            ? window.mbposFetch(url, { timeout: 6000 })
+            : fetch(url, { cache: 'no-store' });
+
+        fetchPromise
+            .then(response => {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.json();
+            })
             .then(data => {
-                const incomingNotifications = Array.isArray(data.notifications) ? data.notifications : [];
-                if (notificationPollInitialized && incomingNotifications.length > 0) {
-                    incomingNotifications.forEach(notif => {
-                        Toastify({
-                            text: notif.message,
-                            duration: 7000,
-                            close: true,
-                            gravity: "top",
-                            position: "right",
-                            style: {
-                                background: "rgba(255, 255, 255, 0.96)",
-                                backdropFilter: "blur(12px)",
-                                color: "#10233f",
-                                borderLeft: "4px solid #0b6ff5",
-                                borderRadius: "12px",
-                                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.12)",
-                                fontWeight: "600",
-                                fontSize: "14px",
-                                padding: "14px 18px"
-                            },
-                        }).showToast();
+                if (!data) return;
+                const incoming = Array.isArray(data.notifications) ? data.notifications : [];
+                const maxServerId = parseInt(data.max_id, 10) || 0;
+
+                if (notificationPollInitialized && incoming.length > 0) {
+                    let toastDelay = 0;
+                    let displayedCount = 0;
+                    incoming.forEach(notif => {
+                        if (displayedCount < 3 && shouldShowNotificationToast(notif.id)) {
+                            displayedCount++;
+                            setTimeout(() => {
+                                showNotificationToast(notif.message);
+                            }, toastDelay);
+                            toastDelay += 350;
+                        }
                     });
                 }
-                if (incomingNotifications.length > 0) {
-                    lastId = Math.max(...incomingNotifications.map(notif => parseInt(notif.id, 10) || 0), lastId);
-                }
+
+                const incomingMax = incoming.reduce((m, n) => Math.max(m, parseInt(n.id, 10) || 0), 0);
+                lastId = Math.max(lastId, maxServerId, incomingMax);
+                try {
+                    localStorage.setItem(lastIdStorageKey, lastId);
+                } catch (e) {}
+
                 notificationPollInitialized = true;
-                
+
                 const badge = document.getElementById('notification-badge');
                 if (badge) {
-                    if (data.unread_count > 0) {
-                        badge.textContent = data.unread_count;
+                    const unread = parseInt(data.unread_count, 10) || 0;
+                    if (unread > 0) {
+                        badge.textContent = unread > 99 ? '99+' : unread;
                         badge.style.display = 'inline-block';
                     } else {
                         badge.style.display = 'none';
                     }
                 }
             })
-            .catch(error => console.error('Error fetching notifications:', error))
-            .finally(() => { notificationPollInFlight = false; });
-        <?php endif; ?>
+            .catch(error => {
+                console.warn('[Notification Poll Error]', error);
+            })
+            .finally(() => {
+                notificationPollInFlight = false;
+            });
     }
-    
+
     fetchNotifications();
     setInterval(fetchNotifications, 15000);
     document.addEventListener('visibilitychange', function() {
         if (!document.hidden) fetchNotifications();
     });
+    window.addEventListener('online', function() {
+        fetchNotifications();
+    });
+<?php endif; ?>
 });
 </script>

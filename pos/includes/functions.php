@@ -264,4 +264,15 @@ function format_datetime_myanmar($datetime, $format = 'full') {
         default => date('F j, Y · h:i A', $ts) . ' (GMT+6:30)'
     };
 }
+
+/**
+ * Standardized currency formatting.
+ * @param float|int|string|null $amount Numeric amount
+ * @param string $currency Currency code (e.g. MMK, MYR, USD)
+ * @param int $decimals Decimal places
+ * @return string Formatted currency string
+ */
+function format_currency($amount, string $currency = 'MMK', int $decimals = 2): string {
+    return e($currency) . ' ' . number_format((float)($amount ?? 0), $decimals);
+}
 ?>

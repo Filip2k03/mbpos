@@ -21,28 +21,46 @@ global $connection;
 
 // Get the ID of the last notification the user has seen
 $last_id = intval($_GET['last_id'] ?? 0);
-$user_id = intval($_SESSION['user_id']);
+$user_id = intval($_SESSION['user_id'] ?? 0);
 
-$notifications = mbpos_cache_remember('notifications-feed', $user_id . ':' . $last_id, 2, function () use ($connection, $user_id, $last_id) {
-    $rows = [];
-    $stmt = mysqli_prepare(
-        $connection,
-        "SELECT id, message, created_at
-         FROM notifications
-         WHERE user_id = ? AND id > ?
-         ORDER BY id ASC
-         LIMIT 50"
-    );
-    if (!$stmt) return $rows;
-    mysqli_stmt_bind_param($stmt, 'ii', $user_id, $last_id);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-    if ($result) {
-        while ($row = mysqli_fetch_assoc($result)) $rows[] = $row;
+$max_id = mbpos_cache_remember('notifications-max-id', $user_id, 3, function () use ($connection, $user_id) {
+    $max = 0;
+    $stmt = mysqli_prepare($connection, "SELECT COALESCE(MAX(id), 0) FROM notifications WHERE user_id = ?");
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, 'i', $user_id);
+        mysqli_stmt_execute($stmt);
+        $res = mysqli_stmt_get_result($stmt);
+        $max = intval(mysqli_fetch_row($res)[0] ?? 0);
+        mysqli_stmt_close($stmt);
     }
-    mysqli_stmt_close($stmt);
-    return $rows;
+    return $max;
 });
+
+if ($last_id <= 0) {
+    // Client initializing or baseline fetch: return max_id without historic backlog dump
+    $notifications = [];
+} else {
+    $notifications = mbpos_cache_remember('notifications-feed', $user_id . ':' . $last_id, 2, function () use ($connection, $user_id, $last_id) {
+        $rows = [];
+        $stmt = mysqli_prepare(
+            $connection,
+            "SELECT id, message, created_at
+             FROM notifications
+             WHERE user_id = ? AND id > ?
+             ORDER BY id ASC
+             LIMIT 50"
+        );
+        if (!$stmt) return $rows;
+        mysqli_stmt_bind_param($stmt, 'ii', $user_id, $last_id);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        if ($result) {
+            while ($row = mysqli_fetch_assoc($result)) $rows[] = $row;
+        }
+        mysqli_stmt_close($stmt);
+        return $rows;
+    });
+}
 
 $unread_count = mbpos_cache_remember('notifications-unread', $user_id, 3, function () use ($connection, $user_id) {
     $count = 0;
@@ -63,4 +81,5 @@ header('Cache-Control: no-store, private');
 echo json_encode([
     'notifications' => $notifications,
     'unread_count' => (int)$unread_count,
+    'max_id' => (int)$max_id,
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

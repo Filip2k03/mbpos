@@ -601,7 +601,7 @@ include_template('header', ['page' => 'voucher_bulk_update']);
                                     <div class="text-xs text-muted mt-0.5">→ <?= e($voucher['destination_region'] ?? 'N/A') ?> <span class="text-slate-400">/</span> <?= e($voucher['destination_branch'] ?? 'N/A') ?></div>
                                 </td>
                                 <td data-label="Amount" class="text-xs font-bold font-mono text-slate-800 whitespace-nowrap">
-                                    <?= format_currency($voucher['total_amount'] ?? 0, $currency) ?>
+                                    <span class="text-xs text-muted"><?= e($currency) ?></span> <?= number_format((float)($voucher['total_amount'] ?? 0), 2) ?>
                                 </td>
                                 <td data-label="Status">
                                     <span class="v5-badge <?= $status_class ?>"><?= e($voucher['status']) ?></span>

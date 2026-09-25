@@ -99,7 +99,7 @@ $regions = mbpos_cache_remember('lookup-regions', 'all', 300, function () use ($
 });
 
 // Status Statistics Counts across the voucher system
-$status_counts = [];
+$status_counts = array_fill_keys($possible_statuses, 0);
 $stats_query = "SELECT status, COUNT(*) as cnt FROM vouchers v";
 $stats_bind_types = '';
 $stats_bind_vals = [];
@@ -118,7 +118,18 @@ if ($stats_stmt) {
     if (mysqli_stmt_execute($stats_stmt)) {
         $stats_res = mysqli_stmt_get_result($stats_stmt);
         while ($r = mysqli_fetch_assoc($stats_res)) {
-            $status_counts[$r['status']] = (int)$r['cnt'];
+            $raw_st = trim((string)($r['status'] ?? ''));
+            $matched = false;
+            foreach ($possible_statuses as $ps) {
+                if (strcasecmp($raw_st, $ps) === 0) {
+                    $status_counts[$ps] += (int)$r['cnt'];
+                    $matched = true;
+                    break;
+                }
+            }
+            if (!$matched && $raw_st !== '') {
+                $status_counts[$raw_st] = ($status_counts[$raw_st] ?? 0) + (int)$r['cnt'];
+            }
         }
     }
     mysqli_stmt_close($stats_stmt);
@@ -134,8 +145,6 @@ $filter_destination_region_id = $filters['destination_region_id'];
 $filter_status = $filters['status'];
 $search_term = $filters['search'];
 $search_column = $filters['search_column'];
-$limit = 50;
-$page = isset($_GET['p']) ? max(1, (int)$_GET['p']) : 1;
 $queryFilter = mbpos_build_voucher_filter_sql($filters, (int)$user_branch_id, is_staff());
 $where_sql = $queryFilter['where_sql'];
 $bind_params = $queryFilter['types'];
@@ -156,11 +165,26 @@ if ($count_stmt) {
 } else {
     error_log('MBPOS bulk voucher count prepare failed: ' . mysqli_error($connection));
 }
+
+// Limit & Pagination handling: support 25, 50, 100, 200, and 'all'
+$raw_limit = strtolower(trim((string)($_GET['limit'] ?? '50')));
+$is_all_limit = ($raw_limit === 'all');
+if ($is_all_limit) {
+    // Show all matching vouchers, capped safely at 500 records per batch view
+    $limit = max(1, min($total_vouchers > 0 ? $total_vouchers : 500, 500));
+} elseif (in_array((int)$raw_limit, [25, 50, 100, 200], true)) {
+    $limit = (int)$raw_limit;
+} else {
+    $limit = 50;
+    $raw_limit = '50';
+}
+
 $total_pages = max(1, (int)ceil($total_vouchers / $limit));
+$page = isset($_GET['p']) ? max(1, (int)$_GET['p']) : 1;
 $page = min($page, $total_pages);
 $offset = ($page - 1) * $limit;
 
-// Paginate voucher IDs first; lookup joins enrich only the current 50 rows.
+// Paginate voucher IDs first; lookup joins enrich only the requested rows.
 $query = "SELECT v.id, v.voucher_code, v.sender_name, v.receiver_name, v.total_amount, v.currency, v.status, v.created_at,
                  r_origin.region_name AS origin_region,
                  b_origin.branch_name AS origin_branch,
@@ -201,8 +225,8 @@ $export_url = 'index.php?page=export_vouchers' . ($export_query_string !== '' ? 
 $pagination_query_string = $export_query_string;
 $pagination_suffix = $pagination_query_string !== '' ? '&' . $pagination_query_string : '';
 
-// Quick status filter ribbon definitions
-$quick_statuses = ['All', 'Pending', 'In Transit', 'Received', 'Delivered', 'Cancelled', 'Returned'];
+// Quick status filter ribbon definitions (including Maintenance)
+$quick_statuses = ['All', 'Pending', 'In Transit', 'Received', 'Delivered', 'Cancelled', 'Returned', 'Maintenance'];
 $status_url_base = $_GET;
 unset($status_url_base['p']);
 
@@ -287,6 +311,14 @@ include_template('header', ['page' => 'voucher_bulk_update']);
             </div>
             <div class="v5-kpi-card__count"><?= number_format($status_counts['Cancelled'] ?? 0) ?></div>
         </a>
+
+        <a href="index.php?page=voucher_bulk_update&amp;status=Maintenance" class="v5-kpi-card v5-kpi-card--maintenance <?= $filter_status === 'Maintenance' ? 'is-active' : '' ?>">
+            <div class="v5-kpi-card__title">
+                <span class="w-2 h-2 rounded-full bg-purple-500 inline-block"></span>
+                <span data-i18n="Maintenance">Maintenance</span>
+            </div>
+            <div class="v5-kpi-card__count"><?= number_format($status_counts['Maintenance'] ?? 0) ?></div>
+        </a>
     </section>
 
     <!-- Filters Panel -->
@@ -310,6 +342,9 @@ include_template('header', ['page' => 'voucher_bulk_update']);
 
             <form action="index.php" method="GET" class="v5-filter-grid" id="filter-form">
                 <input type="hidden" name="page" value="voucher_bulk_update">
+                <?php if ($raw_limit !== '50'): ?>
+                    <input type="hidden" name="limit" value="<?= e($raw_limit) ?>">
+                <?php endif; ?>
 
                 <div class="v5-field">
                     <label for="start_date" class="v5-field-label" data-i18n="Start Date">Start Date</label>
@@ -344,7 +379,7 @@ include_template('header', ['page' => 'voucher_bulk_update']);
                 <div class="v5-field">
                     <label for="filter_status" class="v5-field-label" data-i18n="Status">Status</label>
                     <select id="filter_status" name="status" class="v5-input">
-                        <option value="" data-i18n="All Statuses">All Statuses (<?= number_format($all_vouchers_count) ?>)</option>
+                        <option value="All" <?= (empty($filter_status) || $filter_status === 'All') ? 'selected' : '' ?> data-i18n="All Statuses">All Statuses (<?= number_format($all_vouchers_count) ?>)</option>
                         <?php foreach ($possible_statuses as $s): ?>
                             <option value="<?= e($s) ?>" <?= $filter_status === $s ? 'selected' : '' ?>><?= e($s) ?> (<?= number_format($status_counts[$s] ?? 0) ?>)</option>
                         <?php endforeach; ?>
@@ -355,12 +390,13 @@ include_template('header', ['page' => 'voucher_bulk_update']);
                     <label for="search_term" class="v5-field-label" data-i18n="Search">Search</label>
                     <div class="v5-search-group">
                         <select name="search_column" class="v5-input" style="max-width:160px;">
+                            <option value="id" <?= $search_column === 'id' ? 'selected' : '' ?> data-i18n="Voucher ID">Voucher ID (#ID)</option>
                             <option value="voucher_code" <?= $search_column === 'voucher_code' ? 'selected' : '' ?> data-i18n="Voucher Code">Voucher Code</option>
                             <option value="sender_name" <?= $search_column === 'sender_name' ? 'selected' : '' ?> data-i18n="Sender">Sender</option>
                             <option value="receiver_name" <?= $search_column === 'receiver_name' ? 'selected' : '' ?> data-i18n="Receiver">Receiver</option>
                             <option value="receiver_phone" <?= $search_column === 'receiver_phone' ? 'selected' : '' ?> data-i18n="Receiver Phone">Receiver Phone</option>
                         </select>
-                        <input id="search_term" type="search" name="search" class="v5-input flex-1" placeholder="Search ledger records..." data-i18n-placeholder="Search ledger records..." value="<?= e($search_term) ?>">
+                        <input id="search_term" type="search" name="search" class="v5-input flex-1" placeholder="Search by ID, voucher code, sender, receiver..." data-i18n-placeholder="Search by ID, voucher code, sender, receiver..." value="<?= e($search_term) ?>">
                     </div>
                 </div>
 
@@ -380,13 +416,58 @@ include_template('header', ['page' => 'voucher_bulk_update']);
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h2 data-i18n="Filtered Voucher Ledger">Filtered Voucher Ledger</h2>
-                    <span class="v5-count" data-i18n="Maximum 200 updates per batch">Maximum 200 updates per batch</span>
+                    <div class="flex flex-wrap items-center gap-2 mt-0.5">
+                        <span class="v5-count" data-i18n="Maximum 200 updates per batch">Maximum 200 updates per batch</span>
+                        <span class="text-slate-300">•</span>
+                        <span class="text-xs font-semibold text-slate-500 font-mono">Showing <?= count($vouchers) ?> of <?= number_format($total_vouchers) ?></span>
+                        <?php if ($total_vouchers > count($vouchers)): ?>
+                            <span class="text-slate-300">•</span>
+                            <?php
+                                $show_all_params = $_GET;
+                                $show_all_params['limit'] = 'all';
+                                unset($show_all_params['p']);
+                                $show_all_url = 'index.php?' . http_build_query($show_all_params);
+                            ?>
+                            <a href="<?= e($show_all_url) ?>" class="text-xs text-blue-600 hover:text-blue-800 font-bold hover:underline" data-i18n="Show All Vouchers">Show All Vouchers</a>
+                        <?php endif; ?>
+                    </div>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Page Size / Limit Controls -->
+                    <div class="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-semibold">
+                        <span class="text-slate-500 px-1.5" data-i18n="Show:">Show:</span>
+                        <?php foreach ([50, 100, 200, 'all'] as $optLimit):
+                            $is_limit_active = ($optLimit === 'all' && $raw_limit === 'all') || ($raw_limit !== 'all' && (int)$raw_limit === $optLimit);
+                            $lim_params = $_GET;
+                            $lim_params['limit'] = $optLimit;
+                            unset($lim_params['p']);
+                            $lim_url = 'index.php?' . http_build_query($lim_params);
+                        ?>
+                            <a href="<?= e($lim_url) ?>" class="px-2 py-0.5 rounded-md transition-colors <?= $is_limit_active ? 'bg-white text-blue-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900' ?>">
+                                <?= $optLimit === 'all' ? 'All' : $optLimit ?>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+
                     <span id="selected-counter" class="v5-badge v5-badge-info hidden">0 selected</span>
                     <button type="button" id="btn-select-all-toggle" class="btn-secondary btn-sm" data-i18n="Select All">Select All</button>
                     <button type="button" id="btn-clear-selection" class="btn-ghost btn-sm hidden" data-i18n="Clear Selection">Clear</button>
                 </div>
+            </div>
+
+            <!-- Selected Voucher IDs Bar -->
+            <div id="selected-ids-bar" class="hidden p-2.5 bg-blue-50/90 rounded-xl border border-blue-200/80 flex items-center justify-between gap-3 text-xs">
+                <div class="flex items-center gap-2 overflow-x-auto py-0.5">
+                    <span class="font-bold text-blue-900 whitespace-nowrap flex items-center gap-1">
+                        <?= mbpos_icon('check', 'w-3.5 h-3.5 text-blue-600') ?>
+                        <span data-i18n="Selected Voucher IDs:">Selected Voucher IDs:</span>
+                    </span>
+                    <span id="selected-ids-list" class="font-mono text-blue-800 font-semibold break-all"></span>
+                </div>
+                <button type="button" id="btn-copy-selected-ids" class="btn-ghost btn-xs text-blue-700 hover:bg-blue-100 flex items-center gap-1 whitespace-nowrap" title="Copy comma-separated IDs">
+                    <?= mbpos_icon('copy', 'w-3 h-3') ?>
+                    <span data-i18n="Copy IDs">Copy IDs</span>
+                </button>
             </div>
 
             <!-- Quick Status Filter Pills Ribbon -->
@@ -397,6 +478,7 @@ include_template('header', ['page' => 'voucher_bulk_update']);
                     $qs_count = ($qs === 'All') ? $all_vouchers_count : ($status_counts[$qs] ?? 0);
                     if ($qs === 'All') {
                         $qs_url = 'index.php?page=voucher_bulk_update';
+                        if ($raw_limit !== '50') $qs_url .= '&limit=' . urlencode($raw_limit);
                     } else {
                         $qs_params = $status_url_base;
                         $qs_params['status'] = $qs;
@@ -409,7 +491,7 @@ include_template('header', ['page' => 'voucher_bulk_update']);
                     </a>
                 <?php endforeach; ?>
                 <?php if (!empty($start_date) || !empty($end_date) || $filter_origin_region_id !== 'All' || $filter_destination_region_id !== 'All' || !empty($filter_status) || !empty($search_term)): ?>
-                    <a href="index.php?page=voucher_bulk_update" class="btn-ghost btn-xs text-rose-600 hover:bg-rose-50 flex items-center gap-1 ml-auto" data-i18n="Clear Filters">
+                    <a href="index.php?page=voucher_bulk_update<?= $raw_limit !== '50' ? '&amp;limit=' . urlencode($raw_limit) : '' ?>" class="btn-ghost btn-xs text-rose-600 hover:bg-rose-50 flex items-center gap-1 ml-auto" data-i18n="Clear Filters">
                         <?= mbpos_icon('x', 'w-3.5 h-3.5') ?>
                         <span>Clear Filters</span>
                     </a>
@@ -429,10 +511,13 @@ include_template('header', ['page' => 'voucher_bulk_update']);
 
                     <!-- Quick Status Apply Preset Chips -->
                     <div class="flex flex-wrap items-center gap-1.5 ml-1">
-                        <button type="button" class="status-quick-btn text-xs px-2.5 py-1 rounded-md bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-all" data-status="In Transit" data-i18n="In Transit">In Transit</button>
-                        <button type="button" class="status-quick-btn text-xs px-2.5 py-1 rounded-md bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all" data-status="Received" data-i18n="Received">Received</button>
-                        <button type="button" class="status-quick-btn text-xs px-2.5 py-1 rounded-md bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all" data-status="Delivered" data-i18n="Delivered">Delivered</button>
-                        <button type="button" class="status-quick-btn text-xs px-2.5 py-1 rounded-md bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition-all" data-status="Returned" data-i18n="Returned">Returned</button>
+                        <button type="button" class="status-quick-btn text-xs px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 transition-all" data-status="Pending" data-i18n="Pending">Pending</button>
+                        <button type="button" class="status-quick-btn text-xs px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-all" data-status="In Transit" data-i18n="In Transit">In Transit</button>
+                        <button type="button" class="status-quick-btn text-xs px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 transition-all" data-status="Received" data-i18n="Received">Received</button>
+                        <button type="button" class="status-quick-btn text-xs px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all" data-status="Delivered" data-i18n="Delivered">Delivered</button>
+                        <button type="button" class="status-quick-btn text-xs px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition-all" data-status="Returned" data-i18n="Returned">Returned</button>
+                        <button type="button" class="status-quick-btn text-xs px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-slate-100 hover:text-slate-800 hover:border-slate-300 transition-all" data-status="Cancelled" data-i18n="Cancelled">Cancelled</button>
+                        <button type="button" class="status-quick-btn text-xs px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200 transition-all" data-status="Maintenance" data-i18n="Maintenance">Maintenance</button>
                     </div>
                 </div>
 
@@ -456,6 +541,7 @@ include_template('header', ['page' => 'voucher_bulk_update']);
                             <th style="width:44px;" class="text-center">
                                 <input type="checkbox" id="select-all-vouchers" aria-label="Select all vouchers on this page" title="Select all vouchers">
                             </th>
+                            <th style="width:76px;" data-i18n="ID">ID</th>
                             <th data-i18n="Voucher Code">Voucher</th>
                             <th data-i18n="Sender → Receiver">Sender → Receiver</th>
                             <th data-i18n="Route">Route</th>
@@ -468,7 +554,7 @@ include_template('header', ['page' => 'voucher_bulk_update']);
                     <tbody>
                         <?php if (empty($vouchers)): ?>
                             <tr>
-                                <td colspan="8">
+                                <td colspan="9">
                                     <div class="v5-empty">
                                         <span class="v5-empty__icon"><?= mbpos_icon('voucher_list', 'w-8 h-8 text-slate-400') ?></span>
                                         <strong data-i18n="No vouchers match these filters">No vouchers match these filters</strong>
@@ -483,13 +569,17 @@ include_template('header', ['page' => 'voucher_bulk_update']);
                                 'pending' => 'v5-badge-warning',
                                 'received' => 'v5-badge-success',
                                 'cancelled', 'returned' => 'v5-badge-danger',
+                                'maintenance' => 'v5-badge-purple',
                                 default => 'v5-badge-neutral'
                             };
                             $currency = $voucher['currency'] ?? 'MMK';
                         ?>
                             <tr data-voucher-id="<?= (int)$voucher['id'] ?>" class="v5-table-row">
                                 <td class="text-center" data-label="Select">
-                                    <input type="checkbox" name="voucher_ids[]" value="<?= (int)$voucher['id'] ?>" class="voucher-checkbox" aria-label="Select <?= e($voucher['voucher_code']) ?>">
+                                    <input type="checkbox" name="voucher_ids[]" value="<?= (int)$voucher['id'] ?>" class="voucher-checkbox" aria-label="Select Voucher #<?= (int)$voucher['id'] ?> (<?= e($voucher['voucher_code']) ?>)">
+                                </td>
+                                <td data-label="ID" class="whitespace-nowrap font-mono">
+                                    <span class="v5-id-pill">#<?= (int)$voucher['id'] ?></span>
                                 </td>
                                 <td data-label="Voucher">
                                     <div class="flex items-center gap-1.5">
@@ -500,6 +590,7 @@ include_template('header', ['page' => 'voucher_bulk_update']);
                                             <?= mbpos_icon('copy', 'w-3.5 h-3.5') ?>
                                         </button>
                                     </div>
+                                    <div class="text-[11px] text-slate-400 font-mono mt-0.5">ID: #<?= (int)$voucher['id'] ?></div>
                                 </td>
                                 <td data-label="Sender / Receiver">
                                     <strong><?= e($voucher['sender_name']) ?></strong>
@@ -541,18 +632,40 @@ include_template('header', ['page' => 'voucher_bulk_update']);
         </div>
 
         <!-- Pagination Controls -->
-        <?php if ($total_pages > 1): ?>
-            <div class="v5-panel__head border-t border-slate-100 flex items-center justify-between">
+        <?php if ($total_pages > 1 || $raw_limit === 'all'): ?>
+            <div class="v5-panel__head border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <?php if ($page > 1): ?>
                         <a href="index.php?page=voucher_bulk_update&amp;p=<?= $page - 1 ?><?= e($pagination_suffix) ?>" class="btn-secondary btn-sm" data-i18n="Previous">Previous</a>
                     <?php endif; ?>
                 </div>
-                <div class="text-xs font-bold text-muted">
-                    <span data-i18n="Page">Page</span> <?= $page ?> <span data-i18n="of">of</span> <?= $total_pages ?>
+                <div class="text-xs font-bold text-muted flex items-center gap-2">
+                    <?php if ($raw_limit === 'all'): ?>
+                        <span data-i18n="Showing all vouchers">Showing all <?= number_format(count($vouchers)) ?> matching vouchers</span>
+                        <span class="text-slate-300">•</span>
+                        <?php
+                            $paged_params = $_GET;
+                            unset($paged_params['limit'], $paged_params['p']);
+                            $paged_url = 'index.php?' . http_build_query($paged_params);
+                        ?>
+                        <a href="<?= e($paged_url) ?>" class="text-blue-600 hover:underline" data-i18n="Switch to 50 per page">Switch to 50/page</a>
+                    <?php else: ?>
+                        <span data-i18n="Page">Page</span> <?= $page ?> <span data-i18n="of">of</span> <?= $total_pages ?>
+                        <span class="text-slate-400 font-normal">(<?= number_format($total_vouchers) ?> total)</span>
+                        <?php if ($total_pages > 1): ?>
+                            <span class="text-slate-300">•</span>
+                            <?php
+                                $all_view_params = $_GET;
+                                $all_view_params['limit'] = 'all';
+                                unset($all_view_params['p']);
+                                $all_view_url = 'index.php?' . http_build_query($all_view_params);
+                            ?>
+                            <a href="<?= e($all_view_url) ?>" class="text-blue-600 hover:underline font-bold" data-i18n="Show All">Show All (<?= number_format($total_vouchers) ?>)</a>
+                        <?php endif; ?>
+                    <?php endif; ?>
                 </div>
                 <div>
-                    <?php if ($page < $total_pages): ?>
+                    <?php if ($page < $total_pages && $raw_limit !== 'all'): ?>
                         <a href="index.php?page=voucher_bulk_update&amp;p=<?= $page + 1 ?><?= e($pagination_suffix) ?>" class="btn-secondary btn-sm" data-i18n="Next">Next</a>
                     <?php endif; ?>
                 </div>
@@ -564,6 +677,10 @@ include_template('header', ['page' => 'voucher_bulk_update']);
             <div class="flex items-center gap-3">
                 <span class="v5-badge v5-badge-info font-bold text-sm" id="dock-counter">0 selected</span>
                 <button type="button" id="dock-clear-btn" class="text-xs text-slate-300 hover:text-white underline" data-i18n="Clear Selection">Clear</button>
+                <button type="button" id="dock-copy-btn" class="text-xs text-slate-300 hover:text-white flex items-center gap-1 bg-slate-800/80 px-2 py-1 rounded hover:bg-slate-700 transition-colors" title="Copy selected IDs">
+                    <?= mbpos_icon('copy', 'w-3 h-3') ?>
+                    <span data-i18n="Copy IDs">Copy IDs</span>
+                </button>
             </div>
             <div class="flex items-center gap-2 v5-bulk-actions-group">
                 <select id="dock-status-select" class="text-xs" aria-label="Selected status action">
@@ -592,6 +709,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const dockStatusSelect = document.getElementById('dock-status-select');
     const newStatusSelect = document.getElementById('new_status');
     const form = document.getElementById('bulk-update-form');
+    const selectedIdsBar = document.getElementById('selected-ids-bar');
+    const selectedIdsList = document.getElementById('selected-ids-list');
+    const btnCopySelectedIds = document.getElementById('btn-copy-selected-ids');
+    const dockCopyBtn = document.getElementById('dock-copy-btn');
 
     function t(key, fallback) {
         if (typeof window.mbposT === 'function') {
@@ -601,10 +722,37 @@ document.addEventListener('DOMContentLoaded', function () {
         return fallback || key;
     }
 
+    function getSelectedVoucherIds() {
+        return voucherCheckboxes.filter(cb => cb.checked).map(cb => cb.value);
+    }
+
+    function copySelectedVoucherIds() {
+        const ids = getSelectedVoucherIds();
+        if (ids.length === 0) return;
+        const text = ids.join(', ');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                if (typeof window.showToast === 'function') {
+                    window.showToast(t('Copied ' + ids.length + ' Voucher ID(s) to clipboard', 'Copied ' + ids.length + ' Voucher ID(s) to clipboard'), 'info');
+                } else {
+                    alert('Copied ' + ids.length + ' Voucher ID(s): ' + text);
+                }
+            }).catch(() => {
+                prompt(t('Selected Voucher IDs:', 'Selected Voucher IDs:'), text);
+            });
+        } else {
+            prompt(t('Selected Voucher IDs:', 'Selected Voucher IDs:'), text);
+        }
+    }
+
+    if (btnCopySelectedIds) btnCopySelectedIds.addEventListener('click', copySelectedVoucherIds);
+    if (dockCopyBtn) dockCopyBtn.addEventListener('click', copySelectedVoucherIds);
+
     function updateSelectionUI() {
         const checkedBoxes = voucherCheckboxes.filter(cb => cb.checked);
         const count = checkedBoxes.length;
         const total = voucherCheckboxes.length;
+        const selectedIds = checkedBoxes.map(cb => cb.value);
 
         // Sync indeterminate and checked state of master checkbox
         if (selectAllCheckbox) {
@@ -620,7 +768,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Top badges and counter
+        // Top badges, counter, and selected IDs preview bar
         if (counter) {
             if (count > 0) {
                 const label = t('vouchers selected', 'vouchers selected');
@@ -630,6 +778,18 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 counter.classList.add('hidden');
                 if (clearSelectionBtn) clearSelectionBtn.classList.add('hidden');
+            }
+        }
+
+        if (selectedIdsBar && selectedIdsList) {
+            if (count > 0) {
+                selectedIdsBar.classList.remove('hidden');
+                const displayIds = selectedIds.slice(0, 20).map(id => '#' + id).join(', ');
+                const extra = selectedIds.length > 20 ? ' (+' + (selectedIds.length - 20) + ' more)' : '';
+                selectedIdsList.textContent = displayIds + extra;
+            } else {
+                selectedIdsBar.classList.add('hidden');
+                selectedIdsList.textContent = '';
             }
         }
 

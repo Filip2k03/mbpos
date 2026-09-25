@@ -1713,7 +1713,7 @@ html[data-language="mm"] button, html[data-language="mm"] input, html[data-langu
 /* Ensure wide data tables in scroll containers retain their multi-column tabular structure */
 .overflow-x-auto .v5-table,
 .overflow-x-auto table.v5-table {
-  min-width: 880px !important;
+  min-width: 960px !important;
   display: table !important;
   border-collapse: separate !important;
   border-spacing: 0 !important;
@@ -1812,6 +1812,22 @@ html[data-language="mm"] button, html[data-language="mm"] input, html[data-langu
 .v5-kpi-card--delivered { border-left: 3.5px solid #10b981; }
 .v5-kpi-card--returned { border-left: 3.5px solid #e11d48; }
 .v5-kpi-card--cancelled { border-left: 3.5px solid #64748b; }
+.v5-kpi-card--maintenance { border-left: 3.5px solid #a855f7; }
+
+/* Voucher ID Badge Pill */
+.v5-id-pill {
+  display: inline-flex;
+  align-items: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #334155;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem;
+  padding: 0.15rem 0.5rem;
+  line-height: 1.2;
+}
 
 /* Quick Status Filter Ribbon and Count Badges */
 .v5-pill-count {

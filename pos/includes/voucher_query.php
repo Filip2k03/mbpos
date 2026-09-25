@@ -22,7 +22,7 @@ if (!function_exists('mbpos_voucher_valid_date')) {
 if (!function_exists('mbpos_normalize_voucher_filters')) {
     function mbpos_normalize_voucher_filters(array $input, array $allowedStatuses): array
     {
-        $allowedSearchColumns = ['voucher_code', 'sender_name', 'receiver_name', 'receiver_phone'];
+        $allowedSearchColumns = ['id', 'voucher_code', 'sender_name', 'receiver_name', 'receiver_phone'];
         $searchColumn = $input['search_column'] ?? 'voucher_code';
         if (!is_string($searchColumn) || !in_array($searchColumn, $allowedSearchColumns, true)) {
             $searchColumn = 'voucher_code';
@@ -34,8 +34,17 @@ if (!function_exists('mbpos_normalize_voucher_filters')) {
             : substr($searchTerm, 0, 120);
 
         $status = is_string($input['status'] ?? null) ? trim($input['status']) : '';
-        if ($status === 'All' || !in_array($status, $allowedStatuses, true)) {
+        if (strcasecmp($status, 'All') === 0 || $status === '') {
             $status = '';
+        } else {
+            $matchedStatus = '';
+            foreach ($allowedStatuses as $allowed) {
+                if (strcasecmp($status, $allowed) === 0) {
+                    $matchedStatus = $allowed;
+                    break;
+                }
+            }
+            $status = $matchedStatus;
         }
 
         $normalizeId = static function ($value) {
@@ -98,18 +107,32 @@ if (!function_exists('mbpos_build_voucher_filter_sql')) {
         }
 
         if ($filters['status'] !== '') {
-            $where[] = 'v.status = ?';
+            $where[] = 'LOWER(TRIM(v.status)) = LOWER(?)';
             $types .= 's';
             $values[] = $filters['status'];
         }
 
         if ($filters['search'] !== '') {
             $column = $filters['search_column'];
-            $escapedTerm = strtr($filters['search'], ['=' => '==', '%' => '=%', '_' => '=_']);
-            $prefixSearch = in_array($column, ['voucher_code', 'receiver_phone'], true);
-            $where[] = "v.$column LIKE ? ESCAPE '='";
-            $types .= 's';
-            $values[] = $prefixSearch ? $escapedTerm . '%' : '%' . $escapedTerm . '%';
+            if ($column === 'id') {
+                $cleanId = ltrim(trim($filters['search']), '#');
+                if (ctype_digit($cleanId) || is_numeric($cleanId)) {
+                    $where[] = 'v.id = ?';
+                    $types .= 'i';
+                    $values[] = (int)$cleanId;
+                } else {
+                    $escapedId = strtr($cleanId, ['=' => '==', '%' => '=%', '_' => '=_']);
+                    $where[] = "CAST(v.id AS CHAR) LIKE ? ESCAPE '='";
+                    $types .= 's';
+                    $values[] = $escapedId . '%';
+                }
+            } else {
+                $escapedTerm = strtr($filters['search'], ['=' => '==', '%' => '=%', '_' => '=_']);
+                $prefixSearch = in_array($column, ['voucher_code', 'receiver_phone'], true);
+                $where[] = "v.$column LIKE ? ESCAPE '='";
+                $types .= 's';
+                $values[] = $prefixSearch ? $escapedTerm . '%' : '%' . $escapedTerm . '%';
+            }
         }
 
         return [

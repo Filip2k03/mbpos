@@ -203,12 +203,13 @@ include_template('header', ['page' => 'voucher_list']);
                     <label for="search_term" class="v5-field-label" data-i18n="Universal Search">Universal Search</label>
                     <div class="v5-search-group">
                         <select name="search_column" class="v5-input" style="max-width:160px;">
+                            <option value="id" <?= ($search_column === 'id') ? 'selected' : '' ?> data-i18n="Voucher ID">Voucher ID (#ID)</option>
                             <option value="voucher_code" <?= ($search_column === 'voucher_code') ? 'selected' : '' ?> data-i18n="Voucher Code">Voucher Code</option>
                             <option value="sender_name" <?= ($search_column === 'sender_name') ? 'selected' : '' ?> data-i18n="Sender Name">Sender Name</option>
                             <option value="receiver_name" <?= ($search_column === 'receiver_name') ? 'selected' : '' ?> data-i18n="Receiver Name">Receiver Name</option>
                             <option value="receiver_phone" <?= ($search_column === 'receiver_phone') ? 'selected' : '' ?> data-i18n="Receiver Phone">Receiver Phone</option>
                         </select>
-                        <input type="search" id="search_term" name="search" class="v5-input flex-1" placeholder="Type to search..." value="<?= e($search_term) ?>">
+                        <input type="search" id="search_term" name="search" class="v5-input flex-1" placeholder="Type to search by ID, voucher code, name, phone..." value="<?= e($search_term) ?>">
                     </div>
                 </div>
 
@@ -227,7 +228,7 @@ include_template('header', ['page' => 'voucher_list']);
         </div>
 
         <?php
-        $quick_statuses = ['All', 'Pending', 'In Transit', 'Delivered', 'Cancelled', 'Returned'];
+        $quick_statuses = ['All', 'Pending', 'In Transit', 'Received', 'Delivered', 'Cancelled', 'Returned', 'Maintenance'];
         $status_url_base = $_GET;
         unset($status_url_base['p']);
         ?>
@@ -296,6 +297,7 @@ include_template('header', ['page' => 'voucher_list']);
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-width="2"/></svg>
                                             </button>
                                         </div>
+                                        <div class="text-[11px] text-slate-400 font-mono mt-0.5">ID: #<?= (int)$voucher['id'] ?></div>
                                     </td>
                                     <td class="text-xs whitespace-nowrap">
                                         <strong class="text-slate-800 font-mono block"><?= format_datetime_myanmar($voucher['created_at'], 'date') ?></strong>
